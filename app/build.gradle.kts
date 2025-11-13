@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         applicationId = "com.ltcn272.finny"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -83,6 +83,9 @@ dependencies {
     implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.firebase.appdistribution.gradle)
     implementation(libs.googleid)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -118,6 +121,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.gson)
     implementation(libs.kotlinx.serialization.json)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // Lottie
     implementation(libs.lottie.compose)
