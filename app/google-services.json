@@ -37,6 +37,13 @@
             {
               "client_id": "234480219874-onc4aoaptvoa7ajsp96a4n1k9jac9vc2.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "234480219874-n88v9oqjep15ecfucq60u7qha25vgb8a.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "tvc.faa-ios"
+              }
             }
           ]
         }

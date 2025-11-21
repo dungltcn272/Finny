@@ -16,19 +16,21 @@ interface BudgetDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(budget: BudgetEntity)
 
-    // Lấy tất cả Budgets (chưa bị đánh dấu xóa) và sắp xếp
     @Query("SELECT * FROM budgets WHERE isDeleted = 0 ORDER BY startDate DESC")
     fun getAllBudgets(): Flow<List<BudgetEntity>>
 
-    // Lấy các bản ghi cần sync (chưa synced HOẶC đã deleted)
+    @Query("SELECT * FROM budgets WHERE id = :budgetId")
+    suspend fun getBudgetById(budgetId: String): BudgetEntity?
+
+    @Query("SELECT * FROM budgets WHERE id = :id")
+    fun getBudgetByIdFlow(id: String): Flow<BudgetEntity?>
+
     @Query("SELECT * FROM budgets WHERE isSynced = 0 OR isDeleted = 1")
     suspend fun getBudgetsToSync(): List<BudgetEntity>
 
-    // Đánh dấu xóa cục bộ (Offline-First Delete)
     @Update
     suspend fun update(budget: BudgetEntity)
 
-    // Xóa vĩnh viễn (sau khi sync thành công)
     @Query("DELETE FROM budgets WHERE id = :budgetId")
     suspend fun deleteById(budgetId: String)
 }

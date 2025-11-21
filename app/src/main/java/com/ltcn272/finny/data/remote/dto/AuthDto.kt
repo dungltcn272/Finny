@@ -19,7 +19,6 @@ data class RefreshResponseDto(
 )
 
 data class RefreshDataDto(
-    @SerializedName("access_token") val accessToken: String,
     @SerializedName("refresh_token") val refreshToken: String
 )
 
@@ -28,4 +27,8 @@ data class UpdateUserRequestDto(
     @SerializedName("avatar") val avatar: String?,
     @SerializedName("currency") val currency: String?,
     @SerializedName("lang") val lang: String?
+)
+
+data class SocialLoginRequestDto(
+    val idToken: String
 )

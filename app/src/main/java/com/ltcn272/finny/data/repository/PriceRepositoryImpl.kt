@@ -15,7 +15,6 @@ class PriceRepositoryImpl @Inject constructor(
             val response = priceApi.getPrices(version)
 
             if (response.status == 200) {
-                // Map DTO sang Domain Model
                 val pricePlans = response.data.map { it.toDomain() }
                 AppResult.Success(pricePlans)
             } else {

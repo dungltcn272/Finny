@@ -93,6 +93,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.androidx.compose.material)
 
     // Hilt (KSP)
     implementation(libs.hilt.android)
@@ -121,7 +122,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.gson)
     implementation(libs.kotlinx.serialization.json)
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation(libs.logging.interceptor)
 
     // Lottie
     implementation(libs.lottie.compose)
@@ -141,8 +142,15 @@ dependencies {
     // map
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
 
     // wheel date time picker
     implementation(libs.wheelpickercompose)
+
+    // Coil
+    implementation(libs.coil.compose)
+
+    //  Chart
+    implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
 
 }

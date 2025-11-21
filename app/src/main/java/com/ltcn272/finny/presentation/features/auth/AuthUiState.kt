@@ -1,12 +1,13 @@
 package com.ltcn272.finny.presentation.features.auth
 
+import com.ltcn272.finny.domain.model.AuthUser
+
 /**
  * Ánh xạ từ các trạng thái cần thiết trong AuthViewModel.swift
  */
-data class AuthUiState(
-    val isLoading: Boolean = false,
-    val loginError: String? = null,
-    val isLoginSuccessful: Boolean = false, // Trạng thái chuyển màn hình
-    val isGoogleSdkReady: Boolean = false,
-    val isFacebookSdkReady: Boolean = false
-)
+sealed interface AuthUiState {
+    data object Initial : AuthUiState
+    data object Loading : AuthUiState
+    data class Authorized(val firebaseUser: AuthUser?) : AuthUiState
+    data class Error(val message: String) : AuthUiState
+}

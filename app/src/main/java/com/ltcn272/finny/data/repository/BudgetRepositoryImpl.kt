@@ -1,38 +1,69 @@
 package com.ltcn272.finny.data.repository
 
 import com.ltcn272.finny.data.local.dao.BudgetDao
+import com.ltcn272.finny.data.local.dao.TransactionDao
 import com.ltcn272.finny.data.mapper.toCreateRequestDto
 import com.ltcn272.finny.data.mapper.toDomain
 import com.ltcn272.finny.data.mapper.toEntity
 import com.ltcn272.finny.data.remote.api.BudgetApi
 import com.ltcn272.finny.domain.model.Budget
+import com.ltcn272.finny.domain.model.BudgetDetails
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.util.AppResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
-import java.util.UUID // Dùng để tạo ID tạm thời cho Offline-First
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class BudgetRepositoryImpl @Inject constructor(
     private val budgetApi: BudgetApi,
-    private val budgetDao: BudgetDao
+    private val budgetDao: BudgetDao,
+    private val transactionDao: TransactionDao
 ) : BudgetRepository {
 
-    // 1. Lấy dữ liệu cho UI: ĐỌC TỪ ROOM (Fast UX)
+    override fun getBudgetDetailsList(): Flow<List<BudgetDetails>> {
+        return budgetDao.getAllBudgets().flatMapLatest { budgetEntities ->
+            if (budgetEntities.isEmpty()) {
+                return@flatMapLatest flowOf(emptyList())
+            }
+            val budgetDetailsFlows = budgetEntities.map { budgetEntity ->
+                transactionDao.getTransactionsForBudget(budgetEntity.id).map { transactions ->
+                    val spentAmount = transactions.sumOf { tx -> tx.amount }
+                    BudgetDetails(budget = budgetEntity.toDomain(), spentAmount = spentAmount)
+                }
+            }
+            combine(budgetDetailsFlows) { it.toList() }
+        }
+    }
+
+    override fun getBudgetDetails(id: String): Flow<BudgetDetails?> {
+        return budgetDao.getBudgetByIdFlow(id).flatMapLatest { budgetEntity ->
+            if (budgetEntity == null) {
+                return@flatMapLatest flowOf(null)
+            }
+            transactionDao.getTransactionsForBudget(budgetEntity.id).map { transactions ->
+                val spentAmount = transactions.sumOf { tx -> tx.amount }
+                BudgetDetails(budget = budgetEntity.toDomain(), spentAmount = spentAmount)
+            }
+        }
+    }
+
     override fun getLocalBudgets(): Flow<List<Budget>> {
-        // Lắng nghe Flow từ DAO và map Entity sang Domain Model
         return budgetDao.getAllBudgets().map { entities ->
             entities.map { it.toDomain() }
         }
     }
 
-    // 2. Sync Ban Đầu: API -> ROOM
     override suspend fun syncBudgetsFromApi(): AppResult<Unit> {
         return try {
-            val response = budgetApi.getBudgets(page = 1) // Giả định chỉ cần trang 1 để sync nhanh
+            val response = budgetApi.getBudgets(page = 1)
 
             if (response.status == 200) {
-                // Map DTO sang Entity và chèn vào Room
                 val entities = response.data?.data?.map { it.toEntity(isSynced = true) }
                 if (entities != null) {
                     budgetDao.insertAll(entities)
@@ -46,56 +77,70 @@ class BudgetRepositoryImpl @Inject constructor(
         }
     }
 
-    // 3. Tạo/Cập nhật Cục bộ: DOMAIN -> ROOM (isSynced = false)
-    override suspend fun saveBudgetLocally(budget: Budget, isNew: Boolean): AppResult<Unit> {
-        val entity = if (isNew) {
-            // Tạo ID tạm thời và đánh dấu chưa sync
-            budget.copy(id = UUID.randomUUID().toString()) // UUID cho ID tạm thời
-                .toEntity(isSynced = false)
-        } else {
-            // Cập nhật và đánh dấu cần sync lại
-            budgetDao.getAllBudgets().map { it.find { b -> b.id == budget.id } } // Cần lấy lại Entity cũ để giữ trạng thái
-            // ... Logic chuyển đổi Domain sang Entity và cập nhật isSynced = false
-            budget.toEntity(isSynced = false) // Ví dụ đơn giản, bạn cần lấy isDeleted cũ nếu có
-        }
-
-        budgetDao.insert(entity) // Insert hoặc Replace
+    override suspend fun addBudgetLocally(budget: Budget): AppResult<Unit> {
+        val entity = budget.copy(id = UUID.randomUUID().toString())
+            .toEntity(isSynced = false, isDeleted = false)
+        budgetDao.insert(entity)
         return AppResult.Success(Unit)
     }
 
-    // 4. Đồng bộ hóa thay đổi cục bộ lên API (Background Task)
+    override suspend fun updateBudgetLocally(budget: Budget): AppResult<Unit> {
+        val entity = budget.toEntity(isSynced = false, isDeleted = false)
+        budgetDao.update(entity)
+        return AppResult.Success(Unit)
+    }
+
+    override suspend fun deleteBudgetLocally(budgetId: String): AppResult<Unit> {
+        val entity = budgetDao.getBudgetById(budgetId)
+            ?: return AppResult.Error("Budget not found locally")
+
+        transactionDao.deleteTransactionsByBudgetId(budgetId)
+
+        // If the budget was created offline and never synced, delete it permanently.
+        if (!entity.isSynced) {
+            budgetDao.deleteById(budgetId)
+        } else {
+            // Otherwise, mark it for deletion on the server.
+            val entityToUpdate = entity.copy(isDeleted = true, isSynced = false)
+            budgetDao.update(entityToUpdate)
+        }
+        return AppResult.Success(Unit)
+    }
+
     override suspend fun pushLocalChangesToApi(): AppResult<Unit> {
         val pendingEntities = budgetDao.getBudgetsToSync()
 
         pendingEntities.forEach { entity ->
-            val budgetDomain = entity.toDomain()
-            val requestDto = budgetDomain.toCreateRequestDto()
-
             try {
-                // Xử lý DELETE trước
                 if (entity.isDeleted) {
-                    budgetApi.deleteBudget(entity.id)
-                    budgetDao.deleteById(entity.id) // Xóa vĩnh viễn khỏi Room sau khi API thành công
-                }
-                // Xử lý CREATE/UPDATE
-                else if (!entity.isSynced) {
-                    // Nếu là bản ghi mới (ID tạm thời) -> POST, nếu là ID cũ -> PUT
-                    val isPost = !entity.id.contains("-") // Giả định ID tạm thời chứa dấu '-'
+                    val deleteResponse = budgetApi.deleteBudget(entity.id)
+                    if (deleteResponse.status == 200) {
+                        budgetDao.deleteById(entity.id)
+                    }
+                } else {
+                    val budgetDomain = entity.toDomain()
+                    val requestDto = budgetDomain.toCreateRequestDto()
 
-                    val response = if (isPost) {
+                    val isNew = entity.id.contains("-") // UUIDs contain hyphens
+
+                    val response = if (isNew) {
                         budgetApi.createBudget(requestDto)
                     } else {
                         budgetApi.updateBudget(entity.id, requestDto)
                     }
 
                     if (response.status == 200) {
-                        // Cập nhật trạng thái sync thành công
-                        budgetDao.update(entity.copy(isSynced = true, isDeleted = false))
-                        // Nếu là POST, cần cập nhật ID mới từ API response (tùy thuộc vào cách API trả về)
+                        val syncedEntity = if (isNew && response.data != null) {
+                            // Update with the new ID from the server
+                            response.data.toEntity(isSynced = true)
+                        } else {
+                            entity.copy(isSynced = true)
+                        }
+                        budgetDao.deleteById(entity.id) // Remove old temporary record
+                        budgetDao.insert(syncedEntity) // Insert the synced record
                     }
                 }
             } catch (e: Exception) {
-                // Bỏ qua lỗi và tiếp tục, để background worker retry sau
                 return AppResult.Error("Sync failed for ${entity.id}: ${e.localizedMessage}")
             }
         }

@@ -1,55 +1,35 @@
 package com.ltcn272.finny.core
 
 import android.content.Context
-import com.ltcn272.finny.domain.model.AuthToken
+import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import androidx.core.content.edit
 
-// Sử dụng Preference cho việc lưu trữ token.
 @Singleton
-class TokenManager @Inject constructor(@ApplicationContext context: Context) {
+class TokenManager @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val prefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences("AUTH_PREFS_FINNY", Context.MODE_PRIVATE)
 
     companion object {
-        private const val ACCESS_TOKEN_KEY = "access_token"
-        private const val REFRESH_TOKEN_KEY = "refresh_token"
+        private const val KEY_ACCESS = "access_token"
+        private const val KEY_REFRESH = "refresh_token"
     }
 
-    /**
-     * Lưu trữ Access Token và Refresh Token nhận được từ API.
-     */
-    fun saveTokens(tokens: AuthToken) {
+    fun saveTokens(accessToken: String, refreshToken: String) {
         prefs.edit {
-            putString(ACCESS_TOKEN_KEY, tokens.accessToken)
-                .putString(REFRESH_TOKEN_KEY, tokens.refreshToken)
+            putString(KEY_ACCESS, accessToken)
+            putString(KEY_REFRESH, refreshToken)
         }
     }
 
-    /**
-     * Lấy Access Token để sử dụng trong các request.
-     */
-    fun getAccessToken(): String? {
-        // Lưu ý: Có thể cần thêm logic kiểm tra token hết hạn ở lớp Interceptor
-        return prefs.getString(ACCESS_TOKEN_KEY, null)
-    }
+    fun getAccessToken(): String? = prefs.getString(KEY_ACCESS, null)
+    fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH, null)
 
-    /**
-     * Lấy Refresh Token.
-     */
-    fun getRefreshToken(): String? {
-        return prefs.getString(REFRESH_TOKEN_KEY, null)
-    }
-
-    /**
-     * Xóa tokens khi đăng xuất.
-     */
     fun clearTokens() {
         prefs.edit {
-            remove(ACCESS_TOKEN_KEY)
-                .remove(REFRESH_TOKEN_KEY)
+            remove(KEY_ACCESS)
+            remove(KEY_REFRESH)
         }
     }
 }

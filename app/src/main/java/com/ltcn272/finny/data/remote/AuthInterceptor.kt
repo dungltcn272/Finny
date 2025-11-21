@@ -1,70 +1,86 @@
 package com.ltcn272.finny.data.remote
 
 import com.ltcn272.finny.core.TokenManager
+import com.ltcn272.finny.data.remote.api.AuthApi
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 class AuthInterceptor @Inject constructor(
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val refreshClient: AuthApi
 ) : Interceptor {
-
-    companion object {
-        private const val LOGIN_PATH = "auth/login"
-        private const val BEARER = "Bearer "
-    }
-
-    // Biến tạm để giữ Firebase ID Token cho request Login duy nhất
-    private var firebaseIdToken: String? = null
-
-    /**
-     * Dùng để thiết lập Firebase ID Token (từ Google/FB SDK) cho request POST /auth/login.
-     */
-    fun setFirebaseIdToken(idToken: String) {
-        this.firebaseIdToken = idToken
-    }
-
-    /**
-     * Xóa Firebase ID Token sau khi request Login hoàn tất.
-     */
-    fun clearFirebaseIdToken() {
-        this.firebaseIdToken = null
-    }
-
+    
+    @Throws(java.io.IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val path = originalRequest.url.encodedPath
-        val requestBuilder = originalRequest.newBuilder()
+        val token = tokenManager.getAccessToken()
+        val requestWithToken = if (token != null) {
+            originalRequest.newBuilder()
+                .header("Authorization", "Bearer $token")
+                .build()
+        } else {
+            originalRequest
+        }
 
-        val token: String? = when {
-            // 1. Nếu đang là request Login VÀ đã có Firebase ID Token
-            path.endsWith(LOGIN_PATH) && firebaseIdToken != null -> {
-                firebaseIdToken
+        val response = chain.proceed(requestWithToken)
+
+        // Handle 403 Forbidden error, likely due to an expired token.
+        // Handle 403 Forbidden error, likely due to an expired token.
+        if (response.code == 403) {
+            response.close()
+            // Synchronize to ensure only one thread refreshes the token at a time.
+
+            // Synchronize to ensure only one thread refreshes the token at a time.
+            val newAccessToken = synchronized(this) {
+                refreshTokens()
+                // Retry the original request with the new access token.
             }
-            // 2. Các request khác (Protected Requests)
-            else -> {
-                tokenManager.getAccessToken() // Lấy Backend Access Token đã lưu
+
+            if (newAccessToken != null) {
+                // Retry the original request with the new access token.
+                // If refresh fails, clear tokens to force the user to log in again.
+                val newRequest = originalRequest.newBuilder()
+                    .header("Authorization", "Bearer $newAccessToken")
+                    .build()
+                return chain.proceed(newRequest)
+            } else {
+                // If refresh fails, clear tokens to force the user to log in again.
+    // Handles the token refresh logic.
+                tokenManager.clearTokens()
             }
         }
-
-        // Thêm Header Authorization
-        if (token != null) {
-            requestBuilder.header("Authorization", BEARER + token)
-        }
-
-        // Tiến hành request
-        val response = chain.proceed(requestBuilder.build())
-
-        // Dọn dẹp Firebase ID Token ngay sau khi request Login hoàn tất (ngay cả khi lỗi)
-        if (path.endsWith(LOGIN_PATH)) {
-            clearFirebaseIdToken()
-        }
-
-        // LƯU Ý: Logic xử lý lỗi 401 (Refresh Token) KHÔNG NÊN ĐẶT Ở ĐÂY.
-        // Nó sẽ được đặt ở OkHttp Authenticator (TokenAuthenticator.kt) để xử lý gọn gàng hơn.
 
         return response
+    }
+
+                // Use the refreshClient (which doesn't have this interceptor) to call the refresh API.
+    private fun refreshTokens(): String? {
+                // Save the new access and refresh tokens.
+        val refreshToken = tokenManager.getRefreshToken() ?: return null
+
+        return runBlocking {
+            try {
+                val oldRefreshTokenHeader = "Bearer $refreshToken"
+                val body = mapOf("refresh_token" to refreshToken)
+
+                // On error, clear tokens.
+                // Use the refreshClient (which doesn't have this interceptor) to call the refresh API.
+                val refreshResponse = refreshClient.refreshToken(oldRefreshTokenHeader, body)
+
+                // Save the new access and refresh tokens.
+                val newAuthData = refreshResponse.data
+                newAuthData?.let {
+                    tokenManager.saveTokens(it.accessToken, it.refreshToken)
+                }
+
+                newAuthData?.accessToken
+            } catch (e: Exception) {
+                // On error, clear tokens.
+                tokenManager.clearTokens()
+                null
+            }
+        }
     }
 }

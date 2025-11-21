@@ -1,29 +1,21 @@
 package com.ltcn272.finny.data.mapper
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.ltcn272.finny.data.local.entities.BudgetEntity
 import com.ltcn272.finny.data.remote.dto.BudgetDto
 import com.ltcn272.finny.data.remote.dto.CreateBudgetRequestDto
 import com.ltcn272.finny.domain.model.Budget
+import com.ltcn272.finny.domain.model.BudgetPeriod
 import com.ltcn272.finny.domain.util.DateUtils
 
-// 1. DTO (API) -> Entity (Room)
+// DTO (from API) -> Entity (for Room)
 fun BudgetDto.toEntity(isSynced: Boolean = true): BudgetEntity {
     return BudgetEntity(
         id = this.id,
         name = this.name,
         userId = this.userId,
-        amount = this.amount,
         startDate = this.startDate,
-        remain = this.remain,
         limit = this.limit,
         period = this.period,
-        daysRemaining = this.daysRemaining,
-        diffAvg = this.diffAvg,
-        progress = this.progress,
-        totalIncome = this.totalIncome,
-        totalOutcome = this.totalOutcome,
         createdAt = this.createdAt,
         updatedAt = this.updatedAt,
         isSynced = isSynced,
@@ -31,9 +23,8 @@ fun BudgetDto.toEntity(isSynced: Boolean = true): BudgetEntity {
     )
 }
 
-// 2. Entity (Room) -> Domain (UI/Business Logic)
+// Entity (from Room) -> Domain (for UI/Logic)
 fun BudgetEntity.toDomain(): Budget {
-    // Chuyển đổi String Date thành ZonedDateTime
     val startDateZoned = DateUtils.parseApiDate(this.startDate)
     val createdAtZoned = DateUtils.parseIso8601(this.createdAt)
     val updatedAtZoned = DateUtils.parseIso8601(this.updatedAt)
@@ -42,57 +33,54 @@ fun BudgetEntity.toDomain(): Budget {
         id = this.id,
         name = this.name,
         userId = this.userId,
-        amount = this.amount,
         startDate = startDateZoned,
-        remain = this.remain,
         limit = this.limit,
-        period = this.period,
-        daysRemaining = this.daysRemaining,
-        diffAvg = this.diffAvg,
-        progress = this.progress,
-        totalIncome = this.totalIncome,
-        totalOutcome = this.totalOutcome,
+        period = when(this.period) {
+            "single" -> BudgetPeriod.SINGLE
+            "1_week" -> BudgetPeriod.ONE_WEEK
+            "1_month" -> BudgetPeriod.ONE_MONTH
+            "1_year" -> BudgetPeriod.ONE_YEAR
+            else -> BudgetPeriod.UNKNOWN
+        },
         createdAt = createdAtZoned,
         updatedAt = updatedAtZoned
     )
 }
 
-// 3. Domain (UI Request) -> DTO (API POST/PUT Request Body)
+// Domain (from UI) -> DTO (for API Request)
 fun Budget.toCreateRequestDto(): CreateBudgetRequestDto {
     return CreateBudgetRequestDto(
         name = this.name,
-        amount = this.amount,
+        limit = this.limit,
         startDate = DateUtils.formatApiRequestDate(this.startDate),
-        period = this.period
+        period = when(this.period) {
+            BudgetPeriod.SINGLE -> "single"
+            BudgetPeriod.ONE_WEEK -> "1_week"
+            BudgetPeriod.ONE_MONTH -> "1_month"
+            BudgetPeriod.ONE_YEAR -> "1_year"
+            else -> "unknown"
+        }
     )
 }
 
+// Domain (from UI) -> Entity (for Room)
 fun Budget.toEntity(isSynced: Boolean = false, isDeleted: Boolean = false): BudgetEntity {
     return BudgetEntity(
         id = this.id,
         name = this.name,
         userId = this.userId,
-        amount = this.amount,
-
-        // Chuyển ZonedDateTime sang String theo format API/DB
         startDate = DateUtils.formatApiRequestDate(this.startDate),
-
-        remain = this.remain,
         limit = this.limit,
-        period = this.period,
-        daysRemaining = this.daysRemaining,
-        diffAvg = this.diffAvg,
-        progress = this.progress,
-        totalIncome = this.totalIncome,
-        totalOutcome = this.totalOutcome,
-
-        // Chuyển ZonedDateTime sang String ISO8601
+        period = when(this.period) {
+            BudgetPeriod.SINGLE -> "single"
+            BudgetPeriod.ONE_WEEK -> "1_week"
+            BudgetPeriod.ONE_MONTH -> "1_month"
+            BudgetPeriod.ONE_YEAR -> "1_year"
+            else -> "unknown"
+        },
         createdAt = DateUtils.formatIso8601(this.createdAt),
         updatedAt = DateUtils.formatIso8601(this.updatedAt),
-
-        // Trạng thái sync (Cực kỳ quan trọng cho Offline-First)
         isSynced = isSynced,
         isDeleted = isDeleted
     )
 }
-

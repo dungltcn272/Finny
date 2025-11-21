@@ -2,12 +2,6 @@ package com.ltcn272.finny.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-// Ánh xạ từ User và UserResponse trong User.swift
-data class UserResponseDto(
-    @SerializedName("status") val status: Int,
-    @SerializedName("data") val data: UserDto,
-    @SerializedName("message") val message: String
-)
 
 data class UserDto(
     @SerializedName("_id") val id: String,
