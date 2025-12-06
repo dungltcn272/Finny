@@ -23,7 +23,7 @@ object DatabaseModule {
                 context,
                 AppDatabase::class.java,
                 "finny_db"
-            ).fallbackToDestructiveMigration(false).build() // Nên dùng Migration thực tế
+            ).fallbackToDestructiveMigration(false).build()
     }
 
     @Provides

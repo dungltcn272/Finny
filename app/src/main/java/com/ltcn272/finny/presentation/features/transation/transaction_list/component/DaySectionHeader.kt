@@ -13,7 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
@@ -28,11 +30,12 @@ fun DaySectionHeader(
     daySection: DaySection,
     onAdd: () -> Unit,
 ) {
+    val context = LocalContext.current
     val today = LocalDate.now()
     val title = when (daySection.date) {
-        today -> "Today"
-        today.minusDays(1) -> "Yesterday"
-        else -> daySection.date.format(DateTimeFormatter.ofPattern("EEE, MMM dd", Locale.ENGLISH))
+        today -> stringResource(id = R.string.today)
+        today.minusDays(1) -> stringResource(id = R.string.yesterday)
+        else -> daySection.date.format(DateTimeFormatter.ofPattern("EEE, MMM dd", Locale.getDefault()))
     }
 
     val totalAmountFormatted = formatAmount(daySection.totalAmount)
@@ -49,7 +52,6 @@ fun DaySectionHeader(
         Text(text = title, style = MaterialTheme.typography.titleMedium)
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Chỉ hiển thị tổng tiền khi nó khác 0
             if (daySection.totalAmount != 0.0) {
                 Surface(
                     color = totalColor,
@@ -71,7 +73,7 @@ fun DaySectionHeader(
             }
 
             Surface(
-                color = Color(0xFFF1F5F9),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
                 shape = androidx.compose.foundation.shape.CircleShape,
                 modifier = Modifier
                     .size(20.dp),
@@ -79,7 +81,7 @@ fun DaySectionHeader(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Add Transaction",
+                    contentDescription = stringResource(id = R.string.add_transaction),
                     tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.size(16.dp)
                 )

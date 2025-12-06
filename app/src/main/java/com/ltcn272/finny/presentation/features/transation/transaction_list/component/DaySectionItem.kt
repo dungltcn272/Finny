@@ -12,12 +12,13 @@ import java.time.LocalDate
 
 @Composable
 fun DaySectionItem(
+    modifier: Modifier = Modifier,
     daySection: DaySection,
     currency: String,
     onCreateNewClick: () -> Unit,
-    onTransactionClick: (String) -> Unit // Passes transaction ID
+    onTransactionClick: (String) -> Unit
 ) {
-    Column {
+    Column(modifier = modifier) {
         DaySectionHeader(
             daySection = daySection,
             onAdd = onCreateNewClick

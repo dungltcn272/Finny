@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,7 +60,6 @@ fun BalanceCard(
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF2A2A37),
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(
@@ -70,9 +70,8 @@ fun BalanceCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Total Balance",
-                    style = MaterialTheme.typography.titleMedium, // Increased font size
-                    color = Color.Gray,
+                    stringResource(id = R.string.total_balance),
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -83,7 +82,7 @@ fun BalanceCard(
                     tonalElevation = 4.dp
                 ) {
                     AnimatedContent(
-                        targetState = selectedTimeFilter.displayName,
+                        targetState = stringResource(id = selectedTimeFilter.displayNameRes),
                         transitionSpec = {
                              (slideInVertically(animationSpec = tween(300)) { height -> height } + fadeIn(animationSpec = tween(300)))
                                  .togetherWith(slideOutVertically(animationSpec = tween(300)) { height -> -height } + fadeOut(animationSpec = tween(300)))
@@ -93,8 +92,8 @@ fun BalanceCard(
                         Text(
                             text = targetText,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -112,13 +111,13 @@ fun BalanceCard(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_trending_up),
-                        contentDescription = "Income",
+                        contentDescription = stringResource(id = R.string.income),
                         tint = Color(0xFF28E0B4)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            "Income",
+                            stringResource(id = R.string.income),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.Gray
                         )
@@ -145,13 +144,13 @@ fun BalanceCard(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_trending_down),
-                        contentDescription = "Expense",
+                        contentDescription = stringResource(id = R.string.expense),
                         tint = Color(0xFFF95B5B)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            "Expense",
+                            stringResource(id = R.string.expense),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.Gray
                         )
@@ -174,7 +173,7 @@ fun AnimatedNumberText(
     value: Double,
     formatter: (Double) -> String,
     modifier: Modifier = Modifier,
-    color: Color = Color.White,
+    color: Color = MaterialTheme.colorScheme.onSurface,
     fontSize: androidx.compose.ui.unit.TextUnit = 36.sp,
     fontWeight: FontWeight = FontWeight.ExtraBold
 ) {

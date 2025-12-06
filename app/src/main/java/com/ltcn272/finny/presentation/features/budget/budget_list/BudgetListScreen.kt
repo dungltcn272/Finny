@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,7 +39,7 @@ import com.ltcn272.finny.R
 import com.ltcn272.finny.presentation.common.ui.BudgetItem
 import com.ltcn272.finny.presentation.common.ui.CircleIconButton
 import com.ltcn272.finny.presentation.common.ui.CreateNewButton
-import com.ltcn272.finny.presentation.theme.BudgetBackground
+import com.ltcn272.finny.presentation.theme.BudgetBackgroundBrush
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -66,7 +67,7 @@ fun ListBudgetScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BudgetBackground)
+            .background(BudgetBackgroundBrush)
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -78,7 +79,7 @@ fun ListBudgetScreen(
             ) {
                 CircleIconButton(onClick = onBack, icon = R.drawable.ic_left)
                 Text(
-                    "Your Budgets",
+                    stringResource(id = R.string.your_budgets),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -104,7 +105,7 @@ fun ListBudgetScreen(
                         item {
                             Spacer(modifier = Modifier.size(24.dp))
                             Text(
-                                text = "No budgets found. Create one to get started!",
+                                text = stringResource(id = R.string.no_budgets_found),
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center
                             )
@@ -113,7 +114,6 @@ fun ListBudgetScreen(
                         items(uiState.budgets, key = { it.budget.id }) {
                             BudgetItem(
                                 budgetDetails = it,
-                                currency = "vnd",
                                 onClick = { onBudgetClick(it.budget.id) }
                             )
                         }

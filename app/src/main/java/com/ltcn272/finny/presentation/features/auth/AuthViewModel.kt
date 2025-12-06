@@ -1,9 +1,12 @@
 package com.ltcn272.finny.presentation.features.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -12,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthUiState>(AuthUiState.Initial)
@@ -26,7 +30,7 @@ class AuthViewModel @Inject constructor(
                 val user = authRepository.currentUser.first()
                 _authState.value = AuthUiState.Authorized(firebaseUser = user)
             } catch (e: Exception) {
-                _authState.value = AuthUiState.Error(e.message ?: "Google login failed")
+                _authState.value = AuthUiState.Error(e.message ?: context.getString(R.string.google_login_failed))
             }
         }
     }
@@ -39,7 +43,7 @@ class AuthViewModel @Inject constructor(
                 val user = authRepository.currentUser.first()
                 _authState.value = AuthUiState.Authorized(firebaseUser = user)
             } catch (e: Exception) {
-                _authState.value = AuthUiState.Error(e.message ?: "Facebook login failed")
+                _authState.value = AuthUiState.Error(e.message ?: context.getString(R.string.facebook_login_failed))
             }
         }
     }

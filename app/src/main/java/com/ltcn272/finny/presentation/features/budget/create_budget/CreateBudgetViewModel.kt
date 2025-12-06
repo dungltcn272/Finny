@@ -1,16 +1,17 @@
-// Trong file presentation/features/budget/create_budget/CreateBudgetViewModel.kt
-
 package com.ltcn272.finny.presentation.features.budget.create_budget
 
-import androidx.lifecycle.SavedStateHandle // Import
+import android.content.Context
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ltcn272.finny.core.navigation.NavArgs // Import
+import com.ltcn272.finny.R
+import com.ltcn272.finny.core.navigation.NavArgs
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.BudgetPeriod
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.util.AppResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,28 +19,28 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.UUID
 import javax.inject.Inject
 
 data class CreateBudgetUiState(
-    val budgetId: String? = null, // Thêm ID để biết là create hay update
+    val budgetId: String? = null,
     val isEditMode: Boolean = false,
     val name: String = "",
     val amount: String = "",
     val selectedDate: LocalDate = LocalDate.now(),
     val selectedPeriod: BudgetPeriod = BudgetPeriod.ONE_MONTH,
     val isDatePickerVisible: Boolean = false,
-    val saveInProgress: Boolean = false, // Đổi tên cho rõ nghĩa
-    val saveSuccess: Boolean = false, // Đổi tên cho rõ nghĩa
+    val saveInProgress: Boolean = false,
+    val saveSuccess: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
 class CreateBudgetViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
-    savedStateHandle: SavedStateHandle // Inject SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateBudgetUiState())
@@ -107,7 +108,7 @@ class CreateBudgetViewModel @Inject constructor(
             if (amountAsDouble == null || currentState.name.isBlank()) {
                 _uiState.update {
                     it.copy(
-                        error = "Please fill in all fields correctly.",
+                        error = context.getString(R.string.fill_all_fields_correctly),
                         saveInProgress = false
                     )
                 }
@@ -117,11 +118,11 @@ class CreateBudgetViewModel @Inject constructor(
             val budgetToSave = Budget(
                 id = currentState.budgetId ?: UUID.randomUUID().toString(),
                 name = currentState.name,
-                userId = "", // This will be set by the backend/auth manager
+                userId = "",
                 limit = amountAsDouble,
                 period = currentState.selectedPeriod,
                 startDate = currentState.selectedDate.atStartOfDay(ZonedDateTime.now().zone),
-                createdAt = ZonedDateTime.now(), // Cần logic để không thay đổi khi update
+                createdAt = ZonedDateTime.now(),
                 updatedAt = ZonedDateTime.now()
             )
 
@@ -143,7 +144,7 @@ class CreateBudgetViewModel @Inject constructor(
                         )
                     }
                 }
-                AppResult.Loading -> { /* Handled by saveInProgress */ }
+                AppResult.Loading -> { }
             }
         }
     }

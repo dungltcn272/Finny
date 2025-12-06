@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,13 +51,13 @@ fun IntroSlideTwo(
             cardWidthFraction = 0.55f,
             cardHeightFraction = 0.35f,
             valueText = "2",
-            descriptionText = "Seconds to get an answer",
+            descriptionText = stringResource(id = R.string.intro_slide_two_description),
             icon = painterResource(R.drawable.ic_arrow_right)
         )
         Spacer(Modifier.height(12.dp))
         FinnyHeader(
-            title = "AI Assistant",
-            subtitle = "Your personal AI assistant, here to simplify your life. Whether you need help managing budget, AI is ready to assist you anytime, anywhere.",
+            title = stringResource(id = R.string.intro_slide_two_title),
+            subtitle = stringResource(id = R.string.intro_slide_two_subtitle),
             titleStyle = TextStyle(fontWeight = FontWeight.Black, fontSize = 32.sp, color = Color.Black),
             space = 20.dp
         )
@@ -71,7 +72,7 @@ fun IntroSlideTwo(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                "Get started now",
+                stringResource(id = R.string.get_started_now),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp

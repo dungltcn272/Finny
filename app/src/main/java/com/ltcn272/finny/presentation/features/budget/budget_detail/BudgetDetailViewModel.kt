@@ -1,10 +1,12 @@
 package com.ltcn272.finny.presentation.features.budget.budget_detail
 
+import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.BudgetPeriod
 import com.ltcn272.finny.domain.model.DaySection
@@ -15,6 +17,7 @@ import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import ir.ehsannarmani.compose_charts.models.Bars
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,7 +31,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -50,9 +52,9 @@ sealed class FilterPeriod {
     data class Monthly(val yearMonth: YearMonth) : FilterPeriod()
     data class Daily(val date: LocalDate) : FilterPeriod()
 
-    fun getDisplayName(locale: Locale): String {
+    fun getDisplayName(context: Context, locale: Locale = Locale.getDefault()): String {
         return when (this) {
-            is All -> "All"
+            is All -> context.getString(R.string.all)
             is Daily -> this.date.dayOfMonth.toString()
             is Monthly -> this.yearMonth.month.getDisplayName(TextStyle.SHORT, locale)
         }
@@ -74,7 +76,8 @@ data class BudgetDetailUiState(
 class BudgetDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val budgetId: StateFlow<String> = savedStateHandle.getStateFlow("budgetId", "")
@@ -159,12 +162,12 @@ class BudgetDetailViewModel @Inject constructor(
                 label = day.getDisplayName(TextStyle.SHORT, locale),
                 values = listOf(
                     Bars.Data(
-                        label = "Outcome",
+                        label = context.getString(R.string.outcome),
                         value = outcome,
                         color = SolidColor(Color.Red)
                     ),
                     Bars.Data(
-                        label = "Income",
+                        label = context.getString(R.string.income),
                         value = income,
                         color = SolidColor(Color.Green)
                     )
@@ -200,29 +203,6 @@ class BudgetDetailViewModel @Inject constructor(
                 _navigateBack.emit(Unit)
             }
             _uiState.value = _uiState.value.copy(isDeleting = false)
-        }
-    }
-
-
-    fun formatCurrency(value: Double, locale: Locale): String {
-        val isVietnamese = locale.language == "vi"
-        val million = 1_000_000
-        val thousand = 1_000
-
-        return when {
-            value >= million -> {
-                val displayValue = value / million
-                val suffix = if (isVietnamese) "TR" else "M"
-                "${NumberFormat.getInstance().format(displayValue)}$suffix"
-            }
-
-            value >= thousand -> {
-                val displayValue = value / thousand
-                val suffix = if (isVietnamese) "N" else "K"
-                "${NumberFormat.getInstance().format(displayValue)}$suffix"
-            }
-
-            else -> NumberFormat.getInstance().format(value)
         }
     }
 

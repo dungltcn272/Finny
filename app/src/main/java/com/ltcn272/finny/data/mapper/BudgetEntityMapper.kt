@@ -7,7 +7,6 @@ import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.BudgetPeriod
 import com.ltcn272.finny.domain.util.DateUtils
 
-// DTO (from API) -> Entity (for Room)
 fun BudgetDto.toEntity(isSynced: Boolean = true): BudgetEntity {
     return BudgetEntity(
         id = this.id,
@@ -23,7 +22,6 @@ fun BudgetDto.toEntity(isSynced: Boolean = true): BudgetEntity {
     )
 }
 
-// Entity (from Room) -> Domain (for UI/Logic)
 fun BudgetEntity.toDomain(): Budget {
     val startDateZoned = DateUtils.parseApiDate(this.startDate)
     val createdAtZoned = DateUtils.parseIso8601(this.createdAt)
@@ -47,7 +45,6 @@ fun BudgetEntity.toDomain(): Budget {
     )
 }
 
-// Domain (from UI) -> DTO (for API Request)
 fun Budget.toCreateRequestDto(): CreateBudgetRequestDto {
     return CreateBudgetRequestDto(
         name = this.name,
@@ -63,7 +60,6 @@ fun Budget.toCreateRequestDto(): CreateBudgetRequestDto {
     )
 }
 
-// Domain (from UI) -> Entity (for Room)
 fun Budget.toEntity(isSynced: Boolean = false, isDeleted: Boolean = false): BudgetEntity {
     return BudgetEntity(
         id = this.id,

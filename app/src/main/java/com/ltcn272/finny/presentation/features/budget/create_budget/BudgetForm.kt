@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -40,8 +41,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastCbrt
-import androidx.compose.ui.util.trace
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.BudgetPeriod
 import com.ltcn272.finny.presentation.theme.BudgetAmountCardBackground
@@ -94,14 +93,14 @@ fun BudgetForm(
     val dateLabel = dateTimeMillis?.let {
         val fmt = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
         fmt.format(Date(it))
-    } ?: "Add Datetime"
+    } ?: stringResource(id = R.string.add_datetime)
 
     Column(
         modifier = modifier
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val title = if (isEditMode) "Update Budget" else "Create Budget"
+        val title = if (isEditMode) stringResource(id = R.string.update_budget) else stringResource(id = R.string.create_budget)
         Text(title, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = BudgetTitle)
         Spacer(Modifier.height(8.dp))
 
@@ -119,7 +118,7 @@ fun BudgetForm(
             decorationBox = { inner ->
                 Box(Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
                     if (name.isEmpty()) Text(
-                        "Budget Name",
+                        stringResource(id = R.string.budget_name),
                         color = BudgetName,
                         fontSize = 30.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -191,7 +190,7 @@ fun BudgetForm(
         ) {
             Icon(painterResource(id = R.drawable.ic_calendar), contentDescription = null, tint = BudgetIconTint)
             Spacer(Modifier.width(10.dp))
-            Text("Datetime", color = BudgetTitle, modifier = Modifier.weight(1f))
+            Text(stringResource(id = R.string.datetime), color = BudgetTitle, modifier = Modifier.weight(1f))
             Box(
                 modifier = Modifier
                     .height(30.dp)
@@ -216,11 +215,11 @@ fun BudgetForm(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(id = R.drawable.ic_trending_up), contentDescription = null, tint = BudgetIconTint)
                 Spacer(Modifier.width(6.dp))
-                Text("Period", fontWeight = FontWeight.Medium, color = BudgetTitle)
+                Text(stringResource(id = R.string.period), fontWeight = FontWeight.Medium, color = BudgetTitle)
             }
             Spacer(Modifier.height(6.dp))
             Text(
-                "What period you pay for this transaction?",
+                stringResource(id = R.string.period_description),
                 fontSize = 12.sp,
                 color = BudgetSecondaryText
             )

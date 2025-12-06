@@ -20,8 +20,18 @@ object MainRoute {
     const val TRANSACTION = "transaction"
     const val CHAT = "chat"
     const val CHALLENGE = "challenge"
-    const val TRANSACTION_DETAIL = "transactionDetail/{id}"
-    const val BUDGET_DETAIL = "budgetDetail"
+
+    private const val TRANSACTION_DETAIL_BASE = "transactionDetail"
+    const val TRANSACTION_DETAIL = "$TRANSACTION_DETAIL_BASE/{${NavArgs.TRANSACTION_ID}}"
+    fun transactionDetailUrl(transactionId: String): String {
+        return "$TRANSACTION_DETAIL_BASE/$transactionId"
+    }
+
+    private const val BUDGET_DETAIL_BASE = "budgetDetail"
+    const val BUDGET_DETAIL = "$BUDGET_DETAIL_BASE/{${NavArgs.BUDGET_ID}}"
+    fun budgetDetailUrl(budgetId: String): String {
+        return "$BUDGET_DETAIL_BASE/$budgetId"
+    }
 
     private const val CREATE_TRANSACTION_BASE = "createTransaction"
     const val CREATE_TRANSACTION =
@@ -36,17 +46,15 @@ object MainRoute {
         val args = mutableListOf<String>()
         transactionId?.let { args.add("${NavArgs.TRANSACTION_ID}=$it") }
         budgetId?.let { args.add("${NavArgs.BUDGET_ID}=$it") }
-        date?.let { args.add("${NavArgs.DATE}=$it") } // LocalDateTime.toString() is ISO-8601
+        date?.let { args.add("${NavArgs.DATE}=$it") }
         return if (args.isEmpty()) route else "$route?${args.joinToString("&")}"
     }
 
-    const val CREATE_BUDGET_BASE = "createBudget"
+    private const val CREATE_BUDGET_BASE = "createBudget"
 
-    // 2. Định nghĩa route đầy đủ với argument tùy chọn
     const val CREATE_BUDGET =
         "$CREATE_BUDGET_BASE?${NavArgs.BUDGET_ID}={${NavArgs.BUDGET_ID}}"
 
-    // 3. Tạo hàm helper để xây dựng URL
     fun createBudgetUrl(budgetId: String? = null): String {
         return if (budgetId == null) {
             CREATE_BUDGET_BASE

@@ -43,6 +43,12 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    override fun getLocalTransactionByIdFlow(transactionId: String): Flow<Transaction?> {
+        return transactionDao.getTransactionByIdFlow(transactionId).map { entity ->
+            entity?.toDomain()
+        }
+    }
+
     override suspend fun syncTransactionsFromApi(): AppResult<Unit> {
         try {
             val filterBody = null
@@ -79,11 +85,6 @@ class TransactionRepositoryImpl @Inject constructor(
             .toEntity(isSynced = false, isDeleted = false)
         transactionDao.insert(entity)
         return Success(Unit)
-    }
-
-    override suspend fun getTransactionById(transactionId: String): AppResult<Transaction?> {
-        val entity = transactionDao.getTransactionById(transactionId)
-        return Success(entity?.toDomain())
     }
 
     override suspend fun updateTransactionLocally(transaction: Transaction): AppResult<Unit> {
@@ -125,13 +126,11 @@ class TransactionRepositoryImpl @Inject constructor(
                     if (!entity.localImagePath.isNullOrBlank()) {
                         when (val uploadResult = uploadImage(entity.localImagePath)) {
                             is Success -> {
-                                // Update the domain object with the new server URL
                                 transactionToSync = transactionToSync.copy(image = uploadResult.data)
                             }
                             is Error -> {
-                                // If image upload fails, add error and skip this item
                                 errors.add("Image upload failed for ${entity.id}: ${uploadResult.message}")
-                                return@forEach // continue to next entity
+                                return@forEach
                             }
 
                             AppResult.Loading -> {}
@@ -155,7 +154,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     } else if (response.status == 200) {
                         val updatedEntity = entity.copy(
                             isSynced = true,
-                            image = transactionToSync.image // Persist the new image URL
+                            image = transactionToSync.image
                         )
                         transactionDao.update(updatedEntity)
                     } else {

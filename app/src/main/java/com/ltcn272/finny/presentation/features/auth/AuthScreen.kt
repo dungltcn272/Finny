@@ -5,12 +5,14 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,7 +34,7 @@ import com.facebook.login.LoginResult
 import com.ltcn272.finny.presentation.features.auth.common.LoginButton
 import com.ltcn272.finny.presentation.features.intro.component.FinnyHeader
 import com.ltcn272.finny.presentation.features.intro.component.ImageCard
-import com.ltcn272.finny.presentation.theme.IntroBackgroundBrushWithOpacity
+import com.ltcn272.finny.presentation.theme.IntroBackgroundBrush
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
@@ -50,7 +52,6 @@ fun AuthScreen(
     val scope = rememberCoroutineScope()
     val activity = context as? Activity
 
-    // Facebook callback đăng nhập
     DisposableEffect(Unit) {
         val callback = object : FacebookCallback<LoginResult> {
             override fun onSuccess(result: LoginResult) {
@@ -61,7 +62,7 @@ fun AuthScreen(
             override fun onError(error: FacebookException) {
                 Toast.makeText(
                     context,
-                    "Facebook login error: ${error.message}",
+                    context.getString(R.string.facebook_login_error, error.message),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -70,105 +71,110 @@ fun AuthScreen(
         onDispose { LoginManager.getInstance().unregisterCallback(callbackManager) }
     }
 
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxSize()
-            .background(IntroBackgroundBrushWithOpacity)
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 40.dp),
-        verticalArrangement = Arrangement.Top
+            .background(IntroBackgroundBrush)
     ) {
-        Spacer(Modifier.height(48.dp))
-        ImageCard(
-            image = painterResource(R.drawable.intro_2_money),
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.6f),
-            cardModifier = Modifier
-                .padding(top = 12.dp, start = 8.dp),
-            cardWidthFraction = 0.55f,
-            cardHeightFraction = 0.35f,
-            valueText = "5000+",
-            descriptionText = "Daily users",
-            icon = painterResource(R.drawable.ic_arrow_right)
-        )
-        Spacer(Modifier.height(12.dp))
-        FinnyHeader(
-            title = "Login the Finny!",
-            subtitle = "Login to your account to see your progress and routes.",
-            titleStyle = androidx.compose.ui.text.TextStyle(
-                fontWeight = FontWeight.Black,
-                fontSize = 32.sp,
-                color = Color.Black
-            ),
-            space = 20.dp
-        )
-        Spacer(
-            modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 40.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
-        ) {
-            LoginButton(
-                backgroundColor = Color.White,
-                icon = painterResource(R.drawable.ic_google),
-                iconTint = Color.Unspecified,
-                onClick = { handleGoogleLogin(context, viewModel, scope) },
-                modifier = Modifier.weight(1f),
-                contentDescription = "Google"
-            )
-            LoginButton(
-                backgroundColor = Color(0xFF1877F3),
-                icon = painterResource(R.drawable.ic_facebook),
-                iconTint = Color.White,
-                onClick = { handleFacebookLogin(activity) },
-                modifier = Modifier.weight(1f),
-                contentDescription = "Facebook"
-            )
-        }
-    }
-    Spacer(Modifier.height(12.dp))
-    LaunchedEffect(authUiState) {
-        when (authUiState) {
-            is AuthUiState.Authorized -> {
-                val user = (authUiState as AuthUiState.Authorized).firebaseUser
-                Toast.makeText(context, "Xin chào ${user?.displayName}", Toast.LENGTH_LONG)
-                    .show()
-                onLoggedIn()
-            }
-
-            is AuthUiState.Error -> {
-                val errorMsg = (authUiState as AuthUiState.Error).message
-                Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
-            }
-
-            else -> {}
-        }
-    }
-
-    if (authUiState is AuthUiState.Loading) {
-        val lottieAnimationFile ="generic_loading.json"
-        val composition by rememberLottieComposition(LottieCompositionSpec.Asset(lottieAnimationFile))
-        val progress by animateLottieCompositionAsState(
-            composition = composition,
-            iterations = LottieConstants.IterateForever
-        )
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0x88000000)),
-            contentAlignment = Alignment.Center
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 40.dp),
+            verticalArrangement = Arrangement.Top
         ) {
-            LottieAnimation(
-                composition = composition,
-                progress = { progress },
-                modifier = Modifier.size(80.dp)
+            Spacer(Modifier.height(48.dp))
+            ImageCard(
+                image = painterResource(R.drawable.intro_2_money),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.6f),
+                cardModifier = Modifier
+                    .padding(top = 12.dp, start = 8.dp),
+                cardWidthFraction = 0.55f,
+                cardHeightFraction = 0.35f,
+                valueText = "5000+",
+                descriptionText = "Daily users",
+                icon = painterResource(R.drawable.ic_arrow_right)
             )
+            Spacer(Modifier.height(12.dp))
+            FinnyHeader(
+                title = stringResource(id = R.string.login_title),
+                subtitle = stringResource(id = R.string.login_subtitle),
+                titleStyle = androidx.compose.ui.text.TextStyle(
+                    fontWeight = FontWeight.Black,
+                    fontSize = 32.sp,
+                    color = Color.Black
+                ),
+                space = 20.dp
+            )
+            Spacer(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f)
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
+            ) {
+                LoginButton(
+                    backgroundColor = Color.White,
+                    icon = painterResource(R.drawable.ic_google),
+                    iconTint = Color.Unspecified,
+                    onClick = { handleGoogleLogin(context, viewModel, scope) },
+                    modifier = Modifier.weight(1f),
+                    contentDescription = stringResource(id = R.string.google)
+                )
+                LoginButton(
+                    backgroundColor = Color(0xFF1877F3),
+                    icon = painterResource(R.drawable.ic_facebook),
+                    iconTint = Color.White,
+                    onClick = { handleFacebookLogin(activity) },
+                    modifier = Modifier.weight(1f),
+                    contentDescription = stringResource(id = R.string.facebook)
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        LaunchedEffect(authUiState) {
+            when (authUiState) {
+                is AuthUiState.Authorized -> {
+                    val user = (authUiState as AuthUiState.Authorized).firebaseUser
+                    Toast.makeText(context, context.getString(R.string.welcome_user, user?.displayName), Toast.LENGTH_LONG)
+                        .show()
+                    onLoggedIn()
+                }
+
+                is AuthUiState.Error -> {
+                    val errorMsg = (authUiState as AuthUiState.Error).message
+                    Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+                }
+
+                else -> {}
+            }
+        }
+
+        if (authUiState is AuthUiState.Loading) {
+            val lottieAnimationFile ="generic_loading.json"
+            val composition by rememberLottieComposition(LottieCompositionSpec.Asset(lottieAnimationFile))
+            val progress by animateLottieCompositionAsState(
+                composition = composition,
+                iterations = LottieConstants.IterateForever
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x88000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier.size(80.dp)
+                )
+            }
         }
     }
 }
@@ -191,10 +197,10 @@ private fun handleGoogleLogin(context: Context, viewModel: AuthViewModel, scope:
             handleSignInResult(result, viewModel, context)
         } catch (e: TimeoutCancellationException) {
             viewModel.cancelLoadingIfStuck("Google dialog timed out")
-            Toast.makeText(context, "Google SignIn timeout", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.google_signin_timeout), Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             viewModel.cancelLoadingIfStuck(e.message ?: "Google SignIn error")
-            Toast.makeText(context, "Google SignIn error: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.google_signin_error, e.message), Toast.LENGTH_SHORT).show()
         }
     }
 }
@@ -223,10 +229,10 @@ private fun handleSignInResult(
             viewModel.loginWithGoogle(idToken)
         } catch (e: Exception) {
             viewModel.cancelLoadingIfStuck(e.message ?: "Invalid Google credential")
-            Toast.makeText(context, "Invalid Google credential: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.invalid_google_credential, e.message), Toast.LENGTH_SHORT).show()
         }
     } else {
         viewModel.cancelLoadingIfStuck("Unsupported credential")
-        Toast.makeText(context, "Unsupported credential", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.unsupported_credential), Toast.LENGTH_SHORT).show()
     }
 }

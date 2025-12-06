@@ -33,11 +33,13 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.TransactionType
 import kotlinx.coroutines.launch
 
@@ -132,7 +134,7 @@ fun TransactionTypeSelector(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Chip(
-                    label = "Expense",
+                    label = stringResource(id = R.string.expense),
                     isSelected = selectedType == TransactionType.OUTCOME,
                     selectedText = SelectedText,
                     unselectedText = UnselectedText,
@@ -144,7 +146,7 @@ fun TransactionTypeSelector(
                 }
 
                 Chip(
-                    label = "Income",
+                    label = stringResource(id = R.string.income),
                     isSelected = selectedType == TransactionType.INCOME,
                     selectedText = SelectedText,
                     unselectedText = UnselectedText,

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,7 +20,7 @@ fun CircleIconButton(
     icon: Int,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    backgroundColor: Color = Color.White,
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
     size: Dp = 32.dp,
 ) {
     Surface(

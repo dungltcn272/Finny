@@ -59,6 +59,10 @@ class BudgetRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getBudgetById(id: String): Budget? {
+        return budgetDao.getBudgetById(id)?.toDomain()
+    }
+
     override suspend fun syncBudgetsFromApi(): AppResult<Unit> {
         return try {
             val response = budgetApi.getBudgets(page = 1)
@@ -96,11 +100,9 @@ class BudgetRepositoryImpl @Inject constructor(
 
         transactionDao.deleteTransactionsByBudgetId(budgetId)
 
-        // If the budget was created offline and never synced, delete it permanently.
         if (!entity.isSynced) {
             budgetDao.deleteById(budgetId)
         } else {
-            // Otherwise, mark it for deletion on the server.
             val entityToUpdate = entity.copy(isDeleted = true, isSynced = false)
             budgetDao.update(entityToUpdate)
         }
@@ -121,7 +123,7 @@ class BudgetRepositoryImpl @Inject constructor(
                     val budgetDomain = entity.toDomain()
                     val requestDto = budgetDomain.toCreateRequestDto()
 
-                    val isNew = entity.id.contains("-") // UUIDs contain hyphens
+                    val isNew = entity.id.contains("-")
 
                     val response = if (isNew) {
                         budgetApi.createBudget(requestDto)
@@ -131,13 +133,12 @@ class BudgetRepositoryImpl @Inject constructor(
 
                     if (response.status == 200) {
                         val syncedEntity = if (isNew && response.data != null) {
-                            // Update with the new ID from the server
                             response.data.toEntity(isSynced = true)
                         } else {
                             entity.copy(isSynced = true)
                         }
-                        budgetDao.deleteById(entity.id) // Remove old temporary record
-                        budgetDao.insert(syncedEntity) // Insert the synced record
+                        budgetDao.deleteById(entity.id)
+                        budgetDao.insert(syncedEntity)
                     }
                 }
             } catch (e: Exception) {

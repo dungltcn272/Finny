@@ -1,5 +1,3 @@
-// Trong file presentation/features/budget/create_budget/CreateBudgetScreen.kt
-
 package com.ltcn272.finny.presentation.features.budget.create_budget
 
 import android.widget.Toast
@@ -22,19 +20,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ltcn272.finny.R
 import com.ltcn272.finny.presentation.common.ui.CircleIconButton
 import com.ltcn272.finny.presentation.common.ui.FinnyDatePickerDialog
 import com.ltcn272.finny.presentation.common.ui.SubmitButtonWithTitle
-import com.ltcn272.finny.presentation.theme.BudgetBackground
+import com.ltcn272.finny.presentation.theme.BudgetBackgroundBrush
 import java.time.ZoneId
 
 @Composable
 fun CreateBudgetScreen(
     viewModel: CreateBudgetViewModel = hiltViewModel(),
-    onBack: () -> Unit, // Bỏ giá trị mặc định để bắt buộc truyền vào
+    onBack: () -> Unit,
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
@@ -43,7 +42,7 @@ fun CreateBudgetScreen(
 
     LaunchedEffect(uiState.saveSuccess) {
         if (uiState.saveSuccess) {
-            val message = if (uiState.isEditMode) "Budget updated!" else "Budget created!"
+            val message = if (uiState.isEditMode) context.getString(R.string.budget_updated) else context.getString(R.string.budget_created)
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             onBack()
         }
@@ -67,7 +66,7 @@ fun CreateBudgetScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(brush = BudgetBackground)
+            .background(BudgetBackgroundBrush)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
@@ -98,7 +97,7 @@ fun CreateBudgetScreen(
         } else {
             SubmitButtonWithTitle(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                title = if (uiState.isEditMode) "Update" else "Save", // Cập nhật tiêu đề nút
+                title = if (uiState.isEditMode) stringResource(id = R.string.update) else stringResource(id = R.string.save), // Cập nhật tiêu đề nút
                 onClick = { viewModel.saveBudget() }
             )
         }

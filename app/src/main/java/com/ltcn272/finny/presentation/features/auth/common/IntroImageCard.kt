@@ -1,7 +1,6 @@
 package com.ltcn272.finny.presentation.features.auth.common
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -16,11 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.ltcn272.finny.R
 
-/**
- * Tái tạo Image Card (Card màu trắng có ảnh overlay) từ FirstSlideView.swift
- */
 @Composable
 fun IntroImageCard(imageResId: Int, title: String, modifier: Modifier = Modifier) {
     Card(
@@ -38,7 +33,7 @@ fun IntroImageCard(imageResId: Int, title: String, modifier: Modifier = Modifier
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp) // Kích thước ảnh
+                    .height(200.dp)
             )
             Text(
                 text = title,

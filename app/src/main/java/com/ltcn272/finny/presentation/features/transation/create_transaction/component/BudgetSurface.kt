@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
@@ -52,7 +53,7 @@ fun BudgetSurface(
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_menu),
-                contentDescription = "Budget Menu",
+                contentDescription = stringResource(id = R.string.budget_menu),
                 tint = Color.Gray, // Màu xám cho Icon
                 modifier = Modifier.size(20.dp)
             )

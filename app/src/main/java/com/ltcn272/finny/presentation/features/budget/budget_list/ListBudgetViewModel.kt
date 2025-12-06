@@ -1,10 +1,13 @@
 package com.ltcn272.finny.presentation.features.budget.budget_list
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.BudgetDetails
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,6 +29,7 @@ data class ListBudgetUiState(
 @HiltViewModel
 class ListBudgetViewModel @Inject constructor(
     budgetRepository: BudgetRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _isRefreshing = MutableStateFlow(false)
@@ -48,7 +52,7 @@ class ListBudgetViewModel @Inject constructor(
             error = error
         )
     }.catch { e ->
-        _error.value = e.localizedMessage ?: "An unexpected error occurred"
+        _error.value = e.localizedMessage ?: context.getString(R.string.unexpected_error)
         emit(ListBudgetUiState(isLoading = false))
     }.stateIn(
         scope = viewModelScope,

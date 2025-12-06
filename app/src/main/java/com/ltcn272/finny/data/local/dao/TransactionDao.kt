@@ -25,6 +25,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :transactionId")
     suspend fun getTransactionById(transactionId: String): TransactionEntity?
 
+    @Query("SELECT * FROM transactions WHERE id = :transactionId AND isDeleted = 0 LIMIT 1")
+    fun getTransactionByIdFlow(transactionId: String): Flow<TransactionEntity?>
+
     @Query("SELECT * FROM transactions WHERE budgetId = :budgetId AND isDeleted = 0")
     fun getTransactionsForBudget(budgetId: String): Flow<List<TransactionEntity>>
 

@@ -1,10 +1,9 @@
 package com.ltcn272.finny.presentation.features.transation.transaction_list
 
 import android.content.Context
-import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.DaySection
 import com.ltcn272.finny.domain.model.TransactionFilter
@@ -12,6 +11,7 @@ import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,18 +20,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
-import java.util.UUID
 import javax.inject.Inject
-import kotlin.io.path.copyTo
-import kotlin.io.path.exists
 
 private fun getStartOfWeek(date: LocalDate): LocalDate =
     date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
@@ -55,7 +50,8 @@ data class TransactionListUiState(
 @HiltViewModel
 class TransactionViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val zoneId = ZoneId.systemDefault()
@@ -200,11 +196,10 @@ class TransactionViewModel @Inject constructor(
         val startOfWeek = getStartOfWeek(today)
         val endOfWeek = getEndOfWeek(today)
         return if (start == startOfWeek && end == endOfWeek) {
-            "This week"
+            context.getString(R.string.this_week)
         } else {
-            val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.ENGLISH)
+            val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault())
             "${start.format(formatter)} - ${end.format(formatter)}"
         }
     }
 }
-

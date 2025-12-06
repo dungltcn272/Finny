@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -124,7 +125,7 @@ private fun LocationPickerContent(
     val isMapMoving by remember { derivedStateOf { cameraPositionState.isMoving } }
     var geocodingInProgress by remember { mutableStateOf(false) }
     var selectedLocationName by remember {
-        mutableStateOf(initialLocation?.name ?: "Di chuyển bản đồ để chọn")
+        mutableStateOf(initialLocation?.name ?: context.getString(R.string.move_map_to_select))
     }
     var geocodingJob by remember { mutableStateOf<Job?>(null) }
 
@@ -168,19 +169,14 @@ private fun LocationPickerContent(
                 }
             }
 
-            selectedLocationName = addressResult ?: String.format(
-                Locale.US,
-                "Lat: %.3f, Lng: %.3f",
-                latLng.latitude,
-                latLng.longitude
-            )
+            selectedLocationName = addressResult ?: context.getString(R.string.lat_lng, latLng.latitude, latLng.longitude)
             geocodingInProgress = false
         }
     }
 
     fun getCurrentLocation() {
         if (!isLocationEnabled()) {
-            Toast.makeText(context, "Vui lòng bật vị trí (GPS) để sử dụng tính năng này", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.enable_gps_prompt), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -234,7 +230,7 @@ private fun LocationPickerContent(
 
         Icon(
             painter = painterResource(id = R.drawable.ic_location_pin),
-            contentDescription = "Vị trí đã chọn",
+            contentDescription = stringResource(id = R.string.selected_location),
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(bottom = 40.dp)
@@ -267,13 +263,13 @@ private fun LocationPickerContent(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    "Chọn vị trí",
+                    stringResource(id = R.string.select_location),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (isMapMoving) "Đang di chuyển..." else selectedLocationName,
+                    text = if (isMapMoving) stringResource(id = R.string.moving_map) else selectedLocationName,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -307,7 +303,7 @@ private fun LocationPickerContent(
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Xác nhận vị trí", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(id = R.string.confirm_location), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -332,7 +328,7 @@ private fun LocationPickerContent(
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.padding(start = 12.dp))
-                    Text("Đang tìm địa chỉ...", fontSize = 14.sp)
+                    Text(stringResource(id = R.string.finding_address), fontSize = 14.sp)
                 }
             }
         }
@@ -356,7 +352,7 @@ private fun LocationPickerContent(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_location),
-                        contentDescription = "Vị trí của tôi"
+                        contentDescription = stringResource(id = R.string.my_location)
                     )
                 }
             }

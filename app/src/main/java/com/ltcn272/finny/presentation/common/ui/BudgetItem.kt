@@ -25,11 +25,13 @@ import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.BudgetDetails
 import com.ltcn272.finny.domain.model.BudgetPeriod
-import com.ltcn272.finny.presentation.common.util.formatCurrency
+import com.ltcn272.finny.presentation.common.util.CurrencyUtils
+import java.text.NumberFormat
 import java.time.ZonedDateTime
+import java.util.Locale
 
 @Composable
-fun BudgetItem(budgetDetails: BudgetDetails, currency: String, onClick: () -> Unit) {
+fun BudgetItem(budgetDetails: BudgetDetails, onClick: () -> Unit) {
     val spent = budgetDetails.spentAmount
     val limit = budgetDetails.budget.limit
     val remain = limit - spent
@@ -48,10 +50,13 @@ fun BudgetItem(budgetDetails: BudgetDetails, currency: String, onClick: () -> Un
     val percentageColor = if (progress >= 1f) progressColor else Color.Gray
 
     val isOverspent = remain < 0
+    val formatter = NumberFormat.getNumberInstance(Locale.getDefault())
+    val currencySymbol = CurrencyUtils.getCurrencySymbolForCurrentLocale()
+
     val remainText = if (isOverspent) {
-        "Overspent: ${formatCurrency(-remain, currency)}"
+        "Overspent: ${formatter.format(-remain)}$currencySymbol"
     } else {
-        "Remain: ${formatCurrency(remain, currency)}"
+        "Remain: ${formatter.format(remain)}$currencySymbol"
     }
     val remainTextColor = if (isOverspent) progressColor else Color.Gray
 
@@ -121,7 +126,7 @@ fun BudgetItem(budgetDetails: BudgetDetails, currency: String, onClick: () -> Un
                     color = remainTextColor
                 )
                 Text(
-                    text = "Limit: ${formatCurrency(limit, currency)}",
+                    text = "Limit: ${formatter.format(limit)}$currencySymbol",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -142,7 +147,6 @@ fun BudgetItemPreviewLow() {
             ),
             spentAmount = 250000.0
         ),
-        currency = "vnd",
         onClick = {}
     )
 }
@@ -159,7 +163,6 @@ fun BudgetItemPreviewMedium() {
             ),
             spentAmount = 1500000.0
         ),
-        currency = "vnd",
         onClick = {}
     )
 }
@@ -176,7 +179,6 @@ fun BudgetItemPreviewHigh() {
             ),
             spentAmount = 2200000.0
         ),
-        currency = "vnd",
         onClick = {}
     )
 }
@@ -193,7 +195,6 @@ fun BudgetItemPreviewOver() {
             ),
             spentAmount = 2700000.0
         ),
-        currency = "vnd",
         onClick = {}
     )
 }

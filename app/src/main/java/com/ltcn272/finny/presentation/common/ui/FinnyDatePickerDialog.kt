@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,6 +39,7 @@ import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek
+import com.ltcn272.finny.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -118,7 +120,7 @@ fun FinnyDatePickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismissRequest) {
-                        Text("Cancel")
+                        Text(stringResource(id = R.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
@@ -127,7 +129,7 @@ fun FinnyDatePickerDialog(
                         },
                         enabled = selectedDate != null
                     ) {
-                        Text("OK")
+                        Text(stringResource(id = R.string.ok))
                     }
                 }
             }

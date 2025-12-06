@@ -26,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +48,7 @@ import kotlinx.coroutines.launch
 
 data class NavItem(
     val label: String,
-    val iconRes: Int,   // resource id trong drawable
+    val iconRes: Int,
     val route: String
 )
 
@@ -78,43 +77,37 @@ fun MainBottomBar(
     val pillAnimX = remember { Animatable(0f) }
     val pillAnimWidth = remember { Animatable(0f) }
     val pillAnimScale = remember { Animatable(1f) }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(selectedRoute, bounds.size) {
         val currentBounds = bounds[selectedRoute] ?: return@LaunchedEffect
 
         if (!isInitialAnimationDone) {
-            // --- KHỞI TẠO: Không có animation ---
-            // Snap ngay lập tức đến vị trí và kích thước đầu tiên
             pillAnimX.snapTo(currentBounds.x)
             pillAnimWidth.snapTo(currentBounds.width)
             isInitialAnimationDone = true
         } else {
-            // 1. Scale lên tại vị trí cũ (Chậm và mềm)
             pillAnimScale.animateTo(
                 targetValue = 1.1f,
-                animationSpec = spring( stiffness = Spring.StiffnessLow) // Chậm, mềm mại
+                animationSpec = spring( stiffness = Spring.StiffnessLow)
             )
 
-            // 2. Di chuyển và đổi kích thước đồng thời (Chậm hơn một chút)
             val moveJob = launch {
                 pillAnimX.animateTo(
                     targetValue = currentBounds.x,
-                    animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow) // Chậm nhất để di chuyển dài hơn
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)
                 )
             }
             val resizeJob = launch {
                 pillAnimWidth.animateTo(
                     targetValue = currentBounds.width,
-                    animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow) // Giữ mềm mại
+                    animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)
                 )
             }
-            joinAll(moveJob, resizeJob) // Chờ cả 2 animation di chuyển và đổi size hoàn thành
+            joinAll(moveJob, resizeJob)
 
-            // 3. Scale về kích thước ban đầu (Thời gian bằng lúc scale lên)
             pillAnimScale.animateTo(
                 targetValue = 1f,
-                animationSpec = spring(stiffness = Spring.StiffnessLow) // Giống hệt bước 1
+                animationSpec = spring(stiffness = Spring.StiffnessLow)
             )
         }
     }
@@ -122,24 +115,22 @@ fun MainBottomBar(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         shape = RoundedCornerShape(50.dp)
     ) {
         Box(
             modifier = Modifier.padding(all = edgePadding),
-            contentAlignment = Alignment.CenterStart // Để pill bắt đầu từ gốc toạ độ
+            contentAlignment = Alignment.CenterStart
         ) {
-            // Pill (viên thuốc) di chuyển
             BottomBarPill(
                 x = pillAnimX.value,
                 width = pillAnimWidth.value,
                 scale = pillAnimScale.value,
-                height = 56.dp // Chiều cao cố định cho pill
+                height = 56.dp
             )
 
-            // Các item
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround,
@@ -171,14 +162,13 @@ fun MainBottomBar(
 @Composable
 private fun BottomBarPill(x: Float, width: Float, scale: Float, height: Dp) {
     val density = LocalDensity.current
-    if (width == 0f) return // Không vẽ nếu chưa có kích thước
+    if (width == 0f) return
 
     Surface(
         modifier = Modifier
             .offset(x = with(density) { x.toDp() })
             .size(width = with(density) { width.toDp() }, height = height)
             .graphicsLayer {
-                // Áp dụng scale tại tâm của pill
                 scaleX = scale
                 scaleY = scale
             },
@@ -198,7 +188,7 @@ private fun BottomBarItem(
     onSelect: () -> Unit,
     onPlaced: (ItemBounds) -> Unit,
 ) {
-    val fgColor = if (isSelected) Color(0xFF1E90FF) else Color.Black
+    val fgColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
 
     Column(
         modifier = modifier
@@ -208,7 +198,7 @@ private fun BottomBarItem(
             .clip(RoundedCornerShape(50.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null, // Không có hiệu ứng ripple
+                indication = null,
                 onClick = onSelect
             )
             .padding(vertical = 8.dp, horizontal = 4.dp),

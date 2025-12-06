@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek
+import com.ltcn272.finny.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -60,9 +62,7 @@ fun DateRangePickerDialog(
     val startMonth = remember { currentMonth.minusMonths(24) }
     val endMonth = remember { currentMonth.plusMonths(24) }
 
-    // Lấy Locale (khu vực) hiện tại của thiết bị
     val currentLocale = Locale.getDefault()
-    // Lấy danh sách các ngày trong tuần dựa trên Locale
     val daysOfWeek = remember { daysOfWeek(firstDayOfWeek = DayOfWeek.from(java.time.temporal.WeekFields.of(currentLocale).firstDayOfWeek)) }
 
     Dialog(onDismissRequest = onDismissRequest) {
@@ -83,10 +83,9 @@ fun DateRangePickerDialog(
                     startMonth = startMonth,
                     endMonth = endMonth,
                     firstVisibleMonth = currentMonth,
-                    firstDayOfWeek = daysOfWeek.first() // Sử dụng ngày đầu tuần theo Locale
+                    firstDayOfWeek = daysOfWeek.first()
                 )
 
-                // Sử dụng DateTimeFormatter để định dạng tháng/năm theo Locale
                 val monthYearFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", currentLocale) }
                 Text(
                     text = calendarState.firstVisibleMonth.yearMonth.format(monthYearFormatter),
@@ -100,7 +99,6 @@ fun DateRangePickerDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    // Lấy tên các ngày trong tuần theo Locale
                     for (dayOfWeek in daysOfWeek) {
                         Text(
                             modifier = Modifier.weight(1f),
@@ -140,7 +138,7 @@ fun DateRangePickerDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismissRequest) {
-                        Text("Cancel")
+                        Text(stringResource(id = R.string.cancel))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
@@ -148,7 +146,6 @@ fun DateRangePickerDialog(
                             val finalStartDate = startDate
                             val finalEndDate = endDate ?: finalStartDate
                             if (finalStartDate != null) {
-                                // Đã sửa lỗi NullPointerException tiềm ẩn
                                 if (finalEndDate != null) {
                                     onConfirm(finalStartDate, finalEndDate)
                                 }
@@ -156,7 +153,7 @@ fun DateRangePickerDialog(
                         },
                         enabled = startDate != null
                     ) {
-                        Text("OK")
+                        Text(stringResource(id = R.string.ok))
                     }
                 }
             }
@@ -193,27 +190,20 @@ private fun Day(
         contentAlignment = Alignment.Center
     ) {
         if (isVisible) {
-            // Hợp nhất logic vẽ nền vào một khối duy nhất
             if (inRange || isSelected) {
                 val rangeBackgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                 val shape: Shape = when {
-                    // Xử lý ngày chọn đơn hoặc khoảng chỉ có 1 ngày
                     (isRangeStart && endDate == null) || (isRangeStart && isRangeEnd) -> CircleShape
-                    // Ngày bắt đầu của khoảng
                     isRangeStart -> RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50)
-                    // Ngày kết thúc của khoảng
                     isRangeEnd -> RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50)
-                    // Ngày đầu tuần trong khoảng
-                    inRange && date.dayOfWeek == DayOfWeek.MONDAY -> RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50)
-                    // Ngày cuối tuần trong khoảng
-                    inRange && date.dayOfWeek == DayOfWeek.SUNDAY -> RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50)
-                    // Các ngày khác trong khoảng
-                    inRange -> RoundedCornerShape(0.dp)
-                    // Mặc định an toàn
+                    inRange -> when {
+                        date.dayOfWeek == DayOfWeek.MONDAY -> RoundedCornerShape(topStartPercent = 50, bottomStartPercent = 50)
+                        date.dayOfWeek == DayOfWeek.SUNDAY -> RoundedCornerShape(topEndPercent = 50, bottomEndPercent = 50)
+                        else -> RoundedCornerShape(0.dp)
+                    }
                     else -> RectangleShape
                 }
 
-                // Vẽ dải nền mờ cho tất cả các ngày trong khoảng, bao gồm cả start và end
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -221,7 +211,6 @@ private fun Day(
                 )
             }
 
-            // Vẽ viền cho ngày hôm nay (nếu nó không được chọn)
             if (isToday && !isSelected) {
                 Box(
                     modifier = Modifier
@@ -234,7 +223,6 @@ private fun Day(
                 )
             }
 
-            // Vẽ nền đậm hình tròn đè lên trên cho ngày start và end
             if (isSelected) {
                 Box(
                     modifier = Modifier
@@ -243,12 +231,11 @@ private fun Day(
                 )
             }
 
-            // Chữ số ngày
             Text(
                 text = day.date.dayOfMonth.toString(),
                 color = when {
                     isSelected -> MaterialTheme.colorScheme.onPrimary
-                    isToday -> MaterialTheme.colorScheme.primary // Chữ ngày hôm nay có màu primary
+                    isToday -> MaterialTheme.colorScheme.primary
                     else -> MaterialTheme.colorScheme.onSurface
                 },
                 style = MaterialTheme.typography.bodyMedium,

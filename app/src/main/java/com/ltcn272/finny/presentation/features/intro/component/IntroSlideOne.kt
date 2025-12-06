@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
 
@@ -33,8 +34,8 @@ fun IntroSlideOne() {
     ) {
         Spacer(Modifier.height(48.dp))
         FinnyHeader(
-            title = "Effortless,\nReal-Time Chats",
-            subtitle = "With lightning-speed response times, it processes queries in real-time, offering clear and concise answers without delays."
+            title = stringResource(id = R.string.intro_slide_one_title),
+            subtitle = stringResource(id = R.string.intro_slide_one_subtitle)
         )
         Spacer(modifier = Modifier.fillMaxHeight().weight(1f))
         BoxWithConstraints(
@@ -74,8 +75,8 @@ fun IntroSlideOne() {
                 .padding(start = 4.dp, top = 8.dp, bottom = 40.dp),
             cardWidthFraction = 0.56f,
             cardHeightFraction = 1f,
-            valueText = "1000 +",
-            descriptionText = "Questions answered daily",
+            valueText = stringResource(id = R.string.intro_slide_one_value),
+            descriptionText = stringResource(id = R.string.intro_slide_one_description),
             icon = painterResource(R.drawable.ic_arrow_right)
         )
         Spacer(Modifier.height(40.dp))

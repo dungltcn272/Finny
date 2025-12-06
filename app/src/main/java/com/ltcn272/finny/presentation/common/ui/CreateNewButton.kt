@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,7 +35,7 @@ import com.ltcn272.finny.R
 
 @Composable
 fun CreateNewButton(
-    text: String = "Create New",
+    text: String = stringResource(id = R.string.create_new),
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
     height: Dp = 56.dp,

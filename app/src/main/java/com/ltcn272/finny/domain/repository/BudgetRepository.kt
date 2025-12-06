@@ -12,6 +12,8 @@ interface BudgetRepository {
 
     fun getLocalBudgets(): Flow<List<Budget>>
 
+    suspend fun getBudgetById(id: String): Budget?
+
     suspend fun syncBudgetsFromApi(): AppResult<Unit>
 
     suspend fun addBudgetLocally(budget: Budget): AppResult<Unit>

@@ -34,10 +34,12 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.ltcn272.finny.R
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -48,11 +50,11 @@ fun <T> SliderFilterRow(
     onItemSelected: (T?) -> Unit,
     itemToString: (T) -> String,
     modifier: Modifier = Modifier,
-    // ---- params dễ chỉnh ----
-    selectedBg: Color = Color.White,
-    unselectedBg: Color = Color(0xFFE6E6E6),
-    selectedText: Color = Color.Black,
-    unselectedText: Color = Color(0xFF666666),
+
+    selectedBg: Color = MaterialTheme.colorScheme.surface,
+    unselectedBg: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+    selectedText: Color = MaterialTheme.colorScheme.onSurface,
+    unselectedText: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
     cornerRadius: Dp = 999.dp,
     verticalPadding: Dp = 6.dp,
     horizontalPadding: Dp = 16.dp,
@@ -67,7 +69,6 @@ fun <T> SliderFilterRow(
     val animX = remember { Animatable(0f) }
     val animW = remember { Animatable(0f) }
 
-    // animate đồng thời vị trí & độ rộng của pill
     LaunchedEffect(selectedItem, bounds[selectedItem]) {
         val b = bounds[selectedItem] ?: return@LaunchedEffect
         coroutineScope {
@@ -76,19 +77,16 @@ fun <T> SliderFilterRow(
         }
     }
 
-    // container chung
     Box(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 40.dp)
     ) {
-        // lớp cuộn chung cho pill + chip
         Box(
             modifier = Modifier
                 .horizontalScroll(scroll)
                 .padding(end = 10.dp)
         ) {
-            // ----- LỚP NỀN: capsules xám cho các chip KHÔNG chọn -----
             bounds.forEach { (key, b) ->
                 if (key != selectedItem && b.w > 0f && b.h > 0f) {
                     Box(
@@ -103,7 +101,6 @@ fun <T> SliderFilterRow(
                 }
             }
 
-            // ----- PILL trắng trượt cho chip ĐANG chọn (nằm trên xám, dưới chữ) -----
             val xDp = with(density) { animX.value.toDp() }
             val wDp = with(density) { animW.value.toDp() }
             val hDp = with(density) { (bounds[selectedItem]?.h ?: 0f).toDp() }
@@ -115,18 +112,17 @@ fun <T> SliderFilterRow(
                         .height(hDp)
                         .clip(RoundedCornerShape(cornerRadius))
                         .background(selectedBg)
-                        .zIndex(0.5f) // dưới text
+                        .zIndex(0.5f)
                 )
             }
 
-            // ----- CHỮ & click (không ripple), luôn ở trên cùng -----
             Row(
                 modifier = Modifier.zIndex(1f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 ChipMeasurable(
-                    label = "All",
+                    label = stringResource(id = R.string.all),
                     isSelected = selectedItem == null,
                     selectedText = selectedText,
                     unselectedText = unselectedText,
@@ -187,12 +183,11 @@ private fun ChipMeasurable(
         modifier = Modifier
             .onPlaced(onPlaced)
             .clip(CircleShape)
-            // clickable KHÔNG ripple:
             .clickable(
                 interactionSource = interaction,
                 indication = null
             ) { onClick() }
-            .padding(horizontal = 0.dp, vertical = 2.dp) // spacing dọc tổng thể
+            .padding(horizontal = 0.dp, vertical = 2.dp)
     ) {
         Text(
             text = label,

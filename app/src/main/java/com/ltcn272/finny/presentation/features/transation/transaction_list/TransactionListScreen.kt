@@ -109,6 +109,7 @@ fun TransactionListScreen(
                 } else {
                     items(items = uiState.groupedTransactions, key = { it.date }) { daySection ->
                         DaySectionItem(
+                            modifier = Modifier.animateItem(),
                             daySection = daySection,
                             currency = uiState.currency,
                             onCreateNewClick = onCreateTransactionClick,

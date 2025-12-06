@@ -16,6 +16,9 @@ val properties = Properties().apply {
     }
 }
 val mapsApiKey: String = properties.getProperty("googleMapsApiKey", "DEFAULT_DEBUG_KEY")
+val facebookAppId: String = properties.getProperty("facebook_app_id", "FAKE_FB_ID")
+val facebookClientToken: String = properties.getProperty("facebook_client_token", "FAKE_FB_TOKEN")
+val fbLoginProtocolScheme: String = properties.getProperty("fb_login_protocol_scheme", "fbFAKE")
 
 android {
 
@@ -31,6 +34,9 @@ android {
         versionName = "1.0"
 
         manifestPlaceholders["MAPS_API_KEY_PLACEHOLDER"] = mapsApiKey
+        manifestPlaceholders["facebook_app_id"] = facebookAppId
+        manifestPlaceholders["facebook_client_token"] = facebookClientToken
+        manifestPlaceholders["fb_login_protocol_scheme"] = fbLoginProtocolScheme
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -152,5 +158,10 @@ dependencies {
 
     //  Chart
     implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
+    implementation("com.netguru.multiplatform-charts:multiplatform-charts:1.0.0")
 
+    // Preferences DataStore for locale persistence
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    implementation("dev.muazkadan:switchy-compose:0.7.0")
 }

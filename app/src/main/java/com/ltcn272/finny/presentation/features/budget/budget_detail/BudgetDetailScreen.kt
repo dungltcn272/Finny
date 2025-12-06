@@ -3,7 +3,6 @@ package com.ltcn272.finny.presentation.features.budget.budget_detail
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,9 +24,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,17 +36,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.ltcn272.finny.R
 import com.ltcn272.finny.presentation.common.ui.AnimatedMoreMenu
 import com.ltcn272.finny.presentation.common.ui.CircleIconButton
 import com.ltcn272.finny.presentation.common.ui.SliderFilterRow
+import com.ltcn272.finny.presentation.common.util.CurrencyUtils
 import com.ltcn272.finny.presentation.features.transation.transaction_list.component.DaySectionItem
+import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
 import ir.ehsannarmani.compose_charts.ColumnChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
@@ -71,6 +72,7 @@ fun BudgetDetailScreen(
     val groupedTransactions by viewModel.groupedTransactions.collectAsState()
     val chartUiState by viewModel.chartUiState.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
+    val context = LocalContext.current
 
     var showMenu by remember { mutableStateOf(false) }
 
@@ -83,15 +85,15 @@ fun BudgetDetailScreen(
     if (uiState.showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { viewModel.onDismissDeleteDialog() },
-            title = { Text(text = "Xác nhận xóa") },
-            text = { Text("Bạn chắc chắn muốn xóa Budget này chứ, tất cả các Transaction liên quan sẽ được xóa sổ theo") },
+            title = { Text(text = stringResource(R.string.delete_confirmation_title)) },
+            text = { Text(stringResource(R.string.delete_budget_confirmation_message)) },
             confirmButton = {
                 Button(
                     onClick = { viewModel.onDeleteBudget() },
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
@@ -100,7 +102,7 @@ fun BudgetDetailScreen(
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                 ) {
-                    Text("Cancel", color = Color.Black)
+                    Text(stringResource(R.string.cancel), color = Color.Black)
                 }
             },
             shape = RoundedCornerShape(16.dp)
@@ -125,7 +127,7 @@ fun BudgetDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFDF6F6))
+            .background(MainBackgroundBrush)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
@@ -145,8 +147,6 @@ fun BudgetDetailScreen(
                     icon = R.drawable.ic_menu,
                 )
 
-                // Thay thế bằng AnimatedMoreMenu tùy chỉnh
-                // Điều chỉnh offset để menu hiển thị ngay dưới nút
                 AnimatedMoreMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false },
@@ -163,18 +163,19 @@ fun BudgetDetailScreen(
             }
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Column {
             Text(
                 text = uiState.budget?.name.orEmpty(),
                 style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "${uiState.transactions.size} Items",
+                text = stringResource(id = R.string.transaction_count, uiState.transactions.size),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -185,11 +186,11 @@ fun BudgetDetailScreen(
                 items = uiState.filterPeriods.filter { it !is FilterPeriod.All },
                 selectedItem = if (selectedFilter is FilterPeriod.All) null else selectedFilter,
                 onItemSelected = viewModel::setFilter,
-                itemToString = { it.getDisplayName(Locale.getDefault()) }
+                itemToString = { it.getDisplayName(context) }
             )
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -218,7 +219,7 @@ fun BudgetDetailScreen(
                         ),
                         indicatorProperties = HorizontalIndicatorProperties(
                             contentBuilder = { value ->
-                                viewModel.formatCurrency(
+                                CurrencyUtils.formatCurrencyShort(
                                     value,
                                     Locale.getDefault()
                                 )
@@ -227,7 +228,7 @@ fun BudgetDetailScreen(
                         popupProperties = PopupProperties(
                             containerColor = Color.Magenta,
                             contentBuilder = { value ->
-                                viewModel.formatCurrency(value.value, Locale.getDefault())
+                                CurrencyUtils.formatCurrencyShort(value.value)
                             }),
                         gridProperties = GridProperties(
                             true,

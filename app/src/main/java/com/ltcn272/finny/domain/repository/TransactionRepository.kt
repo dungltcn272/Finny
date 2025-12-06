@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.Flow
 interface TransactionRepository {
     fun getLocalTransactions(filter: TransactionFilter): Flow<List<Transaction>>
 
+    fun getLocalTransactionByIdFlow(transactionId: String): Flow<Transaction?>
+
     suspend fun syncTransactionsFromApi(): AppResult<Unit>
 
     suspend fun addTransactionLocally(transaction: Transaction): AppResult<Unit>
-
-    suspend fun getTransactionById(transactionId: String): AppResult<Transaction?>
 
     suspend fun updateTransactionLocally(transaction: Transaction): AppResult<Unit>
 

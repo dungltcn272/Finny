@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.domain.model.TransactionCategory
-import com.ltcn272.finny.presentation.common.util.CategoryStyle
+import com.ltcn272.finny.presentation.common.util.CategoryUtils
 
 @Preview(showBackground = true)
 @Composable
@@ -36,7 +36,7 @@ fun CategorySurface(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val style = CategoryStyle.getStyle(category)
+    val style = CategoryUtils.getStyle(category)
     val surfaceColor = style.color
     val textColor = Color.White
 

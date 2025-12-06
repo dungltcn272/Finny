@@ -9,17 +9,13 @@ import javax.inject.Singleton
 
 @Singleton
 class SyncScheduler @Inject constructor(
-    private val context: Context // Sử dụng Application Context
+    context: Context
 ) {
     private val workManager = WorkManager.getInstance(context)
 
-    /**
-     * Lập lịch tác vụ đồng bộ hóa định kỳ (ví dụ: mỗi 15 phút).
-     * Sử dụng ExistingPeriodicWorkPolicy.KEEP để đảm bảo chỉ có 1 tác vụ chạy.
-     */
     fun schedulePeriodicSync() {
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED) // Yêu cầu có mạng
+            .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
         val periodicSyncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
@@ -30,15 +26,12 @@ class SyncScheduler @Inject constructor(
             .build()
 
         workManager.enqueueUniquePeriodicWork(
-            SyncWorker.WORK_NAME, // Tên định danh
+            SyncWorker.WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
             periodicSyncRequest
         )
     }
 
-    /**
-     * Lập lịch tác vụ đồng bộ hóa chạy một lần (cho Manual Retry hoặc sau khi User Add Transaction).
-     */
     fun scheduleOneTimeSync() {
         val oneTimeSyncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())

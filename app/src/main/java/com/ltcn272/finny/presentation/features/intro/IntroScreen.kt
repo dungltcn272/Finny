@@ -24,11 +24,11 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.ltcn272.finny.presentation.theme.IntroBackgroundBrushWithOpacity
 import com.ltcn272.finny.ui.feature.on_boarding.component.DotIndicatorWithFade
 import com.ltcn272.finny.presentation.features.intro.component.IntroSlideOne
 import com.ltcn272.finny.presentation.features.intro.component.IntroPage
 import com.ltcn272.finny.presentation.features.intro.component.IntroSlideTwo
+import com.ltcn272.finny.presentation.theme.IntroBackgroundBrush
 import kotlinx.coroutines.delay
 
 @Composable
@@ -57,7 +57,7 @@ fun IntroScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(IntroBackgroundBrushWithOpacity)
+            .background(IntroBackgroundBrush)
             .pointerInput(Unit) {
                 while (true) {
                     awaitPointerEventScope {

@@ -9,7 +9,6 @@ import com.ltcn272.finny.domain.model.TransactionCategory
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.domain.util.DateUtils
 
-// 1. DTO (API Response) -> Entity (RoomDB)
 fun TransactionDto.toEntity(isSynced: Boolean = true): TransactionEntity {
     return TransactionEntity(
         id = this.id,
@@ -22,7 +21,7 @@ fun TransactionDto.toEntity(isSynced: Boolean = true): TransactionEntity {
         amount = this.amount,
         dateTime = this.dateTime,
         image = this.image,
-        localImagePath = null, // Data from API never has a local path
+        localImagePath = null,
         locationName = this.location?.name,
         locationLat = this.location?.lat,
         locationLng = this.location?.lng,
@@ -33,7 +32,6 @@ fun TransactionDto.toEntity(isSynced: Boolean = true): TransactionEntity {
     )
 }
 
-// 2. Entity (RoomDB) -> Domain (UI/Business Logic)
 fun TransactionEntity.toDomain(): Transaction {
     val location = if (this.locationLat != null && this.locationLng != null) {
         Location(this.locationName, this.locationLat, this.locationLng)
@@ -71,7 +69,6 @@ fun TransactionEntity.toDomain(): Transaction {
     )
 }
 
-// 3. Domain (UI Request) -> DTO (API POST/PUT Request Body)
 fun Transaction.toCreateRequestDto(): CreateTransactionRequestDto {
     val locationDto = this.location?.let {
         CreateTransactionRequestDto.LocationRequestDto(

@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
@@ -20,6 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.facebook.CallbackManager
+import com.ltcn272.finny.R
 import com.ltcn272.finny.core.Gate
 import com.ltcn272.finny.presentation.features.MainBottomBar
 import com.ltcn272.finny.presentation.features.auth.AuthScreen
@@ -30,6 +32,7 @@ import com.ltcn272.finny.presentation.features.home.HomeScreen
 import com.ltcn272.finny.presentation.features.intro.IntroScreen
 import com.ltcn272.finny.presentation.features.setting.SettingScreen
 import com.ltcn272.finny.presentation.features.transation.create_transaction.CreateTransactionScreen
+import com.ltcn272.finny.presentation.features.transation.transaction_detail.TransactionDetailScreen
 import com.ltcn272.finny.presentation.features.transation.transaction_list.TransactionListScreen
 
 
@@ -38,14 +41,12 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
     val nav = rememberNavController()
     val context = LocalContext.current
 
-    // Route hiện tại
     val entry by nav.currentBackStackEntryAsState()
     val routeSet = entry?.destination?.hierarchy?.mapNotNull { it.route }?.toSet().orEmpty()
     val currentTab = routeSet.firstOrNull { it in BottomRoutes }
     val showBottomBar = currentTab != null
 
     Box(Modifier.fillMaxSize()) {
-        // CONTENT
         NavHost(
             navController = nav,
             startDestination = startRoute,
@@ -53,7 +54,6 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            // ===== Onboarding =====
             composable(Graph.ONBOARD) {
                 IntroScreen(
                     onBoardSeen = { Gate.markOnboardingSeen(context) },
@@ -66,7 +66,6 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                 )
             }
 
-            // ===== Auth =====
             composable(Graph.AUTH) {
                 AuthScreen(
                     onLoggedIn = {
@@ -79,10 +78,11 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                 )
             }
 
-            // ===== Main (đã đăng nhập) =====
             navigation(startDestination = MainRoute.HOME, route = Graph.MAIN) {
                 composable(MainRoute.HOME) {
-                    HomeScreen()
+                    HomeScreen(onSettingsClick = {
+                        nav.navigate(MainRoute.SETTINGS)
+                    })
                 }
                 composable(MainRoute.TRANSACTION) {
                     TransactionListScreen(
@@ -90,19 +90,19 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                             nav.navigate(MainRoute.createTransactionUrl())
                         },
                         onTransactionClick = { transactionId ->
-                            nav.navigate(MainRoute.createTransactionUrl(transactionId = transactionId))
+                            nav.navigate(MainRoute.transactionDetailUrl(transactionId))
                         },
                         onOpenListBudget = { nav.navigate(MainRoute.LIST_BUDGET) }
                     )
                 }
                 composable(MainRoute.CHAT) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        Text("Chat")
+                        Text(stringResource(id = R.string.chat))
                     }
                 }
                 composable(MainRoute.CHALLENGE) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        Text("Challenge")
+                        Text(stringResource(id = R.string.challenge))
                     }
                 }
                 composable(MainRoute.LIST_BUDGET) {
@@ -110,7 +110,7 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                         onBack = { nav.popBackStack() },
                         onCreateNew = { nav.navigate(MainRoute.createBudgetUrl()) },
                         onBudgetClick = { budgetId ->
-                            nav.navigate(MainRoute.BUDGET_DETAIL + "/$budgetId")
+                            nav.navigate(MainRoute.budgetDetailUrl(budgetId))
                         }
                     )
                 }
@@ -129,31 +129,32 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                     )
                 }
 
-                // Không hiện bottom bar:
                 composable(
                     route = MainRoute.TRANSACTION_DETAIL,
-                    arguments = listOf(navArgument("id") { type = NavType.StringType })
+                    arguments = listOf(navArgument(NavArgs.TRANSACTION_ID) { type = NavType.StringType })
                 ) {
-//                    TransactionDetailScreen(
-//                        sampleTransactions().first(),
-//                        onBack = { nav.popBackStack() }
-//                    )
+                    TransactionDetailScreen(
+                        onBack = { nav.popBackStack() },
+                        onEditClick = { transactionId ->
+                            nav.navigate(MainRoute.createTransactionUrl(transactionId = transactionId))
+                        }
+                    )
                 }
                 composable(
-                    route = MainRoute.BUDGET_DETAIL + "/{budgetId}",
-                    arguments = listOf(navArgument("budgetId") { type = NavType.StringType })
+                    route = MainRoute.BUDGET_DETAIL,
+                    arguments = listOf(navArgument(NavArgs.BUDGET_ID) { type = NavType.StringType })
                 ) { backStackEntry ->
                     BudgetDetailScreen(
                         onBack = { nav.popBackStack() },
                         onEditClick = {
-                            val budgetId = backStackEntry.arguments?.getString("budgetId")
+                            val budgetId = backStackEntry.arguments?.getString(NavArgs.BUDGET_ID)
                             nav.navigate(MainRoute.createBudgetUrl(budgetId = budgetId))
                         },
                         onTransactionClick = { transactionId ->
-                            nav.navigate(MainRoute.createTransactionUrl(transactionId = transactionId))
+                            nav.navigate(MainRoute.transactionDetailUrl(transactionId))
                         },
                         onAddTransactionClick = {
-                            val budgetId = backStackEntry.arguments?.getString("budgetId")
+                            val budgetId = backStackEntry.arguments?.getString(NavArgs.BUDGET_ID)
                             nav.navigate(MainRoute.createTransactionUrl(budgetId = budgetId))
                         }
                     )
@@ -178,10 +179,6 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                     CreateTransactionScreen(
                         onBack = { nav.popBackStack() },
                         onTransactionCreated = {
-                            nav.previousBackStackEntry?.savedStateHandle?.set(
-                                "transaction_created",
-                                true
-                            )
                             nav.popBackStack()
                         }
                     )
@@ -192,7 +189,6 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
             }
         }
 
-        // BOTTOM NAV OVERLAY
         if (showBottomBar) {
             Box(
                 modifier = Modifier
