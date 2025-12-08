@@ -102,6 +102,11 @@
     <string name="thu">Thu</string>
     <string name="chi">Chi</string>
 
+    <!-- Home UI labels -->
+    <string name="see_all">Xem tất cả</string>
+    <string name="latest_transactions">Giao dịch gần đây</string>
+    <string name="outgoing">Chi tiêu</string>
+
     <!-- Create Transaction Screen -->
     <string name="location_permission_denied_snackbar">Quyền truy cập vị trí bị từ chối, không thể tự động định vị.</string>
     <string name="image_selected">Đã chọn ảnh</string>
@@ -135,7 +140,6 @@
     <string name="get_finny_premium_subtitle">Nhận một AI nâng cao hướng dẫn, hiểu biết và phát triển cùng bạn, giúp bạn quản lý ví tiền tốt hơn.</string>
     <string name="subscription">Đăng ký</string>
     <string name="plan_auto_renews">Gói tự động gia hạn cho đến khi bị hủy</string>
-    <string name="country">dqViet 234</string>
     <string name="currency">Tiền tệ</string>
     <string name="language">Ngôn ngữ</string>
     <string name="appearance">Giao diện</string>
@@ -176,6 +180,11 @@
 
     <!-- Budget Surface -->
     <string name="budget_menu">Thực đơn ngân sách</string>
+
+    <!-- Budget item labels -->
+    <string name="budget_remain">Còn lại: %1$s</string>
+    <string name="budget_overspent">Vượt quá: %1$s</string>
+    <string name="budget_limit">Giới hạn: %1$s</string>
 
     <!-- Transaction Details Form -->
     <string name="enter_name">Nhập tên</string>

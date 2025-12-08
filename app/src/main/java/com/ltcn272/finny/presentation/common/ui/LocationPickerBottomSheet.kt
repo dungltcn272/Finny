@@ -122,6 +122,7 @@ private fun LocationPickerContent(
     }
 
     var mapLoaded by remember { mutableStateOf(false) }
+    var mapLoadTimedOut by remember { mutableStateOf(false) }
     val isMapMoving by remember { derivedStateOf { cameraPositionState.isMoving } }
     var geocodingInProgress by remember { mutableStateOf(false) }
     var selectedLocationName by remember {
@@ -227,6 +228,57 @@ private fun LocationPickerContent(
                 mapLoaded = true
             }
         )
+
+        // If the map never calls onMapLoaded, surface a helpful overlay after a short timeout
+        LaunchedEffect(mapLoaded) {
+            if (!mapLoaded) {
+                // wait for 8 seconds for the map to load
+                kotlinx.coroutines.delay(8000L)
+                if (!mapLoaded) mapLoadTimedOut = true
+            } else {
+                mapLoadTimedOut = false
+            }
+        }
+
+        if (mapLoadTimedOut && !mapLoaded) {
+            // Small error card to help troubleshooting — does not change map behavior
+            Card(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(24.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Map failed to load",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Possible reasons: API key issue, Maps SDK not enabled, billing/credential restrictions, or device missing Google Play Services. Check logcat for 'Google Maps Android API' messages.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = {
+                            // Retry by resetting timeout — real fix requires checking API/Play Services
+                            mapLoadTimedOut = false
+                        }) {
+                            Text(text = "Retry")
+                        }
+                        OutlinedButton(onClick = {
+                            // Open device settings is overkill here; just dismiss sheet to let user try again
+                            onDismiss()
+                        }) {
+                            Text(text = "Close")
+                        }
+                    }
+                }
+            }
+        }
 
         Icon(
             painter = painterResource(id = R.drawable.ic_location_pin),

@@ -20,6 +20,8 @@ object MainRoute {
     const val TRANSACTION = "transaction"
     const val CHAT = "chat"
     const val CHALLENGE = "challenge"
+    const val PROFILE = "profile"
+    const val NOTIFICATION = "notification"
 
     private const val TRANSACTION_DETAIL_BASE = "transactionDetail"
     const val TRANSACTION_DETAIL = "$TRANSACTION_DETAIL_BASE/{${NavArgs.TRANSACTION_ID}}"
@@ -68,5 +70,5 @@ object MainRoute {
 }
 
 val BottomRoutes = setOf(
-    MainRoute.HOME, MainRoute.TRANSACTION, MainRoute.CHAT, MainRoute.CHALLENGE
+    MainRoute.HOME, MainRoute.TRANSACTION, MainRoute.CHAT, MainRoute.SETTINGS
 )

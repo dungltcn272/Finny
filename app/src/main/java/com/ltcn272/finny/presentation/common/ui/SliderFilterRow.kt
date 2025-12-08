@@ -52,9 +52,11 @@ fun <T> SliderFilterRow(
     modifier: Modifier = Modifier,
 
     selectedBg: Color = MaterialTheme.colorScheme.surface,
-    unselectedBg: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-    selectedText: Color = MaterialTheme.colorScheme.onSurface,
-    unselectedText: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+    // make unselected chips a subtle translucent gray like the provided mock
+    unselectedBg: Color = Color.Black.copy(alpha = 0.06f),
+    // always render text black regardless of selected state (as requested)
+    selectedText: Color = Color.Black,
+    unselectedText: Color = Color.Black,
     cornerRadius: Dp = 999.dp,
     verticalPadding: Dp = 6.dp,
     horizontalPadding: Dp = 16.dp,

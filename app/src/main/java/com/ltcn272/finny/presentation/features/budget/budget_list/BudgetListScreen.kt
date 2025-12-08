@@ -71,19 +71,20 @@ fun ListBudgetScreen(
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            Box(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                CircleIconButton(onClick = onBack, icon = R.drawable.ic_left)
+                CircleIconButton(
+                    onClick = onBack,
+                    icon = R.drawable.ic_left,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                )
                 Text(
                     stringResource(id = R.string.your_budgets),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-                Spacer(modifier = Modifier.size(32.dp)) // Placeholder for alignment
             }
 
             // Content

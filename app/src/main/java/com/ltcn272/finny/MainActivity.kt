@@ -12,20 +12,6 @@ import com.ltcn272.finny.core.navigation.Graph
 import com.ltcn272.finny.presentation.theme.FinnyTheme
 import dagger.hilt.android.AndroidEntryPoint
 
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import com.ltcn272.finny.data.LocaleDataStore
-import com.ltcn272.finny.util.LocaleManager
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private lateinit var callbackManager: CallbackManager
@@ -41,21 +27,6 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            // collect saved locale from DataStore and apply
-            val localeTagState by LocaleDataStore.localeFlow(this@MainActivity).collectAsState(initial = null)
-            // apply locale when it changes
-            LaunchedEffect(localeTagState) {
-                val prev = LocaleManager.applyLocale(this@MainActivity, localeTagState)
-                // If using fallback context wrapper, Activity recreation may be needed to fully
-                // refresh resources. We'll request recreate to ensure UI updates once.
-                // Avoid forcing recreate on first composition unless tag changed.
-                // Simple approach: always recreate once when user-specified locale is present.
-                // To avoid infinite loop, only recreate when localeTagState is not null.
-                if (localeTagState != null) {
-                    recreate()
-                }
-            }
-
             FinnyTheme {
                 AppNav(startRoute = startRoute, callbackManager = callbackManager)
             }

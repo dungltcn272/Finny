@@ -26,7 +26,7 @@
     <string name="expense_breakdown">Outcome Breakdown: %1$s</string>
     <string name="by_budget">By Budget</string>
     <string name="by_category">By Category</string>
-    <string name="placeholder">Placeholder</string>
+    <string name="placeholder" translatable="false">Placeholder</string>
     <string name="coming_soon">Coming soon!</string>
     <string name="no_expense_data">No expense data for this period.</string>
 
@@ -51,9 +51,9 @@
     <string name="enable_gps_prompt">Please enable GPS to use this feature</string>
     <string name="selected_location">Selected location</string>
     <string name="select_location">Select location</string>
-    <string name="moving_map">Moving...</string>
+    <string name="moving_map">Moving…</string>
     <string name="confirm_location">Confirm location</string>
-    <string name="finding_address">Finding address...</string>
+    <string name="finding_address">Finding address…</string>
     <string name="my_location">My location</string>
 
     <!-- App Nav Host -->
@@ -124,6 +124,11 @@
     <string name="your_budgets">Your Budgets</string>
     <string name="no_budgets_found">No budgets found. Create one to get started!</string>
 
+    <!-- Home UI labels -->
+    <string name="see_all">See all</string>
+    <string name="latest_transactions">Latest Transactions</string>
+    <string name="outgoing">Outgoing</string>
+
     <!-- Create Budget Screen -->
     <string name="budget_updated">Budget updated!</string>
     <string name="budget_created">Budget created!</string>
@@ -137,7 +142,8 @@
     <string name="get_finny_premium_subtitle">Get an Advance AI that guides, insight and evolves with you, that push your wallet better.</string>
     <string name="subscription">Subscription</string>
     <string name="plan_auto_renews">Plan auto-renews until canceled</string>
-    <string name="country">dqViet 234</string>
+    <string name="user_name" translatable="false">User name</string>
+    <string name="user_name_placeholder" translatable="false">Chưa đặt tên</string>
     <string name="currency">Currency</string>
     <string name="language">Language</string>
     <string name="appearance">Appearance</string>
@@ -153,13 +159,17 @@
     <string name="review_the_app">Review the App</string>
     <string name="log_out">Log out</string>
     <string name="pro">Pro</string>
+    <string name="vnd" translatable="false">VND</string>
+    <string name="usd" translatable="false">USD</string>
+    <string name="profile" translatable="false">Profile</string>
 
 
     <!-- Balance Card -->
     <string name="total_balance">Total Balance</string>
 
     <!-- Intro Slide One -->
-    <string name="intro_slide_one_title">Effortless,\nReal-Time Chats</string>
+    <string name="intro_slide_one_title">Effortless,
+Real-Time Chats</string>
     <string name="intro_slide_one_subtitle">With lightning-speed response times, it processes queries in real-time, offering clear and concise answers without delays.</string>
     <string name="intro_slide_one_value">1000 +</string>
     <string name="intro_slide_one_description">Questions answered daily</string>
@@ -184,12 +194,17 @@
     <!-- Budget Surface -->
     <string name="budget_menu">Budget Menu</string>
 
+    <!-- Budget item labels -->
+    <string name="budget_remain">Remain: %1$s</string>
+    <string name="budget_overspent">Overspent: %1$s</string>
+    <string name="budget_limit">Limit: %1$s</string>
+
     <!-- Transaction Details Form -->
     <string name="enter_name">Enter name</string>
     <string name="enter_description">Enter description</string>
 
     <!-- Create Transaction Header -->
-    <string name="saving">Saving...</string>
+    <string name="saving">Saving…</string>
 
     <!-- Main Bottom Bar -->
     <string name="home">Home</string>
@@ -201,6 +216,6 @@
     <string name="one_month">1 Month</string>
     <string name="one_year">1 Year</string>
     <!-- Language display names -->
-    <string name="english">English</string>
-    <string name="vietnamese">Tiếng Việt</string>
+    <string name="english" translatable="false">English</string>
+    <string name="vietnamese" translatable="false">Tiếng Việt</string>
 </resources>

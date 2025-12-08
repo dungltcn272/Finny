@@ -67,8 +67,8 @@ fun MainBottomBar(
         listOf(
             NavItem("Home", R.drawable.ic_home, MainRoute.HOME),
             NavItem("Transaction", R.drawable.ic_transaction, MainRoute.TRANSACTION),
-            NavItem("Chat", R.drawable.ic_facebook, MainRoute.CHAT),
-            NavItem("Challenge", R.drawable.ic_google, MainRoute.CHALLENGE)
+            NavItem("Chat", R.drawable.ic_chat, MainRoute.CHAT),
+            NavItem("Settings", R.drawable.ic_settings, MainRoute.SETTINGS)
         )
     }
     val bounds = remember { mutableStateMapOf<String, ItemBounds>() }

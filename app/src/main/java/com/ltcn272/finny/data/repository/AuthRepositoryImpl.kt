@@ -1,7 +1,9 @@
 package com.ltcn272.finny.data.repository
 
-import android.util.Log
 import com.ltcn272.finny.core.TokenManager
+import com.ltcn272.finny.data.SettingDataStore
+import com.ltcn272.finny.data.local.dao.BudgetDao
+import com.ltcn272.finny.data.local.dao.TransactionDao
 import com.ltcn272.finny.data.mapper.toAuthToken
 import com.ltcn272.finny.data.mapper.toDomain
 import com.ltcn272.finny.data.remote.api.AuthApi
@@ -23,13 +25,14 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private const val TAG = "AuthRepositoryImpl"
-
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val tokenManager: TokenManager,
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val settingDataStore: SettingDataStore,
+    private val budgetDao: BudgetDao,
+    private val transactionDao: TransactionDao
 ) : AuthRepository {
 
     override val currentUser: Flow<AuthUser?> = callbackFlow {
@@ -50,48 +53,44 @@ class AuthRepositoryImpl @Inject constructor(
             if (response.status == 200 && response.data != null) {
                 val newAuthToken = response.data.toAuthToken()
                 tokenManager.saveTokens(newAuthToken.accessToken, newAuthToken.refreshToken)
-                Log.d(TAG, "Backend Login Success. New Access Token: ${newAuthToken.accessToken}")
-                Log.d(TAG, "Backend Login Success. New Refresh Token: ${newAuthToken.refreshToken}")
                 _isLoggedIn.value = true
+
+                // persist only username (displayName) if available
+                val firebaseUser = firebaseAuth.currentUser
+                val name = firebaseUser?.displayName
+                if (!name.isNullOrBlank()) {
+                    settingDataStore.saveUsername(name)
+                }
+
                 AppResult.Success(
                     Pair(response.data.user.toDomain(), newAuthToken)
                 )
             } else {
-                Log.e(TAG, "Backend login failed: ${response.message}")
                 AppResult.Error(response.message)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Backend login exception", e)
             AppResult.Error("Login failed: ${e.localizedMessage}", e)
         }
     }
 
     override suspend fun refreshTokens(refreshToken: String): AppResult<AuthToken> {
-        Log.d(TAG, "Attempting to refresh token.")
-        Log.d(TAG, "Using Refresh Token: $refreshToken")
         return try {
             val refreshHeader = "Bearer $refreshToken"
             val body = mapOf("refresh_token" to refreshToken)
-            Log.d(TAG, "Refresh Token Request Body: $body")
 
             val response = authApi.refreshToken(refreshHeader, body)
-            Log.d(TAG, "Refresh Token Response: $response")
 
             if (response.status == 200 && response.data != null) {
                 val newTokens = response.data.toAuthToken()
                 tokenManager.saveTokens(newTokens.accessToken, newTokens.refreshToken)
-                Log.d(TAG, "Token refresh successful. New Access Token: ${newTokens.accessToken}")
-                Log.d(TAG, "Token refresh successful. New Refresh Token: ${newTokens.refreshToken}")
                 _isLoggedIn.value = true
                 AppResult.Success(newTokens)
             } else {
-                Log.e(TAG, "Token refresh failed with status ${response.status}: ${response.message}")
                 tokenManager.clearTokens()
                 _isLoggedIn.value = false
                 AppResult.Error(response.message)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Token refresh exception", e)
             tokenManager.clearTokens()
             _isLoggedIn.value = false
             AppResult.Error("Token refresh failed: ${e.localizedMessage}", e)
@@ -108,6 +107,11 @@ class AuthRepositoryImpl @Inject constructor(
         if (res.status == 200 && res.data != null) {
             tokenManager.saveTokens(res.data.accessToken, res.data.refreshToken)
             _isLoggedIn.value = true
+
+            // Save username if available
+            firebaseUser.displayName?.let {
+                if (it.isNotBlank()) settingDataStore.saveUsername(it)
+            }
         } else {
             throw IllegalStateException("Backend login failed: ${res.message}")
         }
@@ -123,9 +127,12 @@ class AuthRepositoryImpl @Inject constructor(
         val res = authApi.loginWithFirebaseToken("Bearer $firebaseIdToken")
         if (res.status == 200 && res.data != null) {
             tokenManager.saveTokens(res.data.accessToken, res.data.refreshToken)
-            Log.d(TAG, "Facebook Login Success. New Access Token: ${res.data.accessToken}")
-            Log.d(TAG, "Facebook Login Success. New Refresh Token: ${res.data.refreshToken}")
             _isLoggedIn.value = true
+
+            // persist username
+            firebaseUser.displayName?.let {
+                if (it.isNotBlank()) settingDataStore.saveUsername(it)
+            }
         } else {
             throw IllegalStateException("Backend login failed: ${res.message}")
         }
@@ -135,6 +142,11 @@ class AuthRepositoryImpl @Inject constructor(
         firebaseAuth.signOut()
         tokenManager.clearTokens()
         _isLoggedIn.value = false
+        // Clear persisted username on logout
+        settingDataStore.clearUsername()
+        // Clear local database
+        budgetDao.deleteAll()
+        transactionDao.deleteAll()
     }
 
     private fun firebaseUserToAuthUser(user: FirebaseUser?): AuthUser? {
@@ -143,7 +155,6 @@ class AuthRepositoryImpl @Inject constructor(
             .firstOrNull { it.providerId != "firebase" }
             ?.providerId
             ?: user.providerId
-            ?: ""
 
         val provider = when (providerId.lowercase()) {
             "google.com" -> "GOOGLE"

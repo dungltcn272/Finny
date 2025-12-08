@@ -63,6 +63,16 @@ class BudgetRepositoryImpl @Inject constructor(
         return budgetDao.getBudgetById(id)?.toDomain()
     }
 
+    override suspend fun getBudgetByName(name: String): Budget? {
+        val entity = budgetDao.getBudgetByName(name)
+        return entity?.toDomain()
+    }
+
+    override suspend fun getBudgetsByNames(names: List<String>): List<Budget> {
+        val entities = budgetDao.getBudgetsByNames(names)
+        return entities.map { it.toDomain() }
+    }
+
     override suspend fun syncBudgetsFromApi(): AppResult<Unit> {
         return try {
             val response = budgetApi.getBudgets(page = 1)

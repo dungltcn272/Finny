@@ -25,6 +25,15 @@ interface BudgetDao {
     @Query("SELECT * FROM budgets WHERE id = :id")
     fun getBudgetByIdFlow(id: String): Flow<BudgetEntity?>
 
+    // Return the most recently updated non-deleted budget with the given name
+    @Query("SELECT * FROM budgets WHERE name = :name AND isDeleted = 0 ORDER BY updatedAt DESC LIMIT 1")
+    suspend fun getBudgetByName(name: String): BudgetEntity?
+
+    // Batch lookup for multiple names (only non-deleted)
+    @Query("SELECT * FROM budgets WHERE name IN (:names) AND isDeleted = 0")
+    suspend fun getBudgetsByNames(names: List<String>): List<BudgetEntity>
+
+
     @Query("SELECT * FROM budgets WHERE isSynced = 0 OR isDeleted = 1")
     suspend fun getBudgetsToSync(): List<BudgetEntity>
 
@@ -33,4 +42,7 @@ interface BudgetDao {
 
     @Query("DELETE FROM budgets WHERE id = :budgetId")
     suspend fun deleteById(budgetId: String)
+
+    @Query("DELETE FROM budgets")
+    suspend fun deleteAll()
 }

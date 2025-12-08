@@ -14,12 +14,9 @@ class PriceRepositoryImpl @Inject constructor(
         return try {
             val response = priceApi.getPrices(version)
 
-            if (response.status == 200) {
-                val pricePlans = response.data.map { it.toDomain() }
-                AppResult.Success(pricePlans)
-            } else {
-                AppResult.Error(response.message)
-            }
+            // Adapter: PriceResponseDto.toDomain() returns List<PricePlan>
+            val pricePlans = response.toDomain()
+            AppResult.Success(pricePlans)
         } catch (e: Exception) {
             AppResult.Error("Failed to fetch price plans: ${e.localizedMessage}", e)
         }

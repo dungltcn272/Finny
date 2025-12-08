@@ -3,7 +3,9 @@ package com.ltcn272.finny.di
 import com.ltcn272.finny.data.remote.AuthInterceptor
 import com.ltcn272.finny.data.remote.api.AuthApi
 import com.ltcn272.finny.data.remote.api.BudgetApi
+import com.ltcn272.finny.data.remote.api.ProfileApi
 import com.ltcn272.finny.data.remote.api.TransactionApi
+import com.ltcn272.finny.data.remote.api.PriceApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -76,5 +78,17 @@ object NetworkModule {
     @Singleton
     fun provideTransactionApiService(@AuthedRetrofit retrofit: Retrofit): TransactionApi {
         return retrofit.create(TransactionApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileApiService(@AuthedRetrofit retrofit: Retrofit): ProfileApi {
+        return retrofit.create(ProfileApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun providePriceApiService(@AuthedRetrofit retrofit: Retrofit): PriceApi {
+        return retrofit.create(PriceApi::class.java)
     }
 }

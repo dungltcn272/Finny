@@ -30,10 +30,12 @@ import com.ltcn272.finny.presentation.features.budget.budget_list.ListBudgetScre
 import com.ltcn272.finny.presentation.features.budget.create_budget.CreateBudgetScreen
 import com.ltcn272.finny.presentation.features.home.HomeScreen
 import com.ltcn272.finny.presentation.features.intro.IntroScreen
+import com.ltcn272.finny.presentation.features.notification.NotificationScreen
 import com.ltcn272.finny.presentation.features.setting.SettingScreen
 import com.ltcn272.finny.presentation.features.transation.create_transaction.CreateTransactionScreen
 import com.ltcn272.finny.presentation.features.transation.transaction_detail.TransactionDetailScreen
 import com.ltcn272.finny.presentation.features.transation.transaction_list.TransactionListScreen
+import com.ltcn272.finny.presentation.features.profile.ProfileScreen
 
 
 @Composable
@@ -80,9 +82,20 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
 
             navigation(startDestination = MainRoute.HOME, route = Graph.MAIN) {
                 composable(MainRoute.HOME) {
-                    HomeScreen(onSettingsClick = {
-                        nav.navigate(MainRoute.SETTINGS)
-                    })
+                    HomeScreen(
+                        onNotificationClick = {
+                            nav.navigate(MainRoute.NOTIFICATION)
+                        },
+                        onBudgetClick = { budgetId ->
+                            nav.navigate(MainRoute.budgetDetailUrl(budgetId))
+                        },
+                        onTransactionClick = { transactionId ->
+                            nav.navigate(MainRoute.transactionDetailUrl(transactionId))
+                        }
+                    )
+                }
+                composable(MainRoute.NOTIFICATION) {
+                    NotificationScreen(onBack = { nav.popBackStack() })
                 }
                 composable(MainRoute.TRANSACTION) {
                     TransactionListScreen(
@@ -131,7 +144,9 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
 
                 composable(
                     route = MainRoute.TRANSACTION_DETAIL,
-                    arguments = listOf(navArgument(NavArgs.TRANSACTION_ID) { type = NavType.StringType })
+                    arguments = listOf(navArgument(NavArgs.TRANSACTION_ID) {
+                        type = NavType.StringType
+                    })
                 ) {
                     TransactionDetailScreen(
                         onBack = { nav.popBackStack() },
@@ -184,7 +199,22 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                     )
                 }
                 composable(MainRoute.SETTINGS) {
-                    SettingScreen()
+                    SettingScreen(
+                        onNavigateToProfile = { nav.navigate(MainRoute.PROFILE) },
+                        onNavigateToCategories = { /* existing behavior */ },
+                        onLoggedOut = {
+                            // Navigate back to auth/login screen and clear MAIN graph from backstack
+                            nav.navigate(Graph.AUTH) {
+                                popUpTo(Graph.MAIN) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+
+                // New profile route
+                composable(MainRoute.PROFILE) {
+                    ProfileScreen(onBackClick = { nav.popBackStack() })
                 }
             }
         }

@@ -1,7 +1,6 @@
 package com.ltcn272.finny.presentation.common.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.BudgetDetails
 import com.ltcn272.finny.domain.model.BudgetPeriod
@@ -54,9 +55,9 @@ fun BudgetItem(budgetDetails: BudgetDetails, onClick: () -> Unit) {
     val currencySymbol = CurrencyUtils.getCurrencySymbolForCurrentLocale()
 
     val remainText = if (isOverspent) {
-        "Overspent: ${formatter.format(-remain)}$currencySymbol"
+        stringResource(id = R.string.budget_overspent, "${formatter.format(-remain)}$currencySymbol")
     } else {
-        "Remain: ${formatter.format(remain)}$currencySymbol"
+        stringResource(id = R.string.budget_remain, "${formatter.format(remain)}$currencySymbol")
     }
     val remainTextColor = if (isOverspent) progressColor else Color.Gray
 
@@ -126,7 +127,7 @@ fun BudgetItem(budgetDetails: BudgetDetails, onClick: () -> Unit) {
                     color = remainTextColor
                 )
                 Text(
-                    text = "Limit: ${formatter.format(limit)}$currencySymbol",
+                    text = stringResource(id = R.string.budget_limit, "${formatter.format(limit)}$currencySymbol"),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
