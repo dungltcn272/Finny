@@ -105,7 +105,8 @@ fun SubscriptionBottomSheet(
                                 SegmentedControl(
                                     modifier = Modifier.fillMaxWidth(),
                                     options = tiers,
-                                    selected = tiers.getOrNull(selectedPeriodIndex) ?: tiers.first(),
+                                    selected = tiers.getOrNull(selectedPeriodIndex)
+                                        ?: tiers.first(),
                                     onOptionClicked = { option ->
                                         val idx = tiers.indexOf(option)
                                         if (idx >= 0) onPeriodSelected(idx)
@@ -117,7 +118,8 @@ fun SubscriptionBottomSheet(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                val selectedTier = tiers.getOrNull(selectedPeriodIndex) ?: tiers.first()
+                                val selectedTier =
+                                    tiers.getOrNull(selectedPeriodIndex) ?: tiers.first()
                                 val plansForTier: List<PricePlan> =
                                     pricePlans.filter { it.planName == selectedTier }
                                         .sortedByDescending { it.price }
@@ -126,19 +128,49 @@ fun SubscriptionBottomSheet(
                                     if (plansForTier.isEmpty()) {
                                         val now = ZonedDateTime.now()
                                         PlanCard(
-                                            plan = PricePlan(id = "1", planName = "Pro", period = "One Year", price = 49.9, currency = "USD", features = listOf(), isDefault = true, createdAt = now, updatedAt = now),
+                                            plan = PricePlan(
+                                                id = "1",
+                                                planName = "Pro",
+                                                period = "One Year",
+                                                price = 49.9,
+                                                currency = "USD",
+                                                features = listOf(),
+                                                isDefault = true,
+                                                createdAt = now,
+                                                updatedAt = now
+                                            ),
                                             isSelected = true,
                                             onClick = {}
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                         PlanCard(
-                                            plan = PricePlan(id = "2", planName = "Pro", period = "Six Month", price = 24.9, currency = "USD", features = listOf(), isDefault = false, createdAt = now, updatedAt = now),
+                                            plan = PricePlan(
+                                                id = "2",
+                                                planName = "Pro",
+                                                period = "Six Month",
+                                                price = 24.9,
+                                                currency = "USD",
+                                                features = listOf(),
+                                                isDefault = false,
+                                                createdAt = now,
+                                                updatedAt = now
+                                            ),
                                             isSelected = false,
                                             onClick = {}
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                         PlanCard(
-                                            plan = PricePlan(id = "3", planName = "Pro", period = "One Month", price = 4.9, currency = "USD", features = listOf(), isDefault = false, createdAt = now, updatedAt = now),
+                                            plan = PricePlan(
+                                                id = "3",
+                                                planName = "Pro",
+                                                period = "One Month",
+                                                price = 4.9,
+                                                currency = "USD",
+                                                features = listOf(),
+                                                isDefault = false,
+                                                createdAt = now,
+                                                updatedAt = now
+                                            ),
                                             isSelected = false,
                                             onClick = {}
                                         )
@@ -158,102 +190,119 @@ fun SubscriptionBottomSheet(
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(24.dp))
 
-                // --- Scrollable Content ---
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Spacer(modifier = Modifier.height(24.dp))
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    Text(
+                        text = "What's included?",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                    val tiersForFeatures: List<String> = listOf("Freemium", "Pro", "Premium")
+                    val featureMap = getFeatureMap(pricePlans, tiersForFeatures)
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
                         Text(
-                            text = "What's included?",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium
+                            "Feature",
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f)
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        tiersForFeatures.forEach { tier ->
+                            Text(
+                                text = tier,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
 
-                        val tiersForFeatures: List<String> = listOf("Freemium", "Pro", "Premium")
-                        val featureMap = getFeatureMap(pricePlans, tiersForFeatures)
-
+                    featureMap.forEach { (featureName, tierValues) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp)
+                                .padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Feature", fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text(
+                                featureName,
+                                color = Color.Gray,
+                                modifier = Modifier.weight(1f)
+                            )
                             tiersForFeatures.forEach { tier ->
-                                Text(text = tier, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-                            }
-                        }
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                                val value = tierValues[tier]
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    when (value) {
+                                        "true" -> Icon(
+                                            painter = painterResource(id = R.drawable.ic_check),
+                                            contentDescription = "Included",
+                                            tint = Color(0xFF10B981),
+                                            modifier = Modifier.size(20.dp)
+                                        )
 
-                        featureMap.forEach { (featureName, tierValues) ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(featureName, color = Color.Gray, modifier = Modifier.weight(1f))
-                                tiersForFeatures.forEach { tier ->
-                                    val value = tierValues[tier]
-                                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                                        when (value) {
-                                            "true" -> Icon(painter = painterResource(id = R.drawable.ic_check), contentDescription = "Included", tint = Color(0xFF10B981), modifier = Modifier.size(20.dp))
-                                            "false" -> {}
-                                            else -> Text(value ?: "-", color = Color.Gray, textAlign = TextAlign.Center)
-                                        }
+                                        "false" -> {}
+                                        else -> Text(
+                                            value ?: "-",
+                                            color = Color.Gray,
+                                            textAlign = TextAlign.Center
+                                        )
                                     }
                                 }
                             }
-                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
                         }
                     }
                 }
-
-                // --- Fixed Subscribe Button ---
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    val currentPlan = pricePlans.find { it.id == selectedPlanId }
-                    Surface(
-                        onClick = {
-                            val planId = selectedPlanId ?: ""
-                            if (!isSubscribing && planId.isNotEmpty()) {
-                                onSubscribe(planId, selectedPeriodIndex)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(100),
-                        color = Color(0xFFFF9500),
-                        enabled = !isSubscribing && selectedPlanId != null
+                val currentPlan = pricePlans.find { it.id == selectedPlanId }
+                Surface(
+                    onClick = {
+                        val planId = selectedPlanId ?: ""
+                        if (!isSubscribing && planId.isNotEmpty()) {
+                            onSubscribe(planId, selectedPeriodIndex)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(100),
+                    color = Color(0xFFFF9500),
+                    enabled = !isSubscribing && selectedPlanId != null
+                ) {
+                    Column(
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Subscribe",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                            val priceText = currentPlan?.let {
-                                "Plan auto-renews for ${formatPrice(it.price, it.currency)}/${it.period.lowercase()} until canceled"
-                            } ?: "Plan auto-renews until canceled"
+                        Text(
+                            text = "Subscribe",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        val priceText = currentPlan?.let {
+                            "Plan auto-renews for ${
+                                formatPrice(
+                                    it.price,
+                                    it.currency
+                                )
+                            }/${it.period.lowercase()} until canceled"
+                        } ?: "Plan auto-renews until canceled"
 
-                            Text(
-                                text = priceText,
-                                fontSize = 10.sp,
-                                color = Color.White.copy(alpha = 0.8f),
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        Text(
+                            text = priceText,
+                            fontSize = 10.sp,
+                            color = Color.White.copy(alpha = 0.8f),
+                            textAlign = TextAlign.Center
+                        )
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

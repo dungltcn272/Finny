@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Suppress warnings for BlockHound (optional runtime integration not present on Android)
+-dontwarn reactor.blockhound.integration.**
+
+# Keep Netty internal Hidden class methods used via reflection and its inner classes
+-keep class io.netty.util.internal.Hidden { *; }
+-keep class io.netty.util.internal.Hidden$* { *; }

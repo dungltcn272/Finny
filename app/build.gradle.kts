@@ -42,7 +42,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -116,6 +117,7 @@ dependencies {
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+    implementation(libs.google.firebase.messaging)
 
     // Google Sign-In
     implementation(libs.androidx.credentials)
@@ -164,4 +166,6 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     implementation("dev.muazkadan:switchy-compose:0.7.0")
+
+    implementation("io.github.rizmaulana:compose-stacked-snackbar:1.0.4")
 }

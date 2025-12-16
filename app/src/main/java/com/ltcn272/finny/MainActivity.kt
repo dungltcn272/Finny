@@ -10,7 +10,9 @@ import com.ltcn272.finny.core.Gate
 import com.ltcn272.finny.core.navigation.AppNav
 import com.ltcn272.finny.core.navigation.Graph
 import com.ltcn272.finny.presentation.theme.FinnyTheme
+import com.ltcn272.finny.domain.repository.FcmRepository
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

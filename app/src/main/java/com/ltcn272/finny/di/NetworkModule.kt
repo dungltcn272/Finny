@@ -3,6 +3,7 @@ package com.ltcn272.finny.di
 import com.ltcn272.finny.data.remote.AuthInterceptor
 import com.ltcn272.finny.data.remote.api.AuthApi
 import com.ltcn272.finny.data.remote.api.BudgetApi
+import com.ltcn272.finny.data.remote.api.FcmApi
 import com.ltcn272.finny.data.remote.api.ProfileApi
 import com.ltcn272.finny.data.remote.api.TransactionApi
 import com.ltcn272.finny.data.remote.api.PriceApi
@@ -90,5 +91,11 @@ object NetworkModule {
     @Singleton
     fun providePriceApiService(@AuthedRetrofit retrofit: Retrofit): PriceApi {
         return retrofit.create(PriceApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFcmApiService(@AuthedRetrofit retrofit: Retrofit): FcmApi {
+        return retrofit.create(FcmApi::class.java)
     }
 }

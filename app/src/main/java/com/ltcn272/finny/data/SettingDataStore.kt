@@ -3,6 +3,7 @@ package com.ltcn272.finny.data
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -19,6 +20,8 @@ class SettingDataStore @Inject constructor(@ApplicationContext private val conte
 
     private val selectedCurrencyKey = stringPreferencesKey("selected_currency")
     private val usernameKey = stringPreferencesKey("username")
+    private val enableNotificationsKey = booleanPreferencesKey("enable_notifications")
+    private val authenticationEnabledKey = booleanPreferencesKey("authentication_enabled")
 
     val getSelectedCurrency: Flow<String> = context.dataStore.data
         .map { preferences ->
@@ -29,6 +32,17 @@ class SettingDataStore @Inject constructor(@ApplicationContext private val conte
     val getUsername: Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[usernameKey]
+        }
+
+    // Boolean flows
+    val getEnableNotifications: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[enableNotificationsKey] ?: true
+        }
+
+    val getAuthenticationEnabled: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[authenticationEnabledKey] ?: false
         }
 
     suspend fun saveSelectedCurrency(currency: String) {
@@ -46,6 +60,18 @@ class SettingDataStore @Inject constructor(@ApplicationContext private val conte
     suspend fun clearUsername() {
         context.dataStore.edit { settings ->
             settings.remove(usernameKey)
+        }
+    }
+
+    suspend fun saveEnableNotifications(enabled: Boolean) {
+        context.dataStore.edit { settings ->
+            settings[enableNotificationsKey] = enabled
+        }
+    }
+
+    suspend fun saveAuthenticationEnabled(enabled: Boolean) {
+        context.dataStore.edit { settings ->
+            settings[authenticationEnabledKey] = enabled
         }
     }
 }

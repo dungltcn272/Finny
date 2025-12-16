@@ -205,4 +205,17 @@
     <string name="one_week">1 Tuần</string>
     <string name="one_month">1 Tháng</string>
     <string name="one_year">1 Năm</string>
+
+    <!-- Notification Permission Messages -->
+    <string name="notification_permission_denied">Quyền thông báo bị từ chối</string>
+    <string name="notification_permission_denied_title">Quyền bị từ chối</string>
+    <string name="open_settings">Mở cài đặt</string>
+    <string name="notification_sent_success">Đã bật thông báo — token đã gửi tới server</string>
+    <string name="notification_sent_success_title">Thành công</string>
+    <string name="notification_sent_failed">Đã bật thông báo nhưng gửi token lên server thất bại</string>
+    <string name="notification_sent_failed_title">Thất bại</string>
+    <string name="notification_test_sent_success">Đã yêu cầu test thông báo (backend) — kiểm tra log thiết bị</string>
+    <string name="notification_test_sent_success_title">Đã yêu cầu kiểm tra</string>
+    <string name="notification_test_sent_failed">Không thể yêu cầu test thông báo từ backend</string>
+    <string name="notification_test_sent_failed_title">Kiểm tra thất bại</string>
 </resources>

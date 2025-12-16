@@ -1,6 +1,7 @@
 package com.ltcn272.finny.core
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.edit
 
 object Gate {
@@ -22,6 +23,7 @@ object Gate {
 
     fun isLoggedIn(ctx: Context): Boolean {
         val p = ctx.getSharedPreferences(PREFS_AUTH, Context.MODE_PRIVATE)
+        Log.d("jagsda", "isLoggedIn: ${p.getString(KEY_ACCESS, null)}")
         return !p.getString(KEY_ACCESS, null).isNullOrEmpty() &&
                 !p.getString(KEY_REFRESH, null).isNullOrEmpty()
     }

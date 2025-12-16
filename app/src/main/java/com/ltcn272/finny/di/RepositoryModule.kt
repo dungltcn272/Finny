@@ -2,14 +2,16 @@ package com.ltcn272.finny.di
 
 import com.ltcn272.finny.data.repository.AuthRepositoryImpl
 import com.ltcn272.finny.data.repository.BudgetRepositoryImpl
+import com.ltcn272.finny.data.repository.FcmRepositoryImpl
+import com.ltcn272.finny.data.repository.PriceRepositoryImpl
 import com.ltcn272.finny.data.repository.ProfileRepositoryImpl
 import com.ltcn272.finny.data.repository.TransactionRepositoryImpl
-import com.ltcn272.finny.data.repository.PriceRepositoryImpl
 import com.ltcn272.finny.domain.repository.AuthRepository
 import com.ltcn272.finny.domain.repository.BudgetRepository
+import com.ltcn272.finny.domain.repository.FcmRepository
+import com.ltcn272.finny.domain.repository.PriceRepository
 import com.ltcn272.finny.domain.repository.ProfileRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
-import com.ltcn272.finny.domain.repository.PriceRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -19,14 +21,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
 
     @Binds
-    @Singleton
-    abstract fun bindAuthRepository(authRepositoryImpl: AuthRepositoryImpl): AuthRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindBudgetRepository(budgetRepositoryImpl: BudgetRepositoryImpl): BudgetRepository
+    abstract fun bindBudgetRepository(impl: BudgetRepositoryImpl): BudgetRepository
 
     @Binds
     @Singleton
@@ -34,9 +33,12 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
+    abstract fun bindPriceRepository(impl: PriceRepositoryImpl): PriceRepository
 
     @Binds
     @Singleton
-    abstract fun bindPriceRepository(priceRepositoryImpl: PriceRepositoryImpl): PriceRepository
+    abstract fun bindProfileRepository(profileRepositoryImpl: ProfileRepositoryImpl): ProfileRepository
+
+    @Binds
+    abstract fun bindFcmRepository(impl: FcmRepositoryImpl): FcmRepository
 }

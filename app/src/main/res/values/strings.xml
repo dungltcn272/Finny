@@ -218,4 +218,17 @@ Real-Time Chats</string>
     <!-- Language display names -->
     <string name="english" translatable="false">English</string>
     <string name="vietnamese" translatable="false">Tiếng Việt</string>
+
+    <!-- Notification permission messages -->
+    <string name="notification_permission_denied">Notification permission denied</string>
+    <string name="notification_permission_denied_title">Permission Denied</string>
+    <string name="open_settings">Open settings</string>
+    <string name="notification_sent_success">Notifications enabled — token sent to server</string>
+    <string name="notification_sent_success_title">Success</string>
+    <string name="notification_sent_failed">Notifications enabled but failed to send token</string>
+    <string name="notification_sent_failed_title">Failed</string>
+    <string name="notification_test_sent_success">Test notification requested (backend) — check device logs</string>
+    <string name="notification_test_sent_success_title">Test Requested</string>
+    <string name="notification_test_sent_failed">Failed to request test notification from backend</string>
+    <string name="notification_test_sent_failed_title">Test Failed</string>
 </resources>

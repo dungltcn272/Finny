@@ -58,6 +58,7 @@ calendar-compose = { module = "com.kizitonwose.calendar:compose", version.ref = 
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 facebook-android-sdk = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebookAndroidSdk" }
 facebook-login = { module = "com.facebook.android:facebook-login", version.ref = "facebookAndroidSdk" }
+google-firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -98,6 +99,7 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 # Firebase (BoM)
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 
 # Navigation Compose
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
@@ -122,4 +124,3 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 google-services = { id = "com.google.gms.google-services", version = "4.4.3" }
-
