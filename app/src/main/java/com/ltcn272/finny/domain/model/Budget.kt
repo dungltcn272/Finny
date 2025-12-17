@@ -1,19 +1,29 @@
 package com.ltcn272.finny.domain.model
 
-import java.time.ZonedDateTime
-
 data class Budget(
-    val id: String,
+    val localId: String?,
+    val serverId: String?,
     val name: String,
-    val userId: String,
-    val limit: Double,
-    val period: BudgetPeriod,
-    val startDate: ZonedDateTime,
-    val createdAt: ZonedDateTime,
-    val updatedAt: ZonedDateTime
+    val amount: Long,
+    val limit: Long,
+    val currency: String,
+
+    val startDate: String,
+
+    // Recurring config
+    val recurring: RecurringConfig?,
+
+    val isSingle: Boolean
 )
 
-data class BudgetDetails(
-    val budget: Budget,
-    val spentAmount: Double
+data class RecurringConfig(
+    val unit: RecurringIntervalUnit,
+    val value: Int,
+    val topupAmount: Long,
+    val nextRunAt: String?,
+    val lastRunAt: String?
 )
+
+enum class RecurringIntervalUnit {
+    DAY, WEEK, MONTH, YEAR
+}

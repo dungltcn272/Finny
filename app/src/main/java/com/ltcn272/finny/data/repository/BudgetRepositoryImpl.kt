@@ -1,161 +1,239 @@
 package com.ltcn272.finny.data.repository
 
+import android.util.Log
 import com.ltcn272.finny.data.local.dao.BudgetDao
-import com.ltcn272.finny.data.local.dao.TransactionDao
+import com.ltcn272.finny.data.local.entities.SyncState
 import com.ltcn272.finny.data.mapper.toCreateRequestDto
 import com.ltcn272.finny.data.mapper.toDomain
 import com.ltcn272.finny.data.mapper.toEntity
+import com.ltcn272.finny.data.mapper.toUpdateDto
 import com.ltcn272.finny.data.remote.api.BudgetApi
+import com.ltcn272.finny.data.remote.dto.BusinessException
+import com.ltcn272.finny.data.remote.dto.ensureSuccess
 import com.ltcn272.finny.domain.model.Budget
-import com.ltcn272.finny.domain.model.BudgetDetails
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.util.AppResult
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import java.time.ZonedDateTime
 import java.util.UUID
-import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
-class BudgetRepositoryImpl @Inject constructor(
-    private val budgetApi: BudgetApi,
+
+class BudgetRepositoryImpl(
     private val budgetDao: BudgetDao,
-    private val transactionDao: TransactionDao
+    private val budgetApi: BudgetApi
 ) : BudgetRepository {
 
-    override fun getBudgetDetailsList(): Flow<List<BudgetDetails>> {
-        return budgetDao.getAllBudgets().flatMapLatest { budgetEntities ->
-            if (budgetEntities.isEmpty()) {
-                return@flatMapLatest flowOf(emptyList())
-            }
-            val budgetDetailsFlows = budgetEntities.map { budgetEntity ->
-                transactionDao.getTransactionsForBudget(budgetEntity.id).map { transactions ->
-                    val spentAmount = transactions.sumOf { tx -> tx.amount }
-                    BudgetDetails(budget = budgetEntity.toDomain(), spentAmount = spentAmount)
-                }
-            }
-            combine(budgetDetailsFlows) { it.toList() }
-        }
+    companion object {
+        private const val TAG = "BudgetRepository"
     }
 
-    override fun getBudgetDetails(id: String): Flow<BudgetDetails?> {
-        return budgetDao.getBudgetByIdFlow(id).flatMapLatest { budgetEntity ->
-            if (budgetEntity == null) {
-                return@flatMapLatest flowOf(null)
-            }
-            transactionDao.getTransactionsForBudget(budgetEntity.id).map { transactions ->
-                val spentAmount = transactions.sumOf { tx -> tx.amount }
-                BudgetDetails(budget = budgetEntity.toDomain(), spentAmount = spentAmount)
-            }
-        }
-    }
-
-    override fun getLocalBudgets(): Flow<List<Budget>> {
+    override fun getAllBudgets(): Flow<List<Budget>> {
         return budgetDao.getAllBudgets().map { entities ->
-            entities.map { it.toDomain() }
+            entities
+                .filter { it.syncState != SyncState.DELETE }
+                .map { it.toDomain() }
         }
     }
 
-    override suspend fun getBudgetById(id: String): Budget? {
-        return budgetDao.getBudgetById(id)?.toDomain()
+    override suspend fun getBudgetById(budgetId: String): Budget? {
+        return budgetDao.getBudgetById(budgetId)?.toDomain()
     }
 
-    override suspend fun getBudgetByName(name: String): Budget? {
-        val entity = budgetDao.getBudgetByName(name)
-        return entity?.toDomain()
-    }
-
-    override suspend fun getBudgetsByNames(names: List<String>): List<Budget> {
-        val entities = budgetDao.getBudgetsByNames(names)
-        return entities.map { it.toDomain() }
-    }
-
-    override suspend fun syncBudgetsFromApi(): AppResult<Unit> {
+    override suspend fun createNewBudget(budget: Budget): AppResult<String> {
         return try {
-            val response = budgetApi.getBudgets(page = 1)
-
-            if (response.status == 200) {
-                val entities = response.data?.data?.map { it.toEntity(isSynced = true) }
-                if (entities != null) {
-                    budgetDao.insertAll(entities)
-                }
-                AppResult.Success(Unit)
-            } else {
-                AppResult.Error(response.message)
-            }
+            val localId = budget.localId ?: UUID.randomUUID().toString()
+            val entity = budget.copy(localId = localId)
+                .toEntity(syncState = SyncState.CREATE)
+            budgetDao.upsertBudget(entity)
+            AppResult.Success(localId)
         } catch (e: Exception) {
-            AppResult.Error("API Sync Error: ${e.localizedMessage}")
+            AppResult.Error(e.message.toString())
         }
     }
 
-    override suspend fun addBudgetLocally(budget: Budget): AppResult<Unit> {
-        val entity = budget.copy(id = UUID.randomUUID().toString())
-            .toEntity(isSynced = false, isDeleted = false)
-        budgetDao.insert(entity)
-        return AppResult.Success(Unit)
-    }
+    override suspend fun updateBudget(budget: Budget): AppResult<Unit> {
+        return try {
+            val existingEntity = budgetDao.getBudgetById(
+                budget.localId ?: return AppResult.Error("Local ID required for update")
+            )
 
-    override suspend fun updateBudgetLocally(budget: Budget): AppResult<Unit> {
-        val entity = budget.toEntity(isSynced = false, isDeleted = false)
-        budgetDao.update(entity)
-        return AppResult.Success(Unit)
-    }
+            if (existingEntity == null) {
+                return AppResult.Error("Budget not found locally.")
+            }
 
-    override suspend fun deleteBudgetLocally(budgetId: String): AppResult<Unit> {
-        val entity = budgetDao.getBudgetById(budgetId)
-            ?: return AppResult.Error("Budget not found locally")
+            val newState =
+                if (existingEntity.syncState == SyncState.CREATE) SyncState.CREATE else SyncState.UPDATE
 
-        transactionDao.deleteTransactionsByBudgetId(budgetId)
+            val updatedEntity = budget.toEntity(
+                syncState = newState
+            ).copy(updatedAt = ZonedDateTime.now().toString())
 
-        if (!entity.isSynced) {
-            budgetDao.deleteById(budgetId)
-        } else {
-            val entityToUpdate = entity.copy(isDeleted = true, isSynced = false)
-            budgetDao.update(entityToUpdate)
+            budgetDao.upsertBudget(updatedEntity)
+
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(e.message.toString())
         }
-        return AppResult.Success(Unit)
     }
 
-    override suspend fun pushLocalChangesToApi(): AppResult<Unit> {
-        val pendingEntities = budgetDao.getBudgetsToSync()
+    override suspend fun deleteBudget(budgetId: String): AppResult<Unit> {
+        return try {
+            val existingEntity = budgetDao.getBudgetById(budgetId)
+                ?: return AppResult.Success(Unit)
 
-        pendingEntities.forEach { entity ->
-            try {
-                if (entity.isDeleted) {
-                    val deleteResponse = budgetApi.deleteBudget(entity.id)
-                    if (deleteResponse.status == 200) {
-                        budgetDao.deleteById(entity.id)
-                    }
-                } else {
-                    val budgetDomain = entity.toDomain()
-                    val requestDto = budgetDomain.toCreateRequestDto()
+            if (existingEntity.serverId == null) {
+                budgetDao.deleteBudget(budgetId)
+            } else {
+                val deletedEntity = existingEntity.copy(
+                    syncState = SyncState.DELETE,
+                    updatedAt = ZonedDateTime.now().toString()
+                )
+                budgetDao.updateBudget(deletedEntity)
+            }
 
-                    val isNew = entity.id.contains("-")
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Error(e.message.toString())
+        }
+    }
 
-                    val response = if (isNew) {
-                        budgetApi.createBudget(requestDto)
-                    } else {
-                        budgetApi.updateBudget(entity.id, requestDto)
-                    }
+    override fun syncBudgets(): Flow<AppResult<Unit>> = flow {
+        emit(AppResult.Loading)
+        val currentTime = ZonedDateTime.now().toString()
 
-                    if (response.status == 200) {
-                        val syncedEntity = if (isNew && response.data != null) {
-                            response.data.toEntity(isSynced = true)
-                        } else {
-                            entity.copy(isSynced = true)
+        try {
+            val budgetsToSync = budgetDao.getAllUnsyncedBudgets()
+
+            val failures = mutableListOf<String>()
+
+            for (budget in budgetsToSync) {
+                try {
+                    when (budget.syncState) {
+
+                        SyncState.CREATE -> {
+                            val requestDto = budget.toCreateRequestDto()
+                            val responseDto = budgetApi.createBudget(requestDto).ensureSuccess()
+
+                            budgetDao.updateBudgetAfterCreate(
+                                localId = budget.id,
+                                serverId = responseDto.id,
+                                updatedAt = currentTime
+                            )
+                            Log.d(
+                                TAG,
+                                "Synced CREATE for localId=${budget.id} -> serverId=${responseDto.id}"
+                            )
                         }
-                        budgetDao.deleteById(entity.id)
-                        budgetDao.insert(syncedEntity)
+
+                        SyncState.UPDATE -> {
+                            budget.serverId?.let { serverId ->
+                                val requestDto = budget.toUpdateDto()
+                                budgetApi.updateBudget(serverId, requestDto).ensureSuccess()
+                                budgetDao.markAsSynced(budget.id, currentTime)
+                                Log.d(
+                                    TAG,
+                                    "Synced UPDATE for localId=${budget.id} (serverId=$serverId)"
+                                )
+                            } ?: run {
+                                // If serverId is null, treat as create
+                                val requestDto = budget.toCreateRequestDto()
+                                val responseDto = budgetApi.createBudget(requestDto).ensureSuccess()
+                                budgetDao.updateBudgetAfterCreate(
+                                    localId = budget.id,
+                                    serverId = responseDto.id,
+                                    updatedAt = currentTime
+                                )
+                                Log.d(
+                                    TAG,
+                                    "Converted UPDATE->CREATE for localId=${budget.id} -> serverId=${responseDto.id}"
+                                )
+                            }
+                        }
+
+                        SyncState.DELETE -> {
+                            budget.serverId?.let { serverId ->
+                                budgetApi.deleteBudget(serverId).ensureSuccess()
+                                Log.d(
+                                    TAG,
+                                    "Synced DELETE for localId=${budget.id} (serverId=$serverId)"
+                                )
+                            }
+                            budgetDao.deleteBudget(budget.id)
+                        }
+
+                        SyncState.SYNCED -> Unit
+
+                    }
+                } catch (e: BusinessException) {
+                    val msg = "API Error for localId=${budget.id} (${e.statusCode}): ${e.message}"
+                    Log.e(TAG, msg)
+                    // collect for logging but do not abort overall sync
+                    failures.add(msg)
+                } catch (e: Exception) {
+                    val msg = "System Error for localId=${budget.id}: ${e.message}"
+                    Log.e(TAG, msg)
+                    // collect for logging but do not abort overall sync
+                    failures.add(msg)
+                }
+            }
+            if (failures.isNotEmpty()) {
+                Log.w(
+                    TAG,
+                    "syncBudgets completed with ${failures.size} item failures; see logs for details"
+                )
+            }
+
+            emit(AppResult.Success(Unit))
+
+        } catch (e: Exception) {
+            emit(AppResult.Error("System Error: ${e.message}"))
+        }
+    }
+
+    override suspend fun fetchAndSaveRemoteBudgets(): AppResult<Unit> {
+        return try {
+            val limit = 100
+            var page = 1
+
+            while (true) {
+                val listDto = budgetApi.getBudgets(page = page, limit = limit).ensureSuccess()
+                for (remote in listDto.data) {
+                    try {
+                        val existing = if (remote.id.isNotEmpty()) {
+                            budgetDao.getBudgetByServerId(remote.id)
+                        } else null
+
+                        if (existing != null) {
+                            val preserveSyncState = if (existing.syncState != SyncState.SYNCED) existing.syncState else SyncState.SYNCED
+                            val updatedEntity = remote.toEntity().copy(syncState = preserveSyncState)
+                            budgetDao.upsertBudget(updatedEntity)
+                        } else {
+                            val newEntity = remote.toEntity()
+                            budgetDao.upsertBudget(newEntity)
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error merging remote budget ${remote.id}: ${e.message}")
                     }
                 }
-            } catch (e: Exception) {
-                return AppResult.Error("Sync failed for ${entity.id}: ${e.localizedMessage}")
-            }
-        }
+                Log.d(TAG, "Fetched and merged page=$page size=${listDto.data.size} from server")
 
-        return AppResult.Success(Unit)
+                if (listDto.pagination.totalPage <= page) break
+                page += 1
+            }
+
+            Log.d(TAG, "Fetched and merged budgets from server (all pages)")
+            AppResult.Success(Unit)
+        } catch (e: BusinessException) {
+            val msg = "API Error while fetching budgets: ${e.message}"
+            Log.e(TAG, msg)
+            AppResult.Error(msg)
+        } catch (e: Exception) {
+            val msg = "System Error while fetching budgets: ${e.message}"
+            Log.e(TAG, msg)
+            AppResult.Error(msg)
+        }
     }
+
 }

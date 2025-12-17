@@ -11,7 +11,6 @@ interface FcmApi {
     @POST("token-fcm/update-or-create")
     suspend fun updateOrCreateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
 
-    // Test endpoint: include title/body in the body because server expects 'title'
     @POST("token-fcm/test-noti")
     suspend fun testNotification(@Body request: FcmTestRequest): Response<Unit>
 }

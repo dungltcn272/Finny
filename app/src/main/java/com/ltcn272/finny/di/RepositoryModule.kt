@@ -2,12 +2,14 @@ package com.ltcn272.finny.di
 
 import com.ltcn272.finny.data.repository.AuthRepositoryImpl
 import com.ltcn272.finny.data.repository.BudgetRepositoryImpl
+import com.ltcn272.finny.data.repository.CategoryRepositoryImpl
 import com.ltcn272.finny.data.repository.FcmRepositoryImpl
 import com.ltcn272.finny.data.repository.PriceRepositoryImpl
 import com.ltcn272.finny.data.repository.ProfileRepositoryImpl
 import com.ltcn272.finny.data.repository.TransactionRepositoryImpl
 import com.ltcn272.finny.domain.repository.AuthRepository
 import com.ltcn272.finny.domain.repository.BudgetRepository
+import com.ltcn272.finny.domain.repository.CategoryRepository
 import com.ltcn272.finny.domain.repository.FcmRepository
 import com.ltcn272.finny.domain.repository.PriceRepository
 import com.ltcn272.finny.domain.repository.ProfileRepository
@@ -41,4 +43,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindFcmRepository(impl: FcmRepositoryImpl): FcmRepository
+
+    @Binds
+    abstract fun bindCategoryRepository(impl: CategoryRepositoryImpl): CategoryRepository
 }

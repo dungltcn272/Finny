@@ -3,19 +3,42 @@ package com.ltcn272.finny.data.local.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-// Tên bảng: Budgets
 @Entity(tableName = "budgets")
 data class BudgetEntity(
+
     @PrimaryKey
-    val id: String, // Ánh xạ từ _id
+    val id: String,
+
+    val serverId : String? = null,
+
     val name: String,
-    val userId: String,
-    val startDate: String, // Lưu trữ dạng String (ISO8601 hoặc MM/dd/yyyy)
-    val limit: Double,
-    val period: String,
-    val createdAt: String,
-    val updatedAt: String,
-    // Trạng thái đồng bộ (Đặc biệt quan trọng cho Offline-First)
-    val isSynced: Boolean = false, // true: Đã có trên server, false: Đang chờ POST/PUT
-    val isDeleted: Boolean = false // true: Đã xóa cục bộ, đang chờ DELETE API
+
+    val amount: Long,
+
+    val limit: Long,
+
+    val currency: String,
+
+    val startDate: String,
+
+    // ===== Recurring config =====
+    val recurringActive: Boolean,
+
+    val recurringIntervalUnit: String?, // day | week | month | year
+
+    val recurringIntervalValue: Int,
+
+    val recurringTopupAmount: Long,
+
+    val recurringNextRunAt: String?,
+
+    val recurringLastRunAt: String?,
+
+    // ===== Flags =====
+    val isSingle: Boolean,
+
+    // ===== SYNC =====
+    val syncState: SyncState = SyncState.CREATE,
+
+    val updatedAt: String? = null
 )
