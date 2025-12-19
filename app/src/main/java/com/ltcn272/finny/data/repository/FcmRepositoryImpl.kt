@@ -1,21 +1,25 @@
 package com.ltcn272.finny.data.repository
 
 import com.ltcn272.finny.data.remote.api.FcmApi
-import com.ltcn272.finny.data.remote.api.FcmTestRequest
-import com.ltcn272.finny.data.remote.api.FcmTokenRequest
 import com.ltcn272.finny.domain.repository.FcmRepository
-import retrofit2.Response
+import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.domain.util.toErrorType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class FcmRepositoryImpl @Inject constructor(
     private val fcmApi: FcmApi
 ) : FcmRepository {
-    override suspend fun updateOrCreateFcmToken(token: String) {
-        fcmApi.updateOrCreateFcmToken(FcmTokenRequest(token))
-    }
 
-    override suspend fun testNotification(title: String?, body: String?): Response<Unit> {
-        val request = FcmTestRequest(title, body)
-        return fcmApi.testNotification(request)
+    override fun updateOrCreateFcmToken(token: String): Flow<AppResult<Unit>> = flow {
+        emit(AppResult.Loading)
+        try {
+            val requestBody = mapOf("token" to token)
+            fcmApi.updateOrCreateFcmToken(requestBody)
+            emit(AppResult.Success(Unit))
+        } catch (e: Exception) {
+            emit(AppResult.Error(e.toErrorType()))
+        }
     }
 }

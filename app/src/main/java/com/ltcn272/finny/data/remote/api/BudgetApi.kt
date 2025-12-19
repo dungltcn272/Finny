@@ -14,27 +14,22 @@ import retrofit2.http.Query
 
 interface BudgetApi {
 
-    // CREATE
     @POST("budgets/create")
     suspend fun createBudget(
         @Body body: CreateBudgetRequestDto
     ): ApiResponse<BudgetResponseDto>
 
-    // GET LIST
     @GET("budgets/list")
     suspend fun getBudgets(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 10
+        @Query("page") page: Int = 1
     ): ApiResponse<BudgetListDataDto>
 
-    // UPDATE (
     @PUT("budgets/{id}")
     suspend fun updateBudget(
         @Path("id") id: String,
-        @Body body: Map<String, Any>
+        @Body body: Map<String, Any?>
     ): ApiResponse<BudgetResponseDto>
 
-    // DELETE
     @DELETE("budgets/{id}")
     suspend fun deleteBudget(
         @Path("id") id: String

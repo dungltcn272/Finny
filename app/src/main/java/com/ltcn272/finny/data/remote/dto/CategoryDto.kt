@@ -15,7 +15,7 @@ data class CategoryResponseDto(
     val id: String,
 
     @SerializedName("name")
-    val name: String,
+    val name: String?,
 
     @SerializedName("description")
     val description: String?,
@@ -35,5 +35,5 @@ data class CategoryResponseDto(
 
 data class CreateCategoryDto(
     @SerializedName("name")
-    val name: String
+    val name: String?
 )

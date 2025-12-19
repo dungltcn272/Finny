@@ -1,8 +1,8 @@
 package com.ltcn272.finny.domain.repository
 
-import retrofit2.Response
+import com.ltcn272.finny.domain.util.AppResult
+import kotlinx.coroutines.flow.Flow
 
 interface FcmRepository {
-    suspend fun updateOrCreateFcmToken(token: String)
-    suspend fun testNotification(title: String? = null, body: String? = null): Response<Unit>
+    fun updateOrCreateFcmToken(token: String): Flow<AppResult<Unit>>
 }

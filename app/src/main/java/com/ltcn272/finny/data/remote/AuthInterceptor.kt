@@ -4,83 +4,76 @@ import com.ltcn272.finny.core.TokenManager
 import com.ltcn272.finny.data.remote.api.AuthApi
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
+import okhttp3.Request
 import okhttp3.Response
+import java.io.IOException
 import javax.inject.Inject
 
 class AuthInterceptor @Inject constructor(
     private val tokenManager: TokenManager,
     private val refreshClient: AuthApi
 ) : Interceptor {
-    
-    @Throws(java.io.IOException::class)
+
+    @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val token = tokenManager.getAccessToken()
-        val requestWithToken = if (token != null) {
-            originalRequest.newBuilder()
-                .header("Authorization", "Bearer $token")
-                .build()
+        val accessToken = tokenManager.getAccessToken()
+
+        val requestWithToken = if (accessToken != null) {
+            addAuthHeader(originalRequest, accessToken)
         } else {
-            originalRequest
+            return chain.proceed(originalRequest)
         }
 
         val response = chain.proceed(requestWithToken)
 
-        // Handle 403 Forbidden error, likely due to an expired token.
-        // Handle 403 Forbidden error, likely due to an expired token.
-        if (response.code == 403) {
+        if (response.code == 401 || response.code == 403) {
             response.close()
-            // Synchronize to ensure only one thread refreshes the token at a time.
 
-            // Synchronize to ensure only one thread refreshes the token at a time.
-            val newAccessToken = synchronized(this) {
-                refreshTokens()
-                // Retry the original request with the new access token.
-            }
+            synchronized(this) {
+                val newAccessToken: String?
 
-            if (newAccessToken != null) {
-                // Retry the original request with the new access token.
-                // If refresh fails, clear tokens to force the user to log in again.
-                val newRequest = originalRequest.newBuilder()
-                    .header("Authorization", "Bearer $newAccessToken")
-                    .build()
-                return chain.proceed(newRequest)
-            } else {
-                // If refresh fails, clear tokens to force the user to log in again.
-    // Handles the token refresh logic.
-                tokenManager.clearTokens()
+                val currentTokenAfterSync = tokenManager.getAccessToken()
+
+                newAccessToken = if (currentTokenAfterSync != null && currentTokenAfterSync != accessToken) {
+                    currentTokenAfterSync
+                } else {
+                    refreshToken()
+                }
+
+                if (newAccessToken != null) {
+                    return chain.proceed(addAuthHeader(originalRequest, newAccessToken))
+                } else {
+                    tokenManager.clearTokens()
+                }
             }
         }
-
         return response
     }
 
-                // Use the refreshClient (which doesn't have this interceptor) to call the refresh API.
-    private fun refreshTokens(): String? {
-                // Save the new access and refresh tokens.
+    private fun addAuthHeader(request: Request, token: String): Request {
+        return request.newBuilder()
+            .header("Authorization", "Bearer $token")
+            .build()
+    }
+
+    private fun refreshToken(): String? {
         val refreshToken = tokenManager.getRefreshToken() ?: return null
 
-        return runBlocking {
-            try {
+        return try {
+            val refreshResponse = runBlocking {
                 val oldRefreshTokenHeader = "Bearer $refreshToken"
                 val body = mapOf("refresh_token" to refreshToken)
-
-                // On error, clear tokens.
-                // Use the refreshClient (which doesn't have this interceptor) to call the refresh API.
-                val refreshResponse = refreshClient.refreshToken(oldRefreshTokenHeader, body)
-
-                // Save the new access and refresh tokens.
-                val newAuthData = refreshResponse.data
-                newAuthData?.let {
-                    tokenManager.saveTokens(it.accessToken, it.refreshToken)
-                }
-
-                newAuthData?.accessToken
-            } catch (e: Exception) {
-                // On error, clear tokens.
-                tokenManager.clearTokens()
-                null
+                refreshClient.refreshToken(oldRefreshTokenHeader, body)
             }
+
+            val newAuthData = refreshResponse.data
+            tokenManager.saveTokens(newAuthData.accessToken, newAuthData.refreshToken)
+
+            newAuthData.accessToken
+        } catch (e: Exception) {
+            tokenManager.clearTokens()
+            null
         }
     }
 }

@@ -7,38 +7,52 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.facebook.CallbackManager
 import com.ltcn272.finny.core.Gate
+import com.ltcn272.finny.core.OnboardingManager
+import com.ltcn272.finny.core.TokenManager
 import com.ltcn272.finny.core.navigation.AppNav
 import com.ltcn272.finny.core.navigation.Graph
 import com.ltcn272.finny.presentation.theme.FinnyTheme
-import com.ltcn272.finny.domain.repository.FcmRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var tokenManager: TokenManager
+
+    @Inject
+    lateinit var onboardingManager: OnboardingManager
+
     private lateinit var callbackManager: CallbackManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         callbackManager = CallbackManager.Factory.create()
+
+        val gate = Gate(tokenManager, onboardingManager)
+
         val startRoute = when {
-            Gate.isFirstLaunch(this) -> Graph.ONBOARD
-            !Gate.isLoggedIn(this) -> Graph.AUTH
+            gate.isFirstLaunch() -> Graph.ONBOARD
+            !gate.isLoggedIn() -> Graph.AUTH
             else -> Graph.MAIN
         }
 
         setContent {
             FinnyTheme {
-                AppNav(startRoute = startRoute, callbackManager = callbackManager)
+                AppNav(
+                    startRoute = startRoute,
+                    callbackManager = callbackManager,
+                    onboardingManager
+                )
             }
         }
     }
 
-    @Deprecated("This method has been deprecated in favor of using the Activity Result API\n      which brings increased type safety via an {@link ActivityResultContract} and the prebuilt\n      contracts for common intents available in\n      {@link androidx.activity.result.contract.ActivityResultContracts}, provides hooks for\n      testing, and allow receiving results in separate, testable classes independent from your\n      activity. Use\n      {@link #registerForActivityResult(ActivityResultContract, ActivityResultCallback)}\n      with the appropriate {@link ActivityResultContract} and handling the result in the\n      {@link ActivityResultCallback#onActivityResult(Object) callback}.")
+    @Deprecated("This method has been deprecated in favor of using the Activity Result API")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         callbackManager.onActivityResult(requestCode, resultCode, data)
     }
-
 }

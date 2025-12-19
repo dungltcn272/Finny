@@ -28,13 +28,11 @@ class SettingDataStore @Inject constructor(@ApplicationContext private val conte
             preferences[selectedCurrencyKey] ?: "VND"
         }
 
-    // Expose username as nullable string flow. If not set, returns null.
-    val getUsername: Flow<String?> = context.dataStore.data
+    val usernameFlow: Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[usernameKey]
         }
 
-    // Boolean flows
     val getEnableNotifications: Flow<Boolean> = context.dataStore.data
         .map { preferences ->
             preferences[enableNotificationsKey] ?: true

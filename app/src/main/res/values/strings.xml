@@ -2,6 +2,42 @@
 <resources>
     <string name="app_name">Finny</string>
     <string name="hi_user">Hi %1$s</string>
+
+    <!-- Home Screen -->
+    <string name="home_greeting">Hi, %1$s 👋</string>
+    <string name="left_to_spend_of_limit">Left to spend of %1$s limit</string>
+    <string name="days_to_go">%1$d days to go</string>
+    <string name="saved_amount">%1$s saved</string>
+    <string name="incoming">Incoming</string>
+    <string name="outcoming">OutComing</string>
+
+    <string name="budget_distribution">Budget Distribution</string>
+    <string name="total_remainder">Total Remainder</string>
+    <string name="more_items">+%d more…</string>
+    <string name="see_all">See all</string>
+    <string name="latest_transactions">Latest Transact</string>
+
+    <!-- Transaction -->
+    <string name="recurring_transactions_link">Giao dịch lặp lại</string>
+    <string name="this_week">This week</string>
+    <string name="no_transactions_in_period">No transactions found in this period.</string>
+
+
+    <!-- Transactions -->
+    <string name="transaction_image_count">%1$d ảnh</string>
+    <string name="transaction_amount_format">%1$s%2$s</string>
+
+    <!-- Budgets -->
+    <string name="budget_remaining">Remaining</string>
+    <string name="budget_limit">Spending limit</string>
+    <string name="budget_total_income">Total income</string>
+    <string name="budget_total_outcome">Total expense</string>
+    <string name="budget_recurring_topup">Recurring top-up</string>
+    <string name="budget_percent">%.0f%%</string>
+
+
+
+
     <string name="income_vs_expense">Income vs Outcome</string>
     <string name="line_chart_placeholder">Chart will appear here</string>
 
@@ -95,7 +131,6 @@
 
     <!-- Home View Model -->
     <string name="this_month">This Month</string>
-    <string name="this_week">This Week</string>
     <string name="today">Today</string>
     <string name="last_6_months">Last 6 Months</string>
     <string name="last_n_months">Last %d Months</string>
@@ -123,12 +158,6 @@
     <!-- Budget List Screen -->
     <string name="your_budgets">Your Budgets</string>
     <string name="no_budgets_found">No budgets found. Create one to get started!</string>
-
-    <!-- Home UI labels -->
-    <string name="see_all">See all</string>
-    <string name="latest_transactions">Latest Transactions</string>
-    <string name="outgoing">Outgoing</string>
-
     <!-- Create Budget Screen -->
     <string name="budget_updated">Budget updated!</string>
     <string name="budget_created">Budget created!</string>
@@ -197,7 +226,6 @@ Real-Time Chats</string>
     <!-- Budget item labels -->
     <string name="budget_remain">Remain: %1$s</string>
     <string name="budget_overspent">Overspent: %1$s</string>
-    <string name="budget_limit">Limit: %1$s</string>
 
     <!-- Transaction Details Form -->
     <string name="enter_name">Enter name</string>

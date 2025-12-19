@@ -1,24 +1,24 @@
 package com.ltcn272.finny.domain.repository
 
+import androidx.paging.PagingData
+import com.ltcn272.finny.domain.model.RecurringTransaction
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionFilter
 import com.ltcn272.finny.domain.util.AppResult
 import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
-    fun getLocalTransactions(filter: TransactionFilter): Flow<List<Transaction>>
+    fun getTransactions(filter: TransactionFilter?): Flow<PagingData<Transaction>>
 
-    fun getLocalTransactionByIdFlow(transactionId: String): Flow<Transaction?>
+    suspend fun getRecentTransactions(): AppResult<List<Transaction>>
 
-    suspend fun syncTransactionsFromApi(): AppResult<Unit>
+    fun getRecurringTransactions(): Flow<PagingData<RecurringTransaction>>
 
-    suspend fun addTransactionLocally(transaction: Transaction): AppResult<Unit>
+    suspend fun createTransaction(transaction: Transaction): Flow<AppResult<Transaction>>
 
-    suspend fun updateTransactionLocally(transaction: Transaction): AppResult<Unit>
+    suspend fun updateTransaction(transaction: Transaction): Flow<AppResult<Transaction>>
 
-    suspend fun deleteTransactionLocally(transactionId: String): AppResult<Unit>
+    suspend fun deleteTransaction(id: String): Flow<AppResult<Unit>>
 
-    suspend fun pushLocalChangesToApi(): AppResult<Unit>
-
-    suspend fun uploadImage(imagePath: String): AppResult<String>
+    suspend fun deleteRecurringTransaction(id: String): Flow<AppResult<Unit>>
 }

@@ -85,7 +85,7 @@ data class BudgetResponseDto(
     val diffAvg: Long,
 
     @SerializedName("progress")
-    val progress: Int,
+    val progress: Float,
 
     @SerializedName("is_single")
     val isSingle: Boolean

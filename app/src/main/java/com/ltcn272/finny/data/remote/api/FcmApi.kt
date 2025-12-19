@@ -1,16 +1,10 @@
 package com.ltcn272.finny.data.remote.api
 
-import retrofit2.Response
+import com.ltcn272.finny.data.remote.dto.ApiResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-data class FcmTokenRequest(val token: String)
-data class FcmTestRequest(val title: String?, val body: String?)
-
 interface FcmApi {
     @POST("token-fcm/update-or-create")
-    suspend fun updateOrCreateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
-
-    @POST("token-fcm/test-noti")
-    suspend fun testNotification(@Body request: FcmTestRequest): Response<Unit>
+    suspend fun updateOrCreateFcmToken(@Body body: Map<String, String>): ApiResponse<Unit>
 }

@@ -1,9 +1,7 @@
 package com.ltcn272.finny.data.remote.api
 
-import com.ltcn272.finny.data.remote.dto.ApiResponseDto
-import com.ltcn272.finny.data.remote.dto.ProfileResponse
-import com.ltcn272.finny.data.remote.dto.UpdateUserRequestDto
-import com.ltcn272.finny.data.remote.dto.UserDto
+import com.ltcn272.finny.data.remote.dto.ApiResponse
+import com.ltcn272.finny.data.remote.dto.ProfileUserDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -11,8 +9,8 @@ import retrofit2.http.POST
 interface ProfileApi {
 
     @GET("users/profile")
-    suspend fun getProfile(): ProfileResponse
+    suspend fun getProfile(): ApiResponse<ProfileUserDto>
 
     @POST("users/profile")
-    suspend fun updateProfile(@Body body: UpdateUserRequestDto): ApiResponseDto<UserDto>
+    suspend fun updateProfile(@Body body: Map<String, Any?>): ApiResponse<ProfileUserDto>
 }

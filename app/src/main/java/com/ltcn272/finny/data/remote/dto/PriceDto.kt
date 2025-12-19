@@ -3,9 +3,9 @@ package com.ltcn272.finny.data.remote.dto
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 
-data class PriceResponseDto(
-    @SerializedName("status") val status: Int,
+data class PriceApiResponseDto(
     @SerializedName("data") val data: PriceDataDto,
+    @SerializedName("version") val version: String,
     @SerializedName("message") val message: String
 )
 
@@ -19,7 +19,7 @@ data class PriceOptionDto(
     @SerializedName("display") val display: String,
     @SerializedName("duration") val duration: Int,
     @SerializedName("unit") val unit: String,
-    @SerializedName("price") val price: JsonElement
+    @SerializedName("price") val price: Double
 )
 
 data class FeatureDto(

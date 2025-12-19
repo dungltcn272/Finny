@@ -1,5 +1,6 @@
 package com.ltcn272.finny.core.navigation
 
+import androidx.compose.ui.geometry.isEmpty
 import java.time.LocalDateTime
 
 object Graph {
@@ -23,18 +24,9 @@ object MainRoute {
     const val PROFILE = "profile"
     const val NOTIFICATION = "notification"
 
-    private const val TRANSACTION_DETAIL_BASE = "transactionDetail"
-    const val TRANSACTION_DETAIL = "$TRANSACTION_DETAIL_BASE/{${NavArgs.TRANSACTION_ID}}"
-    fun transactionDetailUrl(transactionId: String): String {
-        return "$TRANSACTION_DETAIL_BASE/$transactionId"
-    }
+    const val TRANSACTION_DETAIL = "transactionDetail"
 
-    private const val BUDGET_DETAIL_BASE = "budgetDetail"
-    const val BUDGET_DETAIL = "$BUDGET_DETAIL_BASE/{${NavArgs.BUDGET_ID}}"
-    fun budgetDetailUrl(budgetId: String): String {
-        return "$BUDGET_DETAIL_BASE/$budgetId"
-    }
-
+    const val BUDGET_DETAIL = "budgetDetail"
     private const val CREATE_TRANSACTION_BASE = "createTransaction"
     const val CREATE_TRANSACTION =
         "$CREATE_TRANSACTION_BASE?${NavArgs.TRANSACTION_ID}={${NavArgs.TRANSACTION_ID}}&${NavArgs.BUDGET_ID}={${NavArgs.BUDGET_ID}}&${NavArgs.DATE}={${NavArgs.DATE}}"

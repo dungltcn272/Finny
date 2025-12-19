@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +53,8 @@ fun AuthScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val activity = context as? Activity
+    var isPreparingGoogleLogin by remember { mutableStateOf(false) }
+
 
     DisposableEffect(Unit) {
         val callback = object : FacebookCallback<LoginResult> {
@@ -123,7 +127,15 @@ fun AuthScreen(
                     backgroundColor = Color.White,
                     icon = painterResource(R.drawable.ic_google),
                     iconTint = Color.Unspecified,
-                    onClick = { handleGoogleLogin(context, viewModel, scope) },
+                    onClick = {
+                        handleGoogleLogin(
+                            context = context,
+                            viewModel = viewModel,
+                            scope = scope,
+                            onStart = { isPreparingGoogleLogin = true },
+                            onFinish = { isPreparingGoogleLogin = false }
+                        )
+                    },
                     modifier = Modifier.weight(1f),
                     contentDescription = stringResource(id = R.string.google)
                 )
@@ -138,25 +150,28 @@ fun AuthScreen(
             }
         }
         Spacer(Modifier.height(12.dp))
+
         LaunchedEffect(authUiState) {
-            when (authUiState) {
+            when (val state = authUiState) {
                 is AuthUiState.Authorized -> {
-                    val user = (authUiState as AuthUiState.Authorized).firebaseUser
-                    Toast.makeText(context, context.getString(R.string.welcome_user, user?.displayName), Toast.LENGTH_LONG)
+                    isPreparingGoogleLogin = false
+                    val user = state.user
+                    Toast.makeText(context, context.getString(R.string.welcome_user, user.displayName), Toast.LENGTH_LONG)
                         .show()
                     onLoggedIn()
                 }
-
                 is AuthUiState.Error -> {
-                    val errorMsg = (authUiState as AuthUiState.Error).message
+                    isPreparingGoogleLogin = false
+                    val errorMsg = state.message
                     Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
                 }
+                else -> {
 
-                else -> {}
+                }
             }
         }
 
-        if (authUiState is AuthUiState.Loading) {
+        if (authUiState is AuthUiState.Loading || isPreparingGoogleLogin) {
             val lottieAnimationFile ="generic_loading.json"
             val composition by rememberLottieComposition(LottieCompositionSpec.Asset(lottieAnimationFile))
             val progress by animateLottieCompositionAsState(
@@ -179,8 +194,15 @@ fun AuthScreen(
     }
 }
 
-private fun handleGoogleLogin(context: Context, viewModel: AuthViewModel, scope: CoroutineScope) {
+private fun handleGoogleLogin(
+    context: Context,
+    viewModel: AuthViewModel,
+    scope: CoroutineScope,
+    onStart: () -> Unit,
+    onFinish: () -> Unit
+) {
     scope.launch {
+        onStart()
         try {
             val credentialManager = CredentialManager.create(context)
             val googleIdOption = GetGoogleIdOption.Builder()
@@ -194,6 +216,8 @@ private fun handleGoogleLogin(context: Context, viewModel: AuthViewModel, scope:
             val result: GetCredentialResponse = withTimeout(15_000) {
                 credentialManager.getCredential(context, request)
             }
+
+            onFinish()
             handleSignInResult(result, viewModel, context)
         } catch (e: TimeoutCancellationException) {
             viewModel.cancelLoadingIfStuck("Google dialog timed out")
@@ -201,6 +225,8 @@ private fun handleGoogleLogin(context: Context, viewModel: AuthViewModel, scope:
         } catch (e: Exception) {
             viewModel.cancelLoadingIfStuck(e.message ?: "Google SignIn error")
             Toast.makeText(context, context.getString(R.string.google_signin_error, e.message), Toast.LENGTH_SHORT).show()
+        } finally {
+            onFinish()
         }
     }
 }

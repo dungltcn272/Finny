@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
     kotlin("plugin.serialization") version "1.9.24"
+    id("kotlin-parcelize")
 }
 val properties = Properties().apply {
     val localPropertiesFile = rootProject.file("local.properties")
@@ -15,7 +16,7 @@ val properties = Properties().apply {
         localPropertiesFile.inputStream().use { load(it) }
     }
 }
-val mapsApiKey: String = properties.getProperty("googleMapsApiKey", "DEFAULT_DEBUG_KEY")
+
 val facebookAppId: String = properties.getProperty("facebook_app_id", "FAKE_FB_ID")
 val facebookClientToken: String = properties.getProperty("facebook_client_token", "FAKE_FB_TOKEN")
 val fbLoginProtocolScheme: String = properties.getProperty("fb_login_protocol_scheme", "fbFAKE")
@@ -33,7 +34,6 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        manifestPlaceholders["MAPS_API_KEY_PLACEHOLDER"] = mapsApiKey
         manifestPlaceholders["facebook_app_id"] = facebookAppId
         manifestPlaceholders["facebook_client_token"] = facebookClientToken
         manifestPlaceholders["fb_login_protocol_scheme"] = fbLoginProtocolScheme
@@ -93,6 +93,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.paging.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -108,11 +109,6 @@ dependencies {
     implementation(libs.androidx.hilt.nav.fragment)
     ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
-
-    // Room (KSP)
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -142,25 +138,22 @@ dependencies {
     // Calendar
     implementation(libs.calendar.compose )
 
-    // Room Database
-    implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
+    // Paging Compose
+    implementation("androidx.paging:paging-common:3.3.6")
+    implementation("androidx.paging:paging-compose:3.3.6")
 
-    // map
-    implementation(libs.maps.compose)
-    implementation(libs.play.services.maps)
-    implementation(libs.play.services.location)
 
     // wheel date time picker
     implementation(libs.wheelpickercompose)
+
+    // Icons
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Coil
     implementation(libs.coil.compose)
 
     //  Chart
-    implementation ("io.github.ehsannarmani:compose-charts:0.2.0")
-    implementation("com.netguru.multiplatform-charts:multiplatform-charts:1.0.0")
+    implementation("io.github.dautovicharis:charts:2.0.1")
 
     // Preferences DataStore for locale persistence
     implementation("androidx.datastore:datastore-preferences:1.0.0")

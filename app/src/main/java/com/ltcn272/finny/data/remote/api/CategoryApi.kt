@@ -16,8 +16,7 @@ interface CategoryApi {
 
     @GET("categories/list")
     suspend fun getList(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int
+        @Query("page") page: Int = 1
     ): ApiResponse<CategoryListDataDto>
 
     @POST("categories")
@@ -28,7 +27,7 @@ interface CategoryApi {
     @PUT("categories/{id}")
     suspend fun update(
         @Path("id") id: String,
-        @Body body: Map<String,Any>
+        @Body body: Map<String,Any?>
     ): ApiResponse<CategoryResponseDto>
 
     @DELETE("categories/{id}")

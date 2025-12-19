@@ -1,56 +1,64 @@
 package com.ltcn272.finny.domain.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
+@Parcelize
 data class Transaction(
-    val id: String,
+    val serverId: String,
     val name: String,
     val budgetId: String,
     val type: TransactionType,
-    val description: String?,
-    val userId: String?,
-    val category: TransactionCategory,
-    val amount: Double,
+    val amount: Long,
     val dateTime: ZonedDateTime,
-    val image: String?, // Server URL
-    val localImagePath: String?, // Local file path for offline images
-    val location: Location?,
-    val createdAt: ZonedDateTime?,
-    val updatedAt: ZonedDateTime?
-)
+    val description: String?,
+    val image: String?,
+
+    val category: Category?,
+
+    val isRecurring: Boolean,
+
+    val recurringInfo: RecurringTransactionInfo?
+) : Parcelable
 
 enum class TransactionType {
     INCOME,
     OUTCOME
 }
 
-enum class TransactionCategory {
-    FOOD,
-    LUNCH,
-    COFFEE,
-    TRANSPORTATION,
-    SHOPPING,
-    HOUSING,
-    UTILITIES,
-    HEALTHCARE,
-    ENTERTAINMENT,
-    EDUCATION,
-    SALARY,
-    GIFT,
-    OTHER
-}
+@Parcelize
+data class RecurringTransactionInfo(
+    val startDate: ZonedDateTime,
+    val intervalUnit: RecurringIntervalUnit,
+    val intervalValue: Int
+) : Parcelable
 
-data class Location(
-    val name: String?,
-    val lat: Double,
-    val lng: Double
-)
+@Parcelize
+data class RecurringTransaction(
+    val serverId: String,
+    val name: String,
+    val budgetId: String,
+    val type: TransactionType,
+    val amount: Long,
+    val description: String?,
+    val image: String?,
+    val active: Boolean,
+
+    val startDate: ZonedDateTime,
+    val intervalUnit: RecurringIntervalUnit,
+    val intervalValue: Int,
+
+    val nextRunAt: ZonedDateTime?,
+    val lastRunAt: ZonedDateTime?,
+
+    val category: Category?
+) : Parcelable
 
 data class TransactionFilter(
-    val budgetId: String? = null,
-    val selectedBudget: Budget? = null,
-    val tags: List<String>? = null,
     val startDate: LocalDate? = null,
-    val endDate: LocalDate? = null
+    val endDate: LocalDate? = null,
+    val categoryId: String? = null
 )
+

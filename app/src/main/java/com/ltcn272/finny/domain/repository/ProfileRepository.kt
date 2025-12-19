@@ -5,6 +5,6 @@ import com.ltcn272.finny.domain.util.AppResult
 import kotlinx.coroutines.flow.Flow
 
 interface ProfileRepository {
-    suspend fun getProfile(): Flow<AppResult<User>>
-    suspend fun updateProfile(displayName: String, currency: String?, lang: String?): AppResult<User>
+    fun getProfile(): Flow<AppResult<User>>
+    fun updateProfile(user: User): Flow<AppResult<User>>
 }

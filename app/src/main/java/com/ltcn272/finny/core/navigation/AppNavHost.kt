@@ -9,40 +9,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.facebook.CallbackManager
 import com.ltcn272.finny.R
-import com.ltcn272.finny.core.Gate
+import com.ltcn272.finny.core.OnboardingManager
+// Thêm import cho các model
+import com.ltcn272.finny.domain.model.Budget
+import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.presentation.features.MainBottomBar
 import com.ltcn272.finny.presentation.features.auth.AuthScreen
-import com.ltcn272.finny.presentation.features.budget.budget_detail.BudgetDetailScreen
-import com.ltcn272.finny.presentation.features.budget.budget_list.ListBudgetScreen
-import com.ltcn272.finny.presentation.features.budget.create_budget.CreateBudgetScreen
+
 import com.ltcn272.finny.presentation.features.home.HomeScreen
 import com.ltcn272.finny.presentation.features.intro.IntroScreen
-import com.ltcn272.finny.presentation.features.notification.NotificationScreen
-import com.ltcn272.finny.presentation.features.setting.SettingScreen
-import com.ltcn272.finny.presentation.features.transation.create_transaction.CreateTransactionScreen
-import com.ltcn272.finny.presentation.features.transation.transaction_detail.TransactionDetailScreen
-import com.ltcn272.finny.presentation.features.transation.transaction_list.TransactionListScreen
-import com.ltcn272.finny.presentation.features.profile.ProfileScreen
+
+import com.ltcn272.finny.presentation.features.transation.transaction_list.TransactionScreen
 
 
 @Composable
-fun AppNav(startRoute: String, callbackManager: CallbackManager) {
+fun AppNav(
+    startRoute: String,
+    callbackManager: CallbackManager,
+    onboardingManager: OnboardingManager
+) {
     val nav = rememberNavController()
-    val context = LocalContext.current
-
     val entry by nav.currentBackStackEntryAsState()
     val routeSet = entry?.destination?.hierarchy?.mapNotNull { it.route }?.toSet().orEmpty()
     val currentTab = routeSet.firstOrNull { it in BottomRoutes }
@@ -58,7 +54,7 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
         ) {
             composable(Graph.ONBOARD) {
                 IntroScreen(
-                    onBoardSeen = { Gate.markOnboardingSeen(context) },
+                    onBoardSeen = { onboardingManager.markOnboardingSeen() },
                     onGetStartedClick = {
                         nav.navigate(Graph.AUTH) {
                             popUpTo(Graph.ONBOARD) { inclusive = true }
@@ -84,138 +80,56 @@ fun AppNav(startRoute: String, callbackManager: CallbackManager) {
                 composable(MainRoute.HOME) {
                     HomeScreen(
                         onNotificationClick = {
-                            nav.navigate(MainRoute.NOTIFICATION)
+                            // Giữ nguyên các lambda khác
+                            // nav.navigate(MainRoute.NOTIFICATION)
                         },
-                        onBudgetClick = { budgetId ->
-                            nav.navigate(MainRoute.budgetDetailUrl(budgetId))
+                        onBudgetClick = { budget ->
+                            nav.currentBackStackEntry?.savedStateHandle?.set("budget", budget)
+                            nav.navigate(MainRoute.BUDGET_DETAIL)
                         },
-                        onTransactionClick = { transactionId ->
-                            nav.navigate(MainRoute.transactionDetailUrl(transactionId))
+                        onTransactionClick = { transaction ->
+                            nav.currentBackStackEntry?.savedStateHandle?.set("transaction", transaction)
+                            nav.navigate(MainRoute.TRANSACTION_DETAIL)
                         }
                     )
                 }
-                composable(MainRoute.NOTIFICATION) {
-                    NotificationScreen(onBack = { nav.popBackStack() })
-                }
+
                 composable(MainRoute.TRANSACTION) {
-                    TransactionListScreen(
-                        onCreateTransactionClick = {
-                            nav.navigate(MainRoute.createTransactionUrl())
-                        },
-                        onTransactionClick = { transactionId ->
-                            nav.navigate(MainRoute.transactionDetailUrl(transactionId))
-                        },
-                        onOpenListBudget = { nav.navigate(MainRoute.LIST_BUDGET) }
-                    )
-                }
-                composable(MainRoute.CHAT) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Text(stringResource(id = R.string.chat))
-                    }
-                }
-                composable(MainRoute.CHALLENGE) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        Text(stringResource(id = R.string.challenge))
-                    }
-                }
-                composable(MainRoute.LIST_BUDGET) {
-                    ListBudgetScreen(
-                        onBack = { nav.popBackStack() },
-                        onCreateNew = { nav.navigate(MainRoute.createBudgetUrl()) },
-                        onBudgetClick = { budgetId ->
-                            nav.navigate(MainRoute.budgetDetailUrl(budgetId))
-                        }
-                    )
+                    TransactionScreen()
                 }
 
-                composable(
-                    route = MainRoute.CREATE_BUDGET,
-                    arguments = listOf(
-                        navArgument(NavArgs.BUDGET_ID) {
-                            type = NavType.StringType
-                            nullable = true
-                        }
-                    )
-                ) {
-                    CreateBudgetScreen(
-                        onBack = { nav.popBackStack() }
-                    )
-                }
+                // --- ĐỊNH NGHĨA LẠI COMPOSABLE CHO MÀN HÌNH DETAIL ---
 
-                composable(
-                    route = MainRoute.TRANSACTION_DETAIL,
-                    arguments = listOf(navArgument(NavArgs.TRANSACTION_ID) {
-                        type = NavType.StringType
-                    })
-                ) {
-                    TransactionDetailScreen(
-                        onBack = { nav.popBackStack() },
-                        onEditClick = { transactionId ->
-                            nav.navigate(MainRoute.createTransactionUrl(transactionId = transactionId))
-                        }
-                    )
-                }
-                composable(
-                    route = MainRoute.BUDGET_DETAIL,
-                    arguments = listOf(navArgument(NavArgs.BUDGET_ID) { type = NavType.StringType })
-                ) { backStackEntry ->
-                    BudgetDetailScreen(
-                        onBack = { nav.popBackStack() },
-                        onEditClick = {
-                            val budgetId = backStackEntry.arguments?.getString(NavArgs.BUDGET_ID)
-                            nav.navigate(MainRoute.createBudgetUrl(budgetId = budgetId))
-                        },
-                        onTransactionClick = { transactionId ->
-                            nav.navigate(MainRoute.transactionDetailUrl(transactionId))
-                        },
-                        onAddTransactionClick = {
-                            val budgetId = backStackEntry.arguments?.getString(NavArgs.BUDGET_ID)
-                            nav.navigate(MainRoute.createTransactionUrl(budgetId = budgetId))
-                        }
-                    )
-                }
-                composable(
-                    route = MainRoute.CREATE_TRANSACTION,
-                    arguments = listOf(
-                        navArgument(NavArgs.TRANSACTION_ID) {
-                            type = NavType.StringType
-                            nullable = true
-                        },
-                        navArgument(NavArgs.BUDGET_ID) {
-                            type = NavType.StringType
-                            nullable = true
-                        },
-                        navArgument(NavArgs.DATE) {
-                            type = NavType.StringType
-                            nullable = true
-                        }
-                    )
-                ) {
-                    CreateTransactionScreen(
-                        onBack = { nav.popBackStack() },
-                        onTransactionCreated = {
-                            nav.popBackStack()
-                        }
-                    )
-                }
-                composable(MainRoute.SETTINGS) {
-                    SettingScreen(
-                        onNavigateToProfile = { nav.navigate(MainRoute.PROFILE) },
-                        onNavigateToCategories = { /* existing behavior */ },
-                        onLoggedOut = {
-                            // Navigate back to auth/login screen and clear MAIN graph from backstack
-                            nav.navigate(Graph.AUTH) {
-                                popUpTo(Graph.MAIN) { inclusive = true }
-                                launchSingleTop = true
-                            }
-                        }
-                    )
-                }
+//                composable(route = MainRoute.BUDGET_DETAIL) {
+//                    val budget = nav.previousBackStackEntry?.savedStateHandle?.get<Budget>("budget")
+//                    if (budget != null) {
+//                        BudgetDetailScreen(
+//                            budget = budget,
+//                            onBack = { nav.popBackStack() }
+//                        )
+//                    } else {
+//                        // Xử lý trường hợp không tìm thấy budget (ví dụ: quay lại)
+//                        nav.popBackStack()
+//                    }
+//                }
 
-                // New profile route
-                composable(MainRoute.PROFILE) {
-                    ProfileScreen(onBackClick = { nav.popBackStack() })
-                }
+//                composable(route = MainRoute.TRANSACTION_DETAIL) {
+//                    val transaction = nav.previousBackStackEntry?.savedStateHandle?.get<Transaction>("transaction")
+//                    if (transaction != null) {
+//                        TransactionDetailScreen(
+//                            transaction = transaction,
+//                            onBack = { nav.popBackStack() }
+//                            // Các lambda khác của màn hình detail
+//                        )
+//                    } else {
+//                        nav.popBackStack()
+//                    }
+//                }
+
+//                // Các route khác giữ nguyên...
+//                composable(MainRoute.PROFILE) {
+//                    ProfileScreen(onBackClick = { nav.popBackStack() })
+//                }
             }
         }
 

@@ -26,12 +26,11 @@ fun BudgetFilterRowShimmer(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Simulate a few chips with variable widths to better match the real UI
             val chipWidths = listOf(90.dp, 70.dp, 110.dp)
             chipWidths.forEach { chipWidth ->
                 Box(
                     modifier = Modifier
-                        .height(36.dp) // More accurate height for a chip with vertical padding
+                        .height(36.dp)
                         .width(chipWidth)
                         .clip(CircleShape)
                         .shimmerEffect()

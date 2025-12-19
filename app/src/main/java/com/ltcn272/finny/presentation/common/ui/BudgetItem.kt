@@ -1,8 +1,7 @@
 package com.ltcn272.finny.presentation.common.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,124 +9,123 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
-import com.ltcn272.finny.domain.model.BudgetDetails
-import com.ltcn272.finny.domain.model.BudgetPeriod
-import com.ltcn272.finny.presentation.common.util.CurrencyUtils
-import java.text.NumberFormat
-import java.time.ZonedDateTime
-import java.util.Locale
+import com.ltcn272.finny.presentation.common.util.rememberCurrencyFormatter
 
 @Composable
-fun BudgetItem(budgetDetails: BudgetDetails, onClick: () -> Unit) {
-    val spent = budgetDetails.spentAmount
-    val limit = budgetDetails.budget.limit
-    val remain = limit - spent
-    // Progress can be > 1.0 if overspent
-    val progress = if (limit > 0) (spent / limit).toFloat() else 0f
-    // For the UI, we cap the progress bar at 100% (or 1.0f)
-    val displayProgress = progress.coerceIn(0f, 1f)
-    val percentage = (progress * 100).toInt()
-
-    val progressColor = when {
-        progress >= 1f -> Color(0xFFD32F2F) // Dark Red
-        progress > 0.75f -> Color(0xFFEF5350) // Light Red
-        progress > 0.5f -> Color(0xFFFFC107)  // Amber Yellow
-        else -> Color(0xFF26A69A) // Teal
-    }
-    val percentageColor = if (progress >= 1f) progressColor else Color.Gray
-
-    val isOverspent = remain < 0
-    val formatter = NumberFormat.getNumberInstance(Locale.getDefault())
-    val currencySymbol = CurrencyUtils.getCurrencySymbolForCurrentLocale()
-
-    val remainText = if (isOverspent) {
-        stringResource(id = R.string.budget_overspent, "${formatter.format(-remain)}$currencySymbol")
-    } else {
-        stringResource(id = R.string.budget_remain, "${formatter.format(remain)}$currencySymbol")
-    }
-    val remainTextColor = if (isOverspent) progressColor else Color.Gray
+fun BudgetItem(
+    budget: Budget,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
+    val formatter = rememberCurrencyFormatter(budget.currency)
 
     Surface(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) Modifier.clickable { onClick() }
+                else Modifier
+            ),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, Color(0xFFE5E5E5)),
         color = Color.White,
-        shadowElevation = 2.dp
+        shadowElevation = 0.dp
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
+
+            /** HEADER **/
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = budgetDetails.budget.name,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    text = budget.name,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
+
                 Text(
-                    text = "$percentage%",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = percentageColor
+                    text = stringResource(
+                        R.string.budget_percent,
+                        budget.progress
+                    ),
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(Modifier.height(10.dp))
 
-            // Custom Progress Bar
-            Box(
+            /** PROGRESS **/
+            FinnyProgressIndicator(
+                progress = budget.progress / 100f,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp)
-                        .background(Color.LightGray.copy(alpha = 0.3f))
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(displayProgress)
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(progressColor)
+                    .height(8.dp),
+                color = Color(0xFF2EC4B6),
+                trackColor = Color(0xFFEAEAEA)
+            )
 
+            Spacer(Modifier.height(12.dp))
+
+            /** ROW 1 **/
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                BudgetInfo(
+                    label = stringResource(R.string.budget_remaining),
+                    value = formatter.format(budget.amount),
+                    modifier = Modifier.weight(1f)
+                )
+
+                BudgetInfo(
+                    label = stringResource(R.string.budget_limit),
+                    value = formatter.format(budget.limit),
+                    modifier = Modifier.weight(1f),
+                    alignEnd = true
                 )
             }
 
+            Spacer(Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
+            /** ROW 2 **/
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = remainText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = remainTextColor
+                BudgetInfo(
+                    label = stringResource(R.string.budget_total_income),
+                    value = formatter.format(budget.totalIncome),
+                    modifier = Modifier.weight(1f)
                 )
+
+                BudgetInfo(
+                    label = stringResource(R.string.budget_total_outcome),
+                    value = formatter.format(budget.totalOutcome),
+                    modifier = Modifier.weight(1f),
+                    alignEnd = true
+                )
+            }
+
+            /** RECURRING **/
+            if (budget.recurring != null) {
+                Spacer(Modifier.height(10.dp))
                 Text(
-                    text = stringResource(id = R.string.budget_limit, "${formatter.format(limit)}$currencySymbol"),
+                    text = stringResource(R.string.budget_recurring_topup),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -136,66 +134,27 @@ fun BudgetItem(budgetDetails: BudgetDetails, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true, name = "Low Usage")
 @Composable
-fun BudgetItemPreviewLow() {
-    BudgetItem(
-        budgetDetails = BudgetDetails(
-            budget = Budget(
-                id = "1", name = "Ăn uống", userId = "user1",
-                startDate = ZonedDateTime.now(), limit = 2500000.0, period = BudgetPeriod.ONE_MONTH,
-                createdAt = ZonedDateTime.now(), updatedAt = ZonedDateTime.now()
-            ),
-            spentAmount = 250000.0
-        ),
-        onClick = {}
-    )
+private fun BudgetInfo(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    alignEnd: Boolean = false
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = if (alignEnd)
+            Alignment.End else Alignment.Start
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray
+        )
+        Text(
+            text = value,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
 }
 
-@Preview(showBackground = true, name = "Medium Usage")
-@Composable
-fun BudgetItemPreviewMedium() {
-    BudgetItem(
-        budgetDetails = BudgetDetails(
-            budget = Budget(
-                id = "1", name = "Giải trí", userId = "user1",
-                startDate = ZonedDateTime.now(), limit = 2500000.0, period = BudgetPeriod.ONE_MONTH,
-                createdAt = ZonedDateTime.now(), updatedAt = ZonedDateTime.now()
-            ),
-            spentAmount = 1500000.0
-        ),
-        onClick = {}
-    )
-}
-
-@Preview(showBackground = true, name = "High Usage")
-@Composable
-fun BudgetItemPreviewHigh() {
-    BudgetItem(
-        budgetDetails = BudgetDetails(
-            budget = Budget(
-                id = "1", name = "Mua sắm", userId = "user1",
-                startDate = ZonedDateTime.now(), limit = 2500000.0, period = BudgetPeriod.ONE_MONTH,
-                createdAt = ZonedDateTime.now(), updatedAt = ZonedDateTime.now()
-            ),
-            spentAmount = 2200000.0
-        ),
-        onClick = {}
-    )
-}
-
-@Preview(showBackground = true, name = "Over Limit")
-@Composable
-fun BudgetItemPreviewOver() {
-    BudgetItem(
-        budgetDetails = BudgetDetails(
-            budget = Budget(
-                id = "1", name = "Du lịch", userId = "user1",
-                startDate = ZonedDateTime.now(), limit = 2500000.0, period = BudgetPeriod.ONE_MONTH,
-                createdAt = ZonedDateTime.now(), updatedAt = ZonedDateTime.now()
-            ),
-            spentAmount = 2700000.0
-        ),
-        onClick = {}
-    )
-}

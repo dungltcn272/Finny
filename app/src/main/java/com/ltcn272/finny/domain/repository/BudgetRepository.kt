@@ -3,25 +3,17 @@ package com.ltcn272.finny.domain.repository
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.util.AppResult
 import kotlinx.coroutines.flow.Flow
+import androidx.paging.PagingData
 
 interface BudgetRepository {
-    fun getAllBudgets(): Flow<List<Budget>>
-    suspend fun getBudgetById(budgetId: String): Budget?
+    fun getBudgets(): Flow<PagingData<Budget>>
 
-    suspend fun createNewBudget(
-        budget: Budget
-    ): AppResult<String>
+    suspend fun getRecentBudgets(): AppResult<List<Budget>>
 
-    suspend fun updateBudget(
-        budget: Budget
-    ): AppResult<Unit>
 
-    suspend fun deleteBudget(
-        budgetId: String
-    ): AppResult<Unit>
+    suspend fun createBudget(budget: Budget): Flow<AppResult<Budget>>
 
-    fun syncBudgets(): Flow<AppResult<Unit>>
+    suspend fun updateBudget(budget: Budget): Flow<AppResult<Budget>>
 
-    suspend fun fetchAndSaveRemoteBudgets(): AppResult<Unit>
+    suspend fun deleteBudget(id: String): Flow<AppResult<Unit>>
 }
-

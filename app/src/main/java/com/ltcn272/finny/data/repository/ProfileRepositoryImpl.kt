@@ -1,44 +1,39 @@
 package com.ltcn272.finny.data.repository
 
-import com.ltcn272.finny.data.mapper.toDomain
+import com.ltcn272.finny.data.mapper.toUpdateMap
+import com.ltcn272.finny.data.mapper.toUserDomain
 import com.ltcn272.finny.data.remote.api.ProfileApi
-import com.ltcn272.finny.data.remote.dto.UpdateUserRequestDto
 import com.ltcn272.finny.domain.model.User
 import com.ltcn272.finny.domain.repository.ProfileRepository
 import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.domain.util.toErrorType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
-class ProfileRepositoryImpl @Inject constructor(private val profileApi: ProfileApi) : ProfileRepository {
-    override suspend fun getProfile(): Flow<AppResult<User>> = flow {
+class ProfileRepositoryImpl @Inject constructor(
+    private val profileApi: ProfileApi
+) : ProfileRepository {
+
+    override fun getProfile(): Flow<AppResult<User>> = flow {
         emit(AppResult.Loading)
         try {
             val response = profileApi.getProfile()
-            // ProfileResponse contains data: UserDto
-            val userDto = response.data
-            emit(AppResult.Success(userDto.toDomain()))
+            emit(AppResult.Success(response.data.toUserDomain()))
         } catch (e: Exception) {
-            emit(AppResult.Error(e.localizedMessage ?: "Unknown error"))
+            emit(AppResult.Error(e.toErrorType()))
         }
     }
 
-    override suspend fun updateProfile(displayName: String, currency: String?, lang: String?): AppResult<User> {
-        return try {
-            val body = UpdateUserRequestDto(
-                displayName = displayName,
-                avatar = null,
-                currency = currency,
-                lang = lang
-            )
-            val response = profileApi.updateProfile(body)
-            if (response.status == 200 && response.data != null) {
-                AppResult.Success(response.data.toDomain())
-            } else {
-                AppResult.Error(response.message)
-            }
+    override fun updateProfile(user: User): Flow<AppResult<User>> = flow {
+        emit(AppResult.Loading)
+        try {
+            val requestBody = user.toUpdateMap()
+            val response = profileApi.updateProfile(requestBody)
+            emit(AppResult.Success(response.data.toUserDomain()))
         } catch (e: Exception) {
-            AppResult.Error(e.localizedMessage ?: "Unknown error")
+            emit(AppResult.Error(e.toErrorType()))
         }
     }
+
 }
