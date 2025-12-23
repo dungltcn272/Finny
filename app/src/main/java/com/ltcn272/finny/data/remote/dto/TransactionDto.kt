@@ -26,7 +26,7 @@ data class TransactionResponseDto(
     @SerializedName("category_id")
     val categoryId: String,
     @SerializedName("amount")
-    val amount: Long,
+    val amount: Double,
     @SerializedName("date_time")
     val dateTime: String,
     @SerializedName("image")
@@ -47,7 +47,7 @@ data class CreateTransactionRequestDto(
     @SerializedName("type")
     val type: String,
     @SerializedName("amount")
-    val amount: Long,
+    val amount: Double,
     @SerializedName("category_id")
     val categoryId: String,
 
@@ -91,7 +91,7 @@ data class RecurringTransactionResponseDto(
     @SerializedName("category_id")
     val categoryId: String,
     @SerializedName("amount")
-    val amount: Long,
+    val amount: Double,
     @SerializedName("image")
     val image: String?,
     @SerializedName("start_date")
@@ -129,8 +129,8 @@ data class TransactionFilterDto(
     @SerializedName("end_date")
     val endDate: String? = null,
 
-    @SerializedName("category")
-    val category: String? = null
+    @SerializedName("budget_id")
+    val budgetId: String? = null
 )
 
 

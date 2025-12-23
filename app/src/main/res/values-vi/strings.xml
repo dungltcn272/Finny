@@ -3,16 +3,184 @@
     <string name="app_name">Finny</string>
     <string name="hi_user">Xin chào %1$s</string>
 
+    <!-- Balance Card -->
+    <string name="total_balance">Tổng số dư</string>
+    <!-- Intro Slide One -->
+    <string name="intro_slide_one_title">Trò chuyện dễ dàng, thời gian thực</string>
+    <string name="intro_slide_one_subtitle">Với tốc độ phản hồi nhanh như chớp, nó xử lý các truy vấn trong thời gian thực, cung cấp câu trả lời rõ ràng và ngắn gọn mà không bị trì hoãn.</string>
+    <string name="intro_slide_one_value">1000 +</string>
+    <string name="intro_slide_one_description">Câu hỏi được trả lời hàng ngày</string>
+    <!-- Intro Slide Two -->
+    <string name="intro_slide_two_description">Chỉ trong vài giây để có câu trả lời</string>
+    <string name="intro_slide_two_title">Trợ lý AI</string>
+    <string name="intro_slide_two_subtitle">Trợ lý AI cá nhân của bạn, luôn sẵn sàng giúp đỡ cuộc sống của bạn trở nên đơn giản hơn. Dù bạn cần giúp quản lý ngân sách, AI luôn sẵn sàng hỗ trợ bạn bất cứ lúc nào, bất cứ nơi đâu.</string>
+    <string name="get_started_now">Bắt đầu ngay</string>
+
+
+    <!-- Create new button -->
+    <string name="create_new">Tạo</string>
+    <string name="update">Cập nhật</string>
+
+    <!-- Dialog Buttons -->
+    <string name="cancel">Hủy</string>
+    <string name="confirm">Xác nhận</string>
+
+    <!-- Select Dialog -->
+    <string name="all">Tất cả</string>
+
+    <!-- Auth Screen -->
+    <string name="facebook_login_error">Lỗi đăng nhập Facebook: %1$s</string>
+    <string name="login_title">Đăng nhập Finny!</string>
+    <string name="login_subtitle">Đăng nhập vào tài khoản của bạn để xem tiến trình và các kế hoạch chi tiêu.</string>
+    <string name="google">Google</string>
+    <string name="facebook">Facebook</string>
+    <string name="welcome_user">Chào mừng %1$s</string>
+    <string name="google_signin_timeout">Hết thời gian đăng nhập Google</string>
+    <string name="google_signin_error">Lỗi đăng nhập Google: %1$s</string>
+    <string name="invalid_google_credential">Thông tin đăng nhập Google không hợp lệ: %1$s</string>
+    <string name="unsupported_credential">Thông tin đăng nhập không được hỗ trợ</string>
+    <!-- Auth View Model -->
+    <string name="google_login_failed">Đăng nhập Google thất bại</string>
+    <string name="facebook_login_failed">Đăng nhập Facebook thất bại</string>
+
+    <!-- Home Screen -->
+    <string name="home_greeting">Chào, %1$s 👋</string>
+    <string name="left_to_spend_of_limit">Còn lại trên tổng %1$s</string>
+    <string name="days_to_go">Còn %1$d ngày</string>
+    <string name="saved_amount">Đã tiết kiệm %1$s</string>
+
+    <string name="budget_distribution">Phân bổ ngân sách</string>
+    <string name="total_remainder">Tổng số dư</string>
+    <string name="more_items">+%d mục khác…</string>
+    <string name="see_all">Xem tất cả</string>
+    <string name="latest_transactions">Giao dịch gần nhất</string>
+    <string name="no_transactions_for_filter">Không có giao dịch nào cho bộ lọc này.</string>
+    <string name="no_transactions_yet">Chưa có giao dịch nào.</string>
+
+    <!-- Transaction -->
+    <string name="recurring_transactions_link">Giao dịch định kỳ</string>
+    <string name="this_week">Tuần này</string>
+    <string name="no_transactions_in_period">Không có giao dịch nào trong khoảng thời gian này.</string>
+    <string name="select_budget">Chọn ngân sách</string>
+    <string name="select_category">Chọn danh mục</string>
+
+
     <!-- Transactions -->
     <string name="transaction_image_count">%1$d ảnh</string>
     <string name="transaction_amount_format">%1$s%2$s</string>
 
     <!-- Budgets -->
+    <string name="your_budgets">Ngân sách của bạn</string>
     <string name="budget_remaining">Còn lại</string>
     <string name="budget_limit">Hạn mức nên chi</string>
     <string name="budget_total_income">Tổng tiền vào</string>
     <string name="budget_total_outcome">Tổng tiền ra</string>
     <string name="budget_recurring_topup">Nạp tiền định kì</string>
     <string name="budget_percent">%.0f%%</string>
+    <string name="budgets_title">Ngân sách</string>
+    <string name="no_budgets_found">Không tìm thấy ngân sách</string>
+
+    <!-- Create/Edit Budget Screen -->
+    <string name="create_budget_title">Tạo ngân sách</string>
+    <string name="update_budget_title">Cập nhật ngân sách</string>
+    <string name="budget_name_label">Tên ngân sách</string>
+    <string name="amount">Số tiền</string>
+    <string name="recurring_top_up">Nạp tiền định kỳ</string>
+    <string name="recurring_top_up_details">Chi tiết nạp định kỳ</string>
+    <string name="recurring_topup_amount">Số tiền nạp định kỳ</string>
+    <string name="cycle">Chu kỳ</string>
+    <string name="how_often_renew_budget">Bao lâu thì bạn gia hạn ngân sách?</string>
+    <string name="start_date">Ngày bắt đầu</string>
+    <string name="next_top_up_on">Lần nạp tiếp theo:</string>
+    <string name="error_name_amount_required">Tên và số tiền không được để trống</string>
+
+    <!-- RecurringIntervalUnit -->
+    <string name="unit_day">Ngày</string>
+    <string name="unit_week">Tuần</string>
+    <string name="unit_month">Tháng</string>
+    <string name="unit_year">Năm</string>
+
+
+    <!-- Create/Edit Transaction Screen -->
+    <string name="create_transaction_title">Tạo giao dịch</string>
+    <string name="update_transaction_title">Cập nhật giao dịch</string>
+    <string name="transaction_name_label">Tên giao dịch</string>
+    <string name="type">Loại</string>
+    <string name="incoming">Thu vào</string>
+    <string name="outcoming">Chi ra</string>
+    <string name="recurring_transaction">Giao dịch định kỳ</string>
+    <string name="recurring_start_date">Ngày bắt đầu định kỳ</string>
+    <string name="recurring_interval">Chu kỳ lặp lại</string>
+    <string name="description">Mô tả</string>
+    <string name="add_description">Thêm mô tả</string>
+    <string name="delete">Xoá</string>
+    <string name="attachments">Ảnh</string>
+    <string name="choose_image">Chọn ảnh</string>
+    <string name="select_and_upload_receipt">Chọn và tải ảnh thông tin hoá đơn của bạn.</string>
+    <string name="budget">Ngân sách</string>
+    <string name="time">Thời gian</string>
+    <string name="select">Chọn</string>
+
+    <!-- Category Screen -->
+    <string name="category">Danh mục</string>
+
+    <!--Budget Detail Screen-->
+    <string name="budget_not_found">Không tìm thấy ngân sách</string>
+    <string name="transactions_label">Giao dịch</string>
+    <plurals name="transaction_count">
+        <item quantity="other">%d giao dịch</item>
+    </plurals>
+    <string name="statistics">Thống kê</string>
+    <string name="week">Tuần</string>
+    <string name="month">Tháng</string>
+    <string name="no_data_available">Không có dữ liệu</string>
+
+    <!-- Setting Screen -->
+    <string name="settings">Cài đặt</string>
+    <string name="user_name_placeholder">Tên người dùng</string>
+    <string name="currency">Tiền tệ</string>
+    <string name="category_management">Quản lý danh mục</string>
+    <string name="enable_notifications">Bật thông báo</string>
+    <string name="export_data">Xuất dữ liệu</string>
+    <string name="suggest_feature">Đề xuất tính năng</string>
+    <string name="rate_app">Đánh giá App</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="feature_in_development">Chức năng đang phát triển</string>
+
+    <!-- Notification Messages -->
+    <string name="notification_permission_denied_title">Quyền thông báo bị từ chối</string>
+    <string name="notification_permission_denied">Để nhận thông báo, bạn cần cấp quyền trong phần cài đặt của ứng dụng.</string>
+    <string name="open_settings">Mở cài đặt</string>
+    <string name="notifications_enabled">Đã bật thông báo</string>
+    <string name="notifications_disabled">Đã tắt thông báo</string>
+
+    <!-- Notification Screen -->
+    <string name="notifications_title">Thông báo</string>
+    <string name="tab_all">Tất cả</string>
+    <string name="tab_unread">Chưa đọc</string>
+    <string name="today">Hôm nay</string>
+    <string name="yesterday">Hôm qua</string>
+    <string name="no_notifications">Không có thông báo nào</string>
+
+
+    <!-- ... các string khác ... -->
+    <plurals name="hours_ago">
+        <item quantity="other">%d giờ trước</item>
+    </plurals>
+    <plurals name="minutes_ago">
+        <item quantity="other">%d phút trước</item>
+    </plurals>
+    <string name="just_now">Vừa xong</string>
+
+    <!-- ... các string khác ... -->
+
+    <!-- Dashboard Screen -->
+    <string name="budgets">Ngân sách</string>
+    <string name="categories">Danh mục</string>
+    <string name="total_outcome">Tổng chi</string>
+    <string name="net_income_expense">Thu - Chi = %s</string>
+    <string name="change_vs_period">↑ %s cùng kỳ</string>
+    <string name="change_vs_period_up">↑ %s cùng kỳ</string>
+    <string name="change_vs_period_down">↓ %s cùng kỳ</string>
 
 </resources>

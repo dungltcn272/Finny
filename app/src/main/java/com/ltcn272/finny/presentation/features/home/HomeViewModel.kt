@@ -10,19 +10,16 @@ import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.presentation.common.ui.DonutData
+import com.ltcn272.finny.presentation.common.util.formatCurrencyNonComposable
 import com.ltcn272.finny.presentation.common.util.generateHarmonicColors
-import com.ltcn272.finny.presentation.features.home.component.LegendData
+import com.ltcn272.finny.presentation.common.util.getCurrentDateFormatted
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.dautovicharis.charts.model.ChartDataSet
-import io.github.dautovicharis.charts.model.toChartDataSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -37,10 +34,9 @@ data class HomeUiState(
     val topBudgets: List<Budget> = emptyList(),
     val featuredBudget: Budget? = null,
     val transactionsToShow: List<Transaction> = emptyList(),
-    val chartDataSet: ChartDataSet? = null,
-    val legendData: List<LegendData> = emptyList(),
-    val totalRemainder: Long = 0,
-    val pieColors: List<Color> = emptyList(),
+
+    val donutChartData: List<DonutData> = emptyList(),
+    val donutChartTotalAmount: Double = 0.0,
 
     val transactionFilterType: TransactionType? = null,
     val currency: String = "VND"
@@ -56,20 +52,27 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    // BỎ CỜ isDataLoaded VÀ HÀM onHomeScreenResumed
+    // private var isDataLoaded = false
+
     init {
+        // Lấy username và ngày tháng
         viewModelScope.launch {
             settingDataStore.usernameFlow.collect { username ->
                 _uiState.update { it.copy(username = username) }
             }
         }
         _uiState.update { it.copy(currentDate = getCurrentDateFormatted()) }
-        // Tải dữ liệu lần đầu
+
+        // GỌI LẠI HÀM LOAD Ở ĐÂY. NÓ SẼ CHỈ CHẠY MỘT LẦN KHI VIEWMODEL ĐƯỢC TẠO
         loadInitialData()
     }
 
+    // fun onHomeScreenResumed() { ... } // BỎ HÀM NÀY
+
     private fun loadInitialData() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) } // Bật isLoading cho lần đầu
+            _uiState.update { it.copy(isLoading = true) }
 
             val budgetResult = budgetRepository.getRecentBudgets()
             val transactionResult = transactionRepository.getRecentTransactions()
@@ -78,16 +81,17 @@ class HomeViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
-                    isLoading = false, // Tắt isLoading sau khi tải xong
+                    // isLoading = false, // Sẽ được set ở processAndUpdateUiState
                     allRecentBudgets = allBudgets,
                     allRecentTransactions = allTransactions
                 )
             }
-            processAndUpdateUiState()
+            processAndUpdateUiState() // Hàm này sẽ set isLoading = false
         }
     }
 
     fun refreshDataFromPull() {
+        // Tải lại dữ liệu và set isRefreshingByUser
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshingByUser = true) }
 
@@ -98,7 +102,7 @@ class HomeViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
-                    isRefreshingByUser = false,
+                    isRefreshingByUser = false, // Reset cờ
                     allRecentBudgets = allBudgets,
                     allRecentTransactions = allTransactions
                 )
@@ -107,18 +111,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setTransactionFilter(type: TransactionType?) {
-        _uiState.update { it.copy(transactionFilterType = type) }
-        processAndUpdateUiState()
-    }
-
     private fun processAndUpdateUiState() {
         _uiState.update { currentState ->
+            // ... (code xử lý dữ liệu bên trong hàm này không đổi) ...
             val allBudgets = currentState.allRecentBudgets
             val allTransactions = currentState.allRecentTransactions
 
             val topBudgets = allBudgets.sortedByDescending { it.startDate }.take(3)
-            val featuredBudget = topBudgets.minByOrNull { it.daysRemaining ?: Int.MAX_VALUE }
+            val featuredBudget = topBudgets.minByOrNull { it.daysRemaining ?: Double.MAX_VALUE }
 
             val filteredTransactions = if (currentState.transactionFilterType == null) {
                 allTransactions
@@ -127,52 +127,44 @@ class HomeViewModel @Inject constructor(
             }
             val transactionsToShow = filteredTransactions.sortedByDescending { it.dateTime }.take(5)
 
-            val chartDataResult = createChartData(allBudgets)
+            val (donutData, totalAmount) = createDonutChartData(allBudgets, currentState.currency)
 
+            // TRẢ VỀ STATE HOÀN CHỈNH VÀ SET isLoading = false
             currentState.copy(
+                isLoading = false,
                 topBudgets = topBudgets,
                 featuredBudget = featuredBudget,
                 transactionsToShow = transactionsToShow,
-                chartDataSet = chartDataResult.first,
-                legendData = chartDataResult.second.legend,
-                totalRemainder = chartDataResult.second.totalRemainder,
-                pieColors = chartDataResult.second.colors
+                donutChartData = donutData,
+                donutChartTotalAmount = totalAmount.toDouble()
             )
         }
     }
 
-    private fun createChartData(budgets: List<Budget>): Pair<ChartDataSet?, ChartRelatedData> {
+    fun setTransactionFilter(type: TransactionType?) {
+        _uiState.update { it.copy(transactionFilterType = type) }
+        processAndUpdateUiState()
+    }
+
+    private fun createDonutChartData(budgets: List<Budget>, currency: String): Pair<List<DonutData>, Double> {
         val budgetsForChart = budgets.filter { it.totalOutcome > 0 }
         if (budgetsForChart.isEmpty()) {
-            return Pair(null, ChartRelatedData())
+            return Pair(emptyList(), 0.0)
         }
 
+        val totalOutcome = budgetsForChart.sumOf { it.totalOutcome }
         val baseColor = Color(0xFF4A90E2)
         val dynamicColors = generateHarmonicColors(baseColor, budgetsForChart.size)
-        val chartValues = budgetsForChart.map { it.totalOutcome.toFloat() }
-        val chartLabels = budgetsForChart.map { it.name }
-        val chartDataSet = chartValues.toChartDataSet("Budget Distribution", labels = chartLabels)
 
-        val legend = budgetsForChart.mapIndexed { index, budget ->
-            LegendData(
-                name = budget.name,
-                amount = budget.totalOutcome,
+        val donutDataList = budgetsForChart.mapIndexed { index, budget ->
+            DonutData(
+                label = budget.name,
+                value = budget.totalOutcome.toFloat(),
+                amountText = formatCurrencyNonComposable(budget.totalOutcome, currency),
                 color = dynamicColors[index]
             )
         }
-        val totalRemainder = budgets.sumOf { it.amount }
 
-        return Pair(chartDataSet, ChartRelatedData(legend, totalRemainder, dynamicColors))
+        return Pair(donutDataList, totalOutcome)
     }
-
-    private fun getCurrentDateFormatted(): String {
-        val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH)
-        return ZonedDateTime.now().format(formatter)
-    }
-
-    private data class ChartRelatedData(
-        val legend: List<LegendData> = emptyList(),
-        val totalRemainder: Long = 0,
-        val colors: List<Color> = emptyList()
-    )
 }

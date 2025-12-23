@@ -1,12 +1,14 @@
 package com.ltcn272.finny.presentation.common.ui
 
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalDensity
@@ -15,15 +17,16 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ltcn272.finny.R
 
 @Composable
 fun AnimatedMoreMenu(
@@ -87,17 +90,17 @@ fun AnimatedMoreMenu(
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
 
                     MenuItemContent(
-                        iconId = R.drawable.ic_edit,
+                        icon = Icons.Default.Edit,
                         text = "Edit",
                         onClick = onEditClick,
                         tint = MaterialTheme.colorScheme.primary
                     )
 
                     MenuItemContent(
-                        iconId = R.drawable.ic_delete,
+                        icon = Icons.Default.Delete,
                         text = "Delete",
                         onClick = onDeleteClick,
-                        tint = Color.Red
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }
@@ -107,7 +110,7 @@ fun AnimatedMoreMenu(
 
 @Composable
 private fun MenuItemContent(
-    @DrawableRes iconId: Int,
+    icon: ImageVector,
     text: String,
     onClick: () -> Unit,
     tint: Color
@@ -126,7 +129,7 @@ private fun MenuItemContent(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            painter = painterResource(id = iconId),
+            imageVector = icon,
             contentDescription = text,
             tint = tint,
             modifier = Modifier.size(23.dp)

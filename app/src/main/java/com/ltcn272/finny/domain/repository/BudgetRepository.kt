@@ -10,7 +10,6 @@ interface BudgetRepository {
 
     suspend fun getRecentBudgets(): AppResult<List<Budget>>
 
-
     suspend fun createBudget(budget: Budget): Flow<AppResult<Budget>>
 
     suspend fun updateBudget(budget: Budget): Flow<AppResult<Budget>>

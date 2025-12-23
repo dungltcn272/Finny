@@ -153,7 +153,7 @@ fun DateRangePickerDialog(
                         },
                         enabled = startDate != null
                     ) {
-                        Text(stringResource(id = R.string.ok))
+                        Text(stringResource(id = R.string.confirm))
                     }
                 }
             }

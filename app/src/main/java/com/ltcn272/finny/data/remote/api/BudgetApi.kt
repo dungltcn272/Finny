@@ -27,7 +27,7 @@ interface BudgetApi {
     @PUT("budgets/{id}")
     suspend fun updateBudget(
         @Path("id") id: String,
-        @Body body: Map<String, Any?>
+        @Body body: Map<String, @JvmSuppressWildcards Any?>
     ): ApiResponse<BudgetResponseDto>
 
     @DELETE("budgets/{id}")

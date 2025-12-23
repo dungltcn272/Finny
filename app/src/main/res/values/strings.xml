@@ -2,99 +2,33 @@
 <resources>
     <string name="app_name">Finny</string>
     <string name="hi_user">Hi %1$s</string>
-
-    <!-- Home Screen -->
-    <string name="home_greeting">Hi, %1$s 👋</string>
-    <string name="left_to_spend_of_limit">Left to spend of %1$s limit</string>
-    <string name="days_to_go">%1$d days to go</string>
-    <string name="saved_amount">%1$s saved</string>
-    <string name="incoming">Incoming</string>
-    <string name="outcoming">OutComing</string>
-
-    <string name="budget_distribution">Budget Distribution</string>
-    <string name="total_remainder">Total Remainder</string>
-    <string name="more_items">+%d more…</string>
-    <string name="see_all">See all</string>
-    <string name="latest_transactions">Latest Transact</string>
-
-    <!-- Transaction -->
-    <string name="recurring_transactions_link">Giao dịch lặp lại</string>
-    <string name="this_week">This week</string>
-    <string name="no_transactions_in_period">No transactions found in this period.</string>
-
-
-    <!-- Transactions -->
-    <string name="transaction_image_count">%1$d ảnh</string>
-    <string name="transaction_amount_format">%1$s%2$s</string>
-
-    <!-- Budgets -->
-    <string name="budget_remaining">Remaining</string>
-    <string name="budget_limit">Spending limit</string>
-    <string name="budget_total_income">Total income</string>
-    <string name="budget_total_outcome">Total expense</string>
-    <string name="budget_recurring_topup">Recurring top-up</string>
-    <string name="budget_percent">%.0f%%</string>
-
-
-
-
-    <string name="income_vs_expense">Income vs Outcome</string>
-    <string name="line_chart_placeholder">Chart will appear here</string>
-
-    <!-- Settings labels -->
-    <string name="settings_title">Settings</string>
-    <string name="settings_language_label">App language</string>
-    <string name="settings_follow_device">Follow device language</string>
-    <string name="settings_choose_language">Choose language</string>
-
     <string name="fb_login_protocol_scheme" translatable="false">fb1457780732175085</string>
 
-    <!-- Budget Detail Screen -->
-    <string name="delete_confirmation_title">Delete Confirmation</string>
-    <string name="delete_budget_confirmation_message">Are you sure you want to delete this Budget? All related Transactions will be deleted as well.</string>
-    <string name="delete">Delete</string>
+    <!-- Balance Card -->
+    <string name="total_balance">Total Balance</string>
+
+    <!-- Intro Slide One -->
+    <string name="intro_slide_one_title">Effortless, Real-Time Chats</string>
+    <string name="intro_slide_one_subtitle">With lightning-speed response times, it processes queries in real-time, offering clear and concise answers without delays.</string>
+    <string name="intro_slide_one_value">1000 +</string>
+    <string name="intro_slide_one_description">Questions answered daily</string>
+
+    <!-- Intro Slide Two -->
+    <string name="intro_slide_two_description">Seconds to get an answer</string>
+    <string name="intro_slide_two_title">AI Assistant</string>
+    <string name="intro_slide_two_subtitle">Your personal AI assistant, here to simplify your life. Whether you need help managing budget, AI is ready to assist you anytime, anywhere.</string>
+    <string name="get_started_now">Get started now</string>
+
+    <!-- Create new button -->
+    <string name="create_new">Create New</string>
+    <string name="update">Update</string>
+
+    <!-- Dialog Buttons -->
     <string name="cancel">Cancel</string>
-    <string name="income">Income</string>
-    <string name="expense">Outcome</string>
-    <string name="transaction_count">%d Items</string>
-
-    <!-- Expense Breakdown Card -->
-    <string name="expense_breakdown">Outcome Breakdown: %1$s</string>
-    <string name="by_budget">By Budget</string>
-    <string name="by_category">By Category</string>
-    <string name="placeholder" translatable="false">Placeholder</string>
-    <string name="coming_soon">Coming soon!</string>
-    <string name="no_expense_data">No expense data for this period.</string>
-
-    <!-- Date Picker -->
-    <string name="ok">OK</string>
-
-    <!-- Budget Form -->
-    <string name="update_budget">Update Budget</string>
-    <string name="create_budget">Create Budget</string>
-    <string name="budget_name">Budget Name</string>
-    <string name="add_datetime">Add Datetime</string>
-    <string name="datetime">Datetime</string>
-    <string name="period">Period</string>
-    <string name="period_description">What period you pay for this transaction?</string>
-
-    <!-- Selection Dialog -->
     <string name="confirm">Confirm</string>
 
-    <!-- Location Picker -->
-    <string name="move_map_to_select">Move the map to select</string>
-    <string name="lat_lng">Lat: %.3f, Lng: %.3f</string>
-    <string name="enable_gps_prompt">Please enable GPS to use this feature</string>
-    <string name="selected_location">Selected location</string>
-    <string name="select_location">Select location</string>
-    <string name="moving_map">Moving…</string>
-    <string name="confirm_location">Confirm location</string>
-    <string name="finding_address">Finding address…</string>
-    <string name="my_location">My location</string>
-
-    <!-- App Nav Host -->
-    <string name="chat">Chat</string>
-    <string name="challenge">Challenge</string>
+    <!-- Select Dialog -->
+    <string name="all">All</string>
 
     <!-- Auth Screen -->
     <string name="facebook_login_error">Facebook login error: %1$s</string>
@@ -112,151 +46,148 @@
     <string name="google_login_failed">Google login failed</string>
     <string name="facebook_login_failed">Facebook login failed</string>
 
-    <!-- Budget Detail View Model -->
-    <string name="all">All</string>
-    <string name="outcome">Outcome</string>
 
-    <!-- List Budget View Model -->
-    <string name="unexpected_error">An unexpected error occurred</string>
+    <!-- Home Screen -->
+    <string name="home_greeting">Hi, %1$s 👋</string>
+    <string name="left_to_spend_of_limit">Left to spend of %1$s limit</string>
+    <string name="days_to_go">%1$d days to go</string>
+    <string name="saved_amount">%1$s saved</string>
+    <string name="incoming">Incoming</string>
+    <string name="outcoming">OutComing</string>
 
-    <!-- Create Budget View Model -->
-    <string name="fill_all_fields_correctly">Please fill in all fields correctly.</string>
+    <string name="budget_distribution">Budget Distribution</string>
+    <string name="total_remainder">Total Remainder</string>
+    <string name="more_items">+%d more…</string>
+    <string name="see_all">See all</string>
+    <string name="latest_transactions">Latest Transact</string>
+    <string name="no_transactions_for_filter">No transactions found for this filter.</string>
+    <string name="no_transactions_yet">No transactions yet.</string>
 
-    <!-- Create Transaction View Model -->
-    <string name="invalid_amount">Invalid amount.</string>
-    <string name="transaction_name_empty">Transaction name cannot be empty.</string>
-    <string name="select_budget_prompt">Please select a budget.</string>
-    <string name="unexpected_loading_state">Unexpected AppResult.Loading from local DB.</string>
-    <string name="failed_to_save_image">Failed to save image locally. Please try again.</string>
-
-    <!-- Home View Model -->
-    <string name="this_month">This Month</string>
-    <string name="today">Today</string>
-    <string name="last_6_months">Last 6 Months</string>
-    <string name="last_n_months">Last %d Months</string>
-    <string name="last_n_days">Last %d Days</string>
-    <string name="last_n_weeks">Last %d Weeks</string>
-    <string name="thu">Thu</string>
-    <string name="chi">Chi</string>
-
-    <!-- Create Transaction Screen -->
-    <string name="location_permission_denied_snackbar">Location permission denied, cannot auto-locate.</string>
-    <string name="image_selected">Image selected</string>
-    <string name="no_image_selected">No image selected</string>
-    <string name="permission_denied">Permission Denied</string>
-    <string name="photo_captured_successfully">Photo captured successfully</string>
-    <string name="capture_cancelled_or_failed">Capture cancelled or failed</string>
-    <string name="transaction_saved_successfully">Transaction saved successfully</string>
+    <!-- Transaction -->
+    <string name="recurring_transactions_link">Giao dịch lặp lại</string>
+    <string name="this_week">This week</string>
+    <string name="no_transactions_in_period">No transactions found in this period.</string>
     <string name="select_budget">Select Budget</string>
     <string name="select_category">Select Category</string>
 
-    <!-- Image Location Controls -->
-    <string name="could_not_create_image_file">Could not create image file</string>
-    <string name="selected_image">Selected Image</string>
-    <string name="clear_image">Clear Image</string>
 
-    <!-- Budget List Screen -->
+    <!-- Transactions -->
+    <string name="transaction_image_count">%1$d ảnh</string>
+    <string name="transaction_amount_format">%1$s%2$s</string>
+
+    <!-- Budgets -->
     <string name="your_budgets">Your Budgets</string>
-    <string name="no_budgets_found">No budgets found. Create one to get started!</string>
-    <!-- Create Budget Screen -->
-    <string name="budget_updated">Budget updated!</string>
-    <string name="budget_created">Budget created!</string>
-    <string name="update">Update</string>
-    <string name="save">Save</string>
+    <string name="budget_remaining">Remaining</string>
+    <string name="budget_limit">Spending limit</string>
+    <string name="budget_total_income">Total income</string>
+    <string name="budget_total_outcome">Total expense</string>
+    <string name="budget_recurring_topup">Recurring top-up</string>
+    <string name="budget_percent">%.1f%%</string>
+    <string name="budgets_title">Budgets</string>
+    <string name="no_budgets_found">No Budgets Found</string>
+
+    <!-- Create/Edit Budget Screen -->
+    <string name="create_budget_title">Create Budget</string>
+    <string name="update_budget_title">Update Budget</string>
+    <string name="budget_name_label">Budget Name</string>
+    <string name="amount">Amount</string>
+    <string name="recurring_top_up">Recurring Top-up</string>
+    <string name="recurring_top_up_details">Recurring Top-up Details</string>
+    <string name="recurring_topup_amount">Top-up Amount</string>
+    <string name="cycle">Cycle</string>
+    <string name="how_often_renew_budget">How often do you renew the budget?</string>
+    <string name="start_date">Start Date</string>
+    <string name="next_top_up_on">Next top-up on:</string>
+    <string name="error_name_amount_required">Name and amount cannot be empty</string>
+
+    <!-- RecurringIntervalUnit -->
+    <string name="unit_day">Day</string>
+    <string name="unit_week">Week</string>
+    <string name="unit_month">Month</string>
+    <string name="unit_year">Year</string>
+
+    <!-- Create/Edit Transaction Screen -->
+    <string name="create_transaction_title">Create Transaction</string>
+    <string name="update_transaction_title">Update Transaction</string>
+    <string name="transaction_name_label">Transaction Name</string>
+    <string name="type">Type</string>
+    <string name="recurring_transaction">Recurring Transaction</string>
+    <string name="recurring_start_date">Recurring Start Date</string>
+    <string name="recurring_interval">Recurring Interval</string>
+    <string name="description">Description</string>
+    <string name="add_description">Add description</string>
+    <string name="delete">Delete</string>
+    <string name="attachments">Attachments</string>
+    <string name="choose_image">Choose image</string>
+    <string name="select_and_upload_receipt">Select and upload your receipt information.</string>
+    <string name="budget">Budget</string>
+    <string name="time">Time</string>
+    <string name="select">Select</string>
+
+
+    <!-- Category Screen -->
+    <string name="category">Category</string>
+
+    <!--Budget Detail Screen-->
+    <string name="budget_not_found">Budget not found</string>
+    <string name="transactions_label">Transactions</string>
+    <plurals name="transaction_count">
+        <item quantity="other">%d transactions</item>
+    </plurals>
+    <string name="statistics">Statistics</string>
+    <string name="week">Week</string>
+    <string name="month">Month</string>
+    <string name="no_data_available">No data available</string>
+
 
     <!-- Setting Screen -->
-    <string name="back">Back</string>
-    <string name="settings_stub">Settings (stub)</string>
-    <string name="get_finny_premium">Get Finny Premium</string>
-    <string name="get_finny_premium_subtitle">Get an Advance AI that guides, insight and evolves with you, that push your wallet better.</string>
-    <string name="subscription">Subscription</string>
-    <string name="plan_auto_renews">Plan auto-renews until canceled</string>
-    <string name="user_name" translatable="false">User name</string>
-    <string name="user_name_placeholder" translatable="false">Chưa đặt tên</string>
+    <string name="settings">Settings</string>
+    <string name="user_name_placeholder">Username</string>
     <string name="currency">Currency</string>
-    <string name="language">Language</string>
-    <string name="appearance">Appearance</string>
-    <string name="system">System</string>
-    <string name="app_preferences">App Preferences</string>
+    <string name="category_management">Category Management</string>
     <string name="enable_notifications">Enable Notifications</string>
-    <string name="authentication">Authentication</string>
-    <string name="icloud_sync">iCloud Sync</string>
-    <string name="categories">Categories</string>
-    <string name="planning">Planning</string>
     <string name="export_data">Export Data</string>
-    <string name="ask_for_feature">Ask for Feature</string>
-    <string name="review_the_app">Review the App</string>
-    <string name="log_out">Log out</string>
-    <string name="pro">Pro</string>
-    <string name="vnd" translatable="false">VND</string>
-    <string name="usd" translatable="false">USD</string>
-    <string name="profile" translatable="false">Profile</string>
+    <string name="suggest_feature">Suggest a Feature</string>
+    <string name="rate_app">Rate App</string>
+    <string name="logout">Log Out</string>
+    <string name="feature_in_development">Feature in development</string>
 
+    <!-- Notification Messages -->
+    <string name="notification_permission_denied_title">Notification Permission Denied</string>
+    <string name="notification_permission_denied">To receive notifications, you need to grant permission in the app settings.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="notifications_enabled">Notifications enabled</string>
+    <string name="notifications_disabled">Notifications disabled</string>
 
-    <!-- Balance Card -->
-    <string name="total_balance">Total Balance</string>
-
-    <!-- Intro Slide One -->
-    <string name="intro_slide_one_title">Effortless,
-Real-Time Chats</string>
-    <string name="intro_slide_one_subtitle">With lightning-speed response times, it processes queries in real-time, offering clear and concise answers without delays.</string>
-    <string name="intro_slide_one_value">1000 +</string>
-    <string name="intro_slide_one_description">Questions answered daily</string>
-
-    <!-- Intro Slide Two -->
-    <string name="intro_slide_two_description">Seconds to get an answer</string>
-    <string name="intro_slide_two_title">AI Assistant</string>
-    <string name="intro_slide_two_subtitle">Your personal AI assistant, here to simplify your life. Whether you need help managing budget, AI is ready to assist you anytime, anywhere.</string>
-    <string name="get_started_now">Get started now</string>
-
-    <!-- Create New Button -->
-    <string name="create_new">Create New</string>
-
-    <!-- Day Section Header -->
+    <!-- Notification Screen -->
+    <string name="notifications_title">Notifications</string>
+    <string name="tab_all">All</string>
+    <string name="tab_unread">Unread</string>
+    <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
+    <string name="no_notifications">No notifications yet</string>
 
-    <string name="add_transaction">Add Transaction</string>
 
-    <!-- Transaction Detail Screen -->
-    <string name="transaction_detail_title">Transaction Detail</string>
 
-    <!-- Budget Surface -->
-    <string name="budget_menu">Budget Menu</string>
+    <!-- ... your other strings ... -->
+    <plurals name="hours_ago">
+        <item quantity="one">%d hour ago</item>
+        <item quantity="other">%d hours ago</item>
+    </plurals>
+    <plurals name="minutes_ago">
+        <item quantity="one">%d minute ago</item>
+        <item quantity="other">%d minutes ago</item>
+    </plurals>
+    <string name="just_now">Just now</string>
 
-    <!-- Budget item labels -->
-    <string name="budget_remain">Remain: %1$s</string>
-    <string name="budget_overspent">Overspent: %1$s</string>
 
-    <!-- Transaction Details Form -->
-    <string name="enter_name">Enter name</string>
-    <string name="enter_description">Enter description</string>
+    <!-- Dashboard Screen -->
+    <string name="budgets">Budgets</string>
+    <string name="categories">Categories</string>
+    <string name="total_outcome">Total Outcome</string>
+    <string name="net_income_expense">Inc - Exp = %s</string>
+    <string name="change_vs_period">↑ %s vs period</string>
+    <string name="change_vs_period_up">↑ %s vs period</string>
+    <string name="change_vs_period_down">↓ %s vs period</string>
 
-    <!-- Create Transaction Header -->
-    <string name="saving">Saving…</string>
-
-    <!-- Main Bottom Bar -->
-    <string name="home">Home</string>
-    <string name="transaction">Transaction</string>
-
-    <!-- Budget Period -->
-    <string name="single">Single</string>
-    <string name="one_week">1 Week</string>
-    <string name="one_month">1 Month</string>
-    <string name="one_year">1 Year</string>
-    <!-- Language display names -->
-    <string name="english" translatable="false">English</string>
-    <string name="vietnamese" translatable="false">Tiếng Việt</string>
-
-    <!-- Notification permission messages -->
-    <string name="notification_permission_denied">Notification permission denied</string>
-    <string name="notification_permission_denied_title">Permission Denied</string>
-    <string name="open_settings">Open settings</string>
-    <string name="notification_sent_success">Notifications enabled — token sent to server</string>
-    <string name="notification_sent_success_title">Success</string>
-    <string name="notification_sent_failed">Notifications enabled but failed to send token</string>
-    <string name="notification_sent_failed_title">Failed</string>
-    <string name="notification_test_sent_success">Test notification requested (backend) — check device logs</string>
-    <string name="notification_test_sent_success_title">Test Requested</string>
-    <string name="notification_test_sent_failed">Failed to request test notification from backend</string>
-    <string name="notification_test_sent_failed_title">Test Failed</string>
 </resources>

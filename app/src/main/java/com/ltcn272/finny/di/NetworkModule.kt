@@ -3,7 +3,10 @@ package com.ltcn272.finny.di
 import com.ltcn272.finny.data.remote.AuthInterceptor
 import com.ltcn272.finny.data.remote.api.AuthApi
 import com.ltcn272.finny.data.remote.api.BudgetApi
+import com.ltcn272.finny.data.remote.api.CategoryApi
+import com.ltcn272.finny.data.remote.api.DashboardApi
 import com.ltcn272.finny.data.remote.api.FcmApi
+import com.ltcn272.finny.data.remote.api.NotificationApi
 import com.ltcn272.finny.data.remote.api.ProfileApi
 import com.ltcn272.finny.data.remote.api.TransactionApi
 import com.ltcn272.finny.data.remote.api.PriceApi
@@ -47,7 +50,7 @@ object NetworkModule {
             .build()
     }
 
-    // 🔹 Retrofit có AuthInterceptor — dùng cho các API cần token
+    // 🔹 Retrofit with AuthInterceptor — used for APIs that require a token
     @Provides
     @Singleton
     @AuthedRetrofit
@@ -95,7 +98,26 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideCategoryApiService(@AuthedRetrofit retrofit: Retrofit): CategoryApi {
+        return retrofit.create(CategoryApi::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideFcmApiService(@AuthedRetrofit retrofit: Retrofit): FcmApi {
         return retrofit.create(FcmApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideNotificationApi(@AuthedRetrofit retrofit: Retrofit): NotificationApi {
+        return retrofit.create(NotificationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDashboardApi(@AuthedRetrofit retrofit: Retrofit): DashboardApi {
+        return retrofit.create(DashboardApi::class.java)
+    }
+
 }

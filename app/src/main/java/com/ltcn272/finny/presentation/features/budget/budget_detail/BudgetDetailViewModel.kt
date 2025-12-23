@@ -1,260 +1,306 @@
-//package com.ltcn272.finny.presentation.features.budget.budget_detail
-//
-//import android.content.Context
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.graphics.SolidColor
-//import androidx.lifecycle.SavedStateHandle
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-//import com.ltcn272.finny.R
-//import com.ltcn272.finny.domain.model.Budget
-//import com.ltcn272.finny.domain.model.DaySection
-//import com.ltcn272.finny.domain.model.Transaction
-//import com.ltcn272.finny.domain.model.TransactionFilter
-//import com.ltcn272.finny.domain.model.TransactionType
-//import com.ltcn272.finny.domain.repository.BudgetRepository
-//import com.ltcn272.finny.domain.repository.TransactionRepository
-//import com.ltcn272.finny.domain.util.AppResult
-//import dagger.hilt.android.lifecycle.HiltViewModel
-//import dagger.hilt.android.qualifiers.ApplicationContext
-//import ir.ehsannarmani.compose_charts.models.Bars
-//import kotlinx.coroutines.ExperimentalCoroutinesApi
-//import kotlinx.coroutines.flow.MutableSharedFlow
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.SharedFlow
-//import kotlinx.coroutines.flow.SharingStarted
-//import kotlinx.coroutines.flow.StateFlow
-//import kotlinx.coroutines.flow.asSharedFlow
-//import kotlinx.coroutines.flow.combine
-//import kotlinx.coroutines.flow.flatMapLatest
-//import kotlinx.coroutines.flow.map
-//import kotlinx.coroutines.flow.stateIn
-//import kotlinx.coroutines.launch
-//import java.time.DayOfWeek
-//import java.time.LocalDate
-//import java.time.YearMonth
-//import java.time.ZonedDateTime
-//import java.time.format.TextStyle
-//import java.util.Locale
-//import javax.inject.Inject
-//import kotlin.math.floor
-//import kotlin.math.log10
-//import kotlin.math.pow
-//
-//data class ChartUiState(
-//    val data: List<Bars> = emptyList(),
-//    val maxValue: Double = 100.0
-//)
-//
-//sealed class FilterPeriod {
-//    data object All : FilterPeriod()
-//    data class Monthly(val yearMonth: YearMonth) : FilterPeriod()
-//    data class Daily(val date: LocalDate) : FilterPeriod()
-//
-//    fun getDisplayName(context: Context, locale: Locale = Locale.getDefault()): String {
-//        return when (this) {
-//            is All -> context.getString(R.string.all)
-//            is Daily -> this.date.dayOfMonth.toString()
-//            is Monthly -> this.yearMonth.month.getDisplayName(TextStyle.SHORT, locale)
-//        }
-//    }
-//}
-//
-//data class BudgetDetailUiState(
-//    val budget: Budget? = null,
-//    val transactions: List<Transaction> = emptyList(),
-//    val filterPeriods: List<FilterPeriod> = emptyList(),
-//    val selectedFilter: FilterPeriod = FilterPeriod.All,
-//    val currency: String = "VND",
-//    val showDeleteConfirmation: Boolean = false,
-//    val isDeleting: Boolean = false
-//)
-//
-//@OptIn(ExperimentalCoroutinesApi::class)
-//@HiltViewModel
-//class BudgetDetailViewModel @Inject constructor(
-//    private val savedStateHandle: SavedStateHandle,
-//    private val budgetRepository: BudgetRepository,
-//    private val transactionRepository: TransactionRepository,
-//    @ApplicationContext private val context: Context
-//) : ViewModel() {
-//
-//    private val budgetId: StateFlow<String> = savedStateHandle.getStateFlow("budgetId", "")
-//
-//    private val _selectedFilter = MutableStateFlow<FilterPeriod>(FilterPeriod.All)
-//    val selectedFilter: StateFlow<FilterPeriod> = _selectedFilter
-//
-//    private val _uiState = MutableStateFlow(BudgetDetailUiState())
-//    val uiState: StateFlow<BudgetDetailUiState> = _uiState
-//
-//    private val _navigateBack = MutableSharedFlow<Unit>()
-//    val navigateBack: SharedFlow<Unit> = _navigateBack.asSharedFlow()
-//
-//
-//    private val allTransactions: StateFlow<List<Transaction>> = budgetId.flatMapLatest { id ->
-//        transactionRepository.getLocalTransactions(TransactionFilter(budgetId = id))
-//    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-//
-//    init {
-//        viewModelScope.launch {
-//            combine(
-//                budgetId.flatMapLatest { id -> budgetRepository.getBudgetDetails(id) },
-//                allTransactions,
-//                _selectedFilter
-//            ) { budgetDetails, transactions, selectedFilter ->
-//                val budget = budgetDetails?.budget
-//                val filterPeriods = generateFilterPeriods(budget, transactions)
-//                val currentSelectedFilter =
-//                    if (filterPeriods.contains(selectedFilter)) selectedFilter else FilterPeriod.All
-//
-//                val filteredTransactions = when (currentSelectedFilter) {
-//                    FilterPeriod.All -> transactions
-//                    is FilterPeriod.Daily -> {
-//                        val date = currentSelectedFilter.date
-//                        transactions.filter { it.dateTime.toLocalDate() == date }
-//                    }
-//
-//                    is FilterPeriod.Monthly -> {
-//                        val yearMonth = currentSelectedFilter.yearMonth
-//                        transactions.filter { YearMonth.from(it.dateTime.toLocalDate()) == yearMonth }
-//                    }
-//                }
-//
-//                _uiState.value.copy(
-//                    budget = budget,
-//                    transactions = filteredTransactions,
-//                    filterPeriods = filterPeriods,
-//                    selectedFilter = currentSelectedFilter
-//                )
-//            }.collect {
-//                _uiState.value = it
-//            }
-//        }
-//    }
-//
-//
-//    val groupedTransactions: StateFlow<List<DaySection>> = uiState.map { state ->
-//        state.transactions
-//            .groupBy { it.dateTime.toLocalDate() }
-//            .map { (date, transactions) ->
-//                val total =
-//                    transactions.sumOf { if (it.type == TransactionType.INCOME) it.amount else -it.amount }
-//                DaySection(date, total, transactions)
-//            }
-//            .sortedByDescending { it.date }
-//    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-//
-//
-//    val chartUiState: StateFlow<ChartUiState> = uiState.map { state ->
-//        val transactionsByDay = state.transactions.groupBy { it.dateTime.dayOfWeek }
-//        val locale = Locale.getDefault()
-//        val daysOfWeek = DayOfWeek.entries.toTypedArray()
-//
-//        val bars = daysOfWeek.map { day ->
-//            val transactionsForDay = transactionsByDay[day] ?: emptyList()
-//            val income =
-//                transactionsForDay.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-//            val outcome =
-//                transactionsForDay.filter { it.type == TransactionType.OUTCOME }.sumOf { it.amount }
-//
-//            Bars(
-//                label = day.getDisplayName(TextStyle.SHORT, locale),
-//                values = listOf(
-//                    Bars.Data(
-//                        label = context.getString(R.string.outcome),
-//                        value = outcome,
-//                        color = SolidColor(Color.Red)
-//                    ),
-//                    Bars.Data(
-//                        label = context.getString(R.string.income),
-//                        value = income,
-//                        color = SolidColor(Color.Green)
-//                    )
-//                )
-//            )
-//        }
-//
-//        val maxDataValue =
-//            bars.maxOfOrNull { bar -> bar.values.maxOfOrNull { data -> data.value } ?: 0.0 } ?: 0.0
-//        val niceMaxValue = calculateNiceMaxValue(maxDataValue)
-//
-//        ChartUiState(data = bars, maxValue = niceMaxValue)
-//
-//    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ChartUiState())
-//
-//    fun setFilter(filter: FilterPeriod?) {
-//        _selectedFilter.value = filter ?: FilterPeriod.All
-//    }
-//
-//    fun onDeleteConfirmation() {
-//        _uiState.value = _uiState.value.copy(showDeleteConfirmation = true)
-//    }
-//
-//    fun onDismissDeleteDialog() {
-//        _uiState.value = _uiState.value.copy(showDeleteConfirmation = false)
-//    }
-//
-//    fun onDeleteBudget() {
-//        viewModelScope.launch {
-//            _uiState.value = _uiState.value.copy(isDeleting = true, showDeleteConfirmation = false)
-//            val result = budgetRepository.deleteBudgetLocally(budgetId.value)
-//            if (result is AppResult.Success) {
-//                _navigateBack.emit(Unit)
-//            }
-//            _uiState.value = _uiState.value.copy(isDeleting = false)
-//        }
-//    }
-//
-//    private fun calculateNiceMaxValue(actualMax: Double): Double {
-//        if (actualMax <= 0) return 40.0
-//        val power = floor(log10(actualMax))
-//        val divisor = 4 * 10.0.pow(power)
-//        return (floor(actualMax / divisor) + 1) * divisor
-//    }
-//
-//    private fun generateFilterPeriods(
-//        budget: Budget?,
-//        transactions: List<Transaction>
-//    ): List<FilterPeriod> {
-//        if (budget == null) return listOf(FilterPeriod.All)
-//
-//        val latestTransactionDate = transactions.maxOfOrNull { it.dateTime }
-//        val now = ZonedDateTime.now()
-//
-//        val endDateForGeneration =
-//            if (latestTransactionDate != null && latestTransactionDate.isAfter(now)) {
-//                latestTransactionDate
-//            } else {
-//                now
-//            }
-//
-//        val periods = mutableListOf<FilterPeriod>(FilterPeriod.All)
-//
-//        when (budget.period) {
-//            BudgetPeriod.SINGLE -> { /* No extra periods */
-//            }
-//
-//            BudgetPeriod.ONE_WEEK -> {
-//                var currentDate = budget.startDate.toLocalDate()
-//                val endLocalDate = endDateForGeneration.toLocalDate()
-//                while (!currentDate.isAfter(endLocalDate)) {
-//                    periods.add(FilterPeriod.Daily(currentDate))
-//                    currentDate = currentDate.plusDays(1)
-//                }
-//            }
-//
-//            BudgetPeriod.ONE_MONTH, BudgetPeriod.ONE_YEAR -> {
-//                var currentMonth = YearMonth.from(budget.startDate)
-//                val endMonth = YearMonth.from(endDateForGeneration)
-//                while (!currentMonth.isAfter(endMonth)) {
-//                    periods.add(FilterPeriod.Monthly(currentMonth))
-//                    currentMonth = currentMonth.plusMonths(1)
-//                }
-//            }
-//
-//            else -> { /* No extra periods */
-//            }
-//        }
-//        return periods
-//    }
-//}
+package com.ltcn272.finny.presentation.features.budget.budget_detail
+
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.ltcn272.finny.domain.model.Budget
+import com.ltcn272.finny.domain.model.Transaction
+import com.ltcn272.finny.domain.model.TransactionFilter
+import com.ltcn272.finny.domain.model.TransactionType
+import com.ltcn272.finny.domain.repository.BudgetRepository
+import com.ltcn272.finny.domain.repository.TransactionRepository
+import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.presentation.common.ui.LineChartData
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.Month // THÊM IMPORT
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle // THÊM IMPORT
+import java.time.temporal.TemporalAdjusters
+import java.util.Locale // THÊM IMPORT
+import javax.inject.Inject
+
+// Data class và Enum không thay đổi
+enum class ChartTimeRange {
+    WEEK, MONTH
+}
+
+data class BudgetDetailUiState(
+    val budget: Budget? = null,
+    val timeRange: ChartTimeRange = ChartTimeRange.WEEK,
+    val incomeChartData: List<LineChartData> = emptyList(),
+    val outcomeChartData: List<LineChartData> = emptyList(),
+    val transactionCount: Int = 0,
+    val netAmount: Double = 0.0,
+    val isStatisticsLoading: Boolean = true,
+    val isRefreshingByUser: Boolean = false,
+    val currency: String = "VND",
+)
+
+sealed class BudgetDetailEvent {
+    data object DeleteSuccess : BudgetDetailEvent()
+    data class Error(val message: String) : BudgetDetailEvent()
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@HiltViewModel
+class BudgetDetailViewModel @Inject constructor(
+    private val transactionRepository: TransactionRepository,
+    private val budgetRepository: BudgetRepository // THÊM REPOSITORY
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(BudgetDetailUiState())
+    val uiState: StateFlow<BudgetDetailUiState> = _uiState.asStateFlow()
+
+    // THÊM SHARED FLOW CHO EVENT
+    private val _eventFlow = MutableSharedFlow<BudgetDetailEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
+    private val _filterStateForPaging = MutableStateFlow(TransactionFilter())
+
+    private var isInitialized = false
+    private val TAG = "BudgetDetailVM"
+    private var allTransactions: List<Transaction> = emptyList()
+
+    val transactionsPagingFlow: Flow<PagingData<Transaction>> = _filterStateForPaging
+        .flatMapLatest { currentFilter ->
+            if (currentFilter.budgetId.isNullOrEmpty()) {
+                emptyFlow()
+            } else {
+                transactionRepository.getTransactions(currentFilter)
+            }
+        }
+        .cachedIn(viewModelScope)
+
+    fun initialize(budget: Budget) {
+        if (isInitialized) return
+        isInitialized = true
+
+        Log.d(TAG, "--- initialize() --- Budget nhận được: ${budget.name}")
+
+        _uiState.update {
+            it.copy(
+                budget = budget,
+                currency = budget.currency,
+                // Lấy các giá trị ban đầu từ budget để UI có cái hiển thị ngay
+                transactionCount = 0, // Sẽ được cập nhật
+                netAmount = budget.totalIncome - budget.totalOutcome,
+                isStatisticsLoading = true // <<< BẬT LOADING MỚI
+            )
+        }
+
+        loadAllTransactionDetails(budget.serverId)
+    }
+
+    private fun loadAllTransactionDetails(budgetId: String?) {
+        if (budgetId.isNullOrEmpty()) {
+            _uiState.update { it.copy(isStatisticsLoading = false) } // Tắt loading nếu có lỗi
+            Log.e(TAG, "loadAllTransactionDetails thất bại vì budgetId rỗng.")
+            return
+        }
+
+        viewModelScope.launch {
+            if(!_uiState.value.isRefreshingByUser) {
+                _uiState.update { it.copy(isStatisticsLoading = true) }
+            }
+
+            val result = transactionRepository.getAllTransactionsByBudget(budgetId)
+
+            when (result) {
+                is AppResult.Success -> {
+                    val transactionList = result.data
+                    this@BudgetDetailViewModel.allTransactions = transactionList
+                    Log.d(TAG, "Repo đã trả về thành công ${transactionList.size} giao dịch.")
+
+                    val totalIncome = transactionList.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
+                    val totalOutcome = transactionList.filter { it.type == TransactionType.OUTCOME }.sumOf { it.amount }
+
+                    _uiState.update {
+                        it.copy(
+                            transactionCount = transactionList.size,
+                            netAmount = totalIncome - totalOutcome,
+                            budget = it.budget?.copy(
+                                totalIncome = totalIncome,
+                                totalOutcome = totalOutcome
+                            ),
+                            isStatisticsLoading = false, // <<< TẮT LOADING
+                            isRefreshingByUser = false
+                        )
+                    }
+                    updateChartData(uiState.value.timeRange)
+                }
+                is AppResult.Error -> {
+                    Log.e(TAG, "Lỗi khi lấy tất cả giao dịch: ${result.errorType}")
+                    _uiState.update { it.copy(isStatisticsLoading = false, isRefreshingByUser = false) } // <<< TẮT LOADING
+                }
+                is AppResult.Loading -> {}
+            }
+
+            _filterStateForPaging.update {
+                it.copy(
+                    budgetId = budgetId,
+                    startDate = getStartOfWeek(),
+                    endDate = getEndOfWeek()
+                )
+            }
+        }
+    }
+
+    // --- SỬA LẠI HÀM NÀY ---
+    private fun updateChartData(range: ChartTimeRange) {
+        if (range == ChartTimeRange.WEEK) {
+            updateChartDataForWeek()
+        } else {
+            updateChartDataForYear()
+        }
+    }
+
+    private fun updateChartDataForWeek() {
+        val config = ChartConfig(
+            startDate = getStartOfWeek(),
+            endDate = getEndOfWeek(),
+            labels = (0..6).map { getStartOfWeek().plusDays(it.toLong()) },
+            dateFormat = "EEE"
+        )
+
+        val relevantTransactions = allTransactions.filter {
+            val date = it.dateTime.toLocalDate()
+            !date.isBefore(config.startDate) && !date.isAfter(config.endDate)
+        }
+        Log.d(TAG, "Có ${relevantTransactions.size} giao dịch phù hợp cho biểu đồ WEEK")
+
+        val incomeByDate = relevantTransactions
+            .filter { it.type == TransactionType.INCOME }
+            .groupBy { it.dateTime.toLocalDate() }
+            .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
+
+        val outcomeByDate = relevantTransactions
+            .filter { it.type == TransactionType.OUTCOME }
+            .groupBy { it.dateTime.toLocalDate() }
+            .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
+
+        val incomeChartData = config.labels.map { date ->
+            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, Locale("vi"))), incomeByDate[date] ?: 0f)
+        }
+
+        val outcomeChartData = config.labels.map { date ->
+            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, Locale("vi"))), outcomeByDate[date] ?: 0f)
+        }
+
+        _uiState.update {
+            it.copy(
+                incomeChartData = incomeChartData,
+                outcomeChartData = outcomeChartData
+            )
+        }
+    }
+
+    private fun updateChartDataForYear() {
+        val currentYear = LocalDate.now().year
+        val startOfYear = LocalDate.of(currentYear, 1, 1)
+        val endOfYear = LocalDate.of(currentYear, 12, 31)
+
+        val relevantTransactions = allTransactions.filter {
+            val date = it.dateTime.toLocalDate()
+            !date.isBefore(startOfYear) && !date.isAfter(endOfYear)
+        }
+        Log.d(TAG, "Có ${relevantTransactions.size} giao dịch phù hợp cho biểu đồ MONTH (cả năm)")
+
+        val incomeByMonth = relevantTransactions
+            .filter { it.type == TransactionType.INCOME }
+            .groupBy { it.dateTime.month } // Nhóm theo tháng
+            .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
+
+        val outcomeByMonth = relevantTransactions
+            .filter { it.type == TransactionType.OUTCOME }
+            .groupBy { it.dateTime.month } // Nhóm theo tháng
+            .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
+
+        // Tạo labels cho 12 tháng
+        val allMonths = Month.entries
+        val vietnameseLocale = Locale("vi")
+
+        val incomeChartData = allMonths.map { month ->
+            LineChartData(
+                label = "T${month.value}", // "T1", "T2", ...
+                value = incomeByMonth[month] ?: 0f
+            )
+        }
+
+        val outcomeChartData = allMonths.map { month ->
+            LineChartData(
+                label = "T${month.value}", // "T1", "T2", ...
+                value = outcomeByMonth[month] ?: 0f
+            )
+        }
+
+        _uiState.update {
+            it.copy(
+                incomeChartData = incomeChartData,
+                outcomeChartData = outcomeChartData
+            )
+        }
+    }
+
+    fun onTimeRangeSelected(range: ChartTimeRange) {
+        if (range == uiState.value.timeRange) return
+        _uiState.update { it.copy(timeRange = range) }
+        // Chỉ cần gọi lại updateChartData với time range mới, không cần gọi lại API
+        updateChartData(range)
+
+        // Cập nhật lại filter cho Paging
+        val startDate = if (range == ChartTimeRange.WEEK) getStartOfWeek() else getStartOfMonth()
+        val endDate = if (range == ChartTimeRange.WEEK) getEndOfWeek() else getEndOfMonth()
+        _filterStateForPaging.update { it.copy(startDate = startDate, endDate = endDate) }
+    }
+
+    fun onUserPullToRefresh() {
+        if (uiState.value.isRefreshingByUser) return
+        _uiState.update { it.copy(isRefreshingByUser = true) }
+        // Khi người dùng kéo để làm mới, gọi lại hàm tải tất cả dữ liệu
+        loadAllTransactionDetails(uiState.value.budget?.serverId)
+    }
+
+    fun deleteBudget() {
+        viewModelScope.launch {
+            val budgetToDelete = uiState.value.budget
+            if (budgetToDelete?.serverId == null) {
+                _eventFlow.emit(BudgetDetailEvent.Error("Không tìm thấy ID ngân sách để xóa."))
+                return@launch
+            }
+            budgetRepository.deleteBudget(budgetToDelete.serverId).collectLatest { result ->
+                when(result) {
+                    is AppResult.Success -> {
+                        Log.d(TAG, "Xóa budget thành công.")
+                        _eventFlow.emit(BudgetDetailEvent.DeleteSuccess)
+                    }
+                    is AppResult.Error -> {
+                        val errorMessage = "Lỗi khi xóa: ${result.errorType}"
+                        Log.e(TAG, errorMessage)
+                        _eventFlow.emit(BudgetDetailEvent.Error(errorMessage))
+                    }
+                    is AppResult.Loading -> {}
+                }
+            }
+        }
+    }
+
+    // Data class nhỏ này chỉ dùng nội bộ cho hàm updateChartDataForWeek
+    private data class ChartConfig(
+        val startDate: LocalDate,
+        val endDate: LocalDate,
+        val labels: List<LocalDate>,
+        val dateFormat: String
+    )
+
+    private fun getStartOfWeek(): LocalDate = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    private fun getEndOfWeek(): LocalDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
+    private fun getStartOfMonth(): LocalDate = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth())
+    private fun getEndOfMonth(): LocalDate = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth())
+}

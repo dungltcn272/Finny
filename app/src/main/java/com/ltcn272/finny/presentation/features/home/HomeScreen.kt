@@ -4,23 +4,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,14 +31,17 @@ import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.presentation.common.ui.BudgetItem
+import com.ltcn272.finny.presentation.common.ui.BudgetItemShimmer
 import com.ltcn272.finny.presentation.common.ui.SliderFilterRow
 import com.ltcn272.finny.presentation.common.ui.TransactionItem
+import com.ltcn272.finny.presentation.common.ui.TransactionItemShimmer
 import com.ltcn272.finny.presentation.features.home.component.BudgetDistributionCard
+import com.ltcn272.finny.presentation.features.home.component.BudgetDistributionCardShimmer
 import com.ltcn272.finny.presentation.features.home.component.FeaturedBudgetCard
+import com.ltcn272.finny.presentation.features.home.component.FeaturedBudgetCardShimmer
 import com.ltcn272.finny.presentation.features.home.component.HomeHeader
-import com.ltcn272.finny.presentation.features.home.component.HomeScreenShimmer
 import com.ltcn272.finny.presentation.features.home.component.ListHeader
-import com.ltcn272.finny.presentation.theme.FinnyTheme
+import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -52,12 +49,10 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
     onNotificationClick: () -> Unit,
-    onSettingsClick: () -> Unit = {},
     onSeeAllBudgets: () -> Unit = {},
     onSeeAllTransactions: () -> Unit = {},
     onBudgetClick: (Budget) -> Unit = {},
     onTransactionClick: (Transaction) -> Unit = {},
-    onCreateTransactionClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -67,99 +62,110 @@ fun HomeScreen(
     )
 
     val incomeString = stringResource(id = R.string.incoming)
-    val outgoingString = stringResource(id = R.string.outcome)
+    val outgoingString = stringResource(id = R.string.outcoming)
     val currencyCode = uiState.currency
 
-    FinnyTheme {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .windowInsetsPadding(WindowInsets.safeDrawing)
-                .pullRefresh(pullRefreshState) // Modifier vẫn giữ nguyên
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MainBackgroundBrush)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .pullRefresh(pullRefreshState)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 12.dp,
+                bottom = 160.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (uiState.isLoading && uiState.topBudgets.isEmpty()) {
-                HomeScreenShimmer(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            item {
+                HomeHeader(
+                    username = uiState.username ?: "...",
+                    currentDate = uiState.currentDate,
+                    onNotificationClick = onNotificationClick
                 )
+            }
+
+            if (uiState.isLoading) {
+                item { FeaturedBudgetCardShimmer() }
+                item { BudgetDistributionCardShimmer() }
+                item {
+                    ListHeader(
+                        title = stringResource(R.string.your_budgets),
+                        onSeeAllClick = {})
+                }
+                items(2) { BudgetItemShimmer() }
+                item {
+                    ListHeader(
+                        title = stringResource(R.string.latest_transactions),
+                        onSeeAllClick = {})
+                }
+                items(3) { TransactionItemShimmer() }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // 1. Header
+                uiState.featuredBudget?.let { featuredBudget ->
                     item {
-                        HomeHeader(
-                            username = uiState.username ?: "...",
-                            currentDate = uiState.currentDate,
-                            onNotificationClick = onNotificationClick,
-                            onSettingsClick = onSettingsClick
+                        FeaturedBudgetCard(
+                            budget = featuredBudget,
+                            onCardClick = { onBudgetClick(featuredBudget) }
+                        )
+                    }
+                }
+
+                if (uiState.donutChartData.isNotEmpty()) {
+                    item {
+                        BudgetDistributionCard(
+                            reportData = uiState.donutChartData,
+                            totalAmount = uiState.donutChartTotalAmount
+                        )
+                    }
+                }
+
+                if (uiState.topBudgets.isNotEmpty()) {
+                    item {
+                        ListHeader(
+                            title = stringResource(R.string.your_budgets),
+                            onSeeAllClick = onSeeAllBudgets
+                        )
+                    }
+                    items(uiState.topBudgets, key = { it.serverId!! }) { budget ->
+                        BudgetItem(
+                            budget = budget,
+                            onClick = { onBudgetClick(budget) }
+                        )
+                    }
+                }
+
+                if (uiState.allRecentTransactions.isNotEmpty()) {
+                    item {
+                        ListHeader(
+                            title = stringResource(R.string.latest_transactions),
+                            onSeeAllClick = onSeeAllTransactions
+                        )
+                    }
+                    item {
+                        val filterItems = remember { TransactionType.entries }
+                        SliderFilterRow(
+                            items = filterItems,
+                            selectedItem = uiState.transactionFilterType,
+                            onItemSelected = viewModel::setTransactionFilter,
+                            itemToString = { type ->
+                                when (type) {
+                                    TransactionType.INCOME -> incomeString
+                                    TransactionType.OUTCOME -> outgoingString
+                                }
+                            },
+                            selectedBg = MaterialTheme.colorScheme.primary,
+                            unselectedBg = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            selectedText = MaterialTheme.colorScheme.onPrimary,
+                            unselectedText = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    // Các item còn lại giữ nguyên...
-                    uiState.featuredBudget?.let { featuredBudget ->
-                        item {
-                            FeaturedBudgetCard(
-                                budget = featuredBudget,
-                                onCardClick = { onBudgetClick(featuredBudget) }
-                            )
-                        }
-                    }
-
-                    uiState.chartDataSet?.let { chartDataSet ->
-                        item {
-                            BudgetDistributionCard(
-                                chartDataSet = chartDataSet,
-                                legendData = uiState.legendData,
-                                totalRemainder = uiState.totalRemainder,
-                                currencyCode = currencyCode,
-                                pieColors = uiState.pieColors
-                            )
-                        }
-                    }
-
-                    if (uiState.topBudgets.isNotEmpty()) {
-                        item {
-                            ListHeader(
-                                title = stringResource(R.string.your_budgets),
-                                onSeeAllClick = onSeeAllBudgets
-                            )
-                        }
-                        items(uiState.topBudgets, key = { it.serverId!! }) { budget ->
-                            BudgetItem(
-                                budget = budget,
-                                onClick = { onBudgetClick(budget) }
-                            )
-                        }
-                    }
-
                     if (uiState.transactionsToShow.isNotEmpty()) {
-                        item {
-                            ListHeader(
-                                title = stringResource(R.string.latest_transactions),
-                                onSeeAllClick = onSeeAllTransactions
-                            )
-                        }
-                        item {
-                            val filterItems = remember { TransactionType.entries }
-                            SliderFilterRow(
-                                items = filterItems,
-                                selectedItem = uiState.transactionFilterType,
-                                onItemSelected = viewModel::setTransactionFilter,
-                                itemToString = { type ->
-                                    when (type) {
-                                        TransactionType.INCOME -> incomeString
-                                        TransactionType.OUTCOME -> outgoingString
-                                    }
-                                },
-                                selectedBg = MaterialTheme.colorScheme.primary,
-                                unselectedBg = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                selectedText = MaterialTheme.colorScheme.onPrimary,
-                                unselectedText = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                         items(uiState.transactionsToShow, key = { it.serverId }) { transaction ->
                             TransactionItem(
                                 transaction = transaction,
@@ -167,45 +173,31 @@ fun HomeScreen(
                                 onClick = { onTransactionClick(transaction) }
                             )
                         }
-                    } else if (!uiState.isLoading) {
+                    } else {
                         item {
                             Text(
-                                text = "Không có giao dịch nào.",
+                                text = stringResource(R.string.no_transactions_for_filter),
                                 modifier = Modifier.padding(vertical = 20.dp)
                             )
                         }
                     }
-
+                } else {
                     item {
-                        Spacer(modifier = Modifier.height(80.dp))
+                        Text(
+                            text = stringResource(R.string.no_transactions_yet),
+                            modifier = Modifier.padding(vertical = 20.dp)
+                        )
                     }
                 }
             }
-
-
-            // Floating Action Button
-            FloatingActionButton(
-                onClick = onCreateTransactionClick,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(20.dp),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.add_transaction)
-                )
-            }
-
-            // Pull to refresh indicator
-            PullRefreshIndicator(
-                refreshing = uiState.isRefreshingByUser,
-                state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter),
-                backgroundColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
-            )
         }
+
+        PullRefreshIndicator(
+            refreshing = uiState.isRefreshingByUser,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
+        )
     }
 }

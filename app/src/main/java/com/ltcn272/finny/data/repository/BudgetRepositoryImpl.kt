@@ -1,6 +1,5 @@
 package com.ltcn272.finny.data.repository
 
-import android.util.Log
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -21,7 +20,6 @@ import kotlinx.coroutines.flow.flow
 class BudgetRepositoryImpl @Inject constructor(
     private val budgetApi: BudgetApi
 ) : BudgetRepository {
-
     override fun getBudgets(): Flow<PagingData<Budget>> {
         return Pager(
             config = PagingConfig(

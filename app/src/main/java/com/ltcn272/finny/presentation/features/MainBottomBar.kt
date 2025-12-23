@@ -16,6 +16,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+// --- ADD NEW IMPORTS ---
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SwapHoriz
+// --------------------
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,15 +39,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector // <<< ADD IMPORT
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ltcn272.finny.R
 import com.ltcn272.finny.core.navigation.MainRoute
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -48,7 +54,7 @@ import kotlinx.coroutines.launch
 
 data class NavItem(
     val label: String,
-    val iconRes: Int,
+    val icon: ImageVector,
     val route: String
 )
 
@@ -65,10 +71,10 @@ fun MainBottomBar(
 ) {
     val items = remember {
         listOf(
-            NavItem("Home", R.drawable.ic_home, MainRoute.HOME),
-            NavItem("Transaction", R.drawable.ic_transaction, MainRoute.TRANSACTION),
-            NavItem("Chat", R.drawable.ic_chat, MainRoute.CHAT),
-            NavItem("Settings", R.drawable.ic_settings, MainRoute.SETTINGS)
+            NavItem("Home", Icons.Default.Home, MainRoute.HOME),
+            NavItem("Transaction", Icons.Default.SwapHoriz, MainRoute.TRANSACTION),
+            NavItem("Dashboard", Icons.Default.BarChart, MainRoute.DASHBOARD),
+            NavItem("Settings", Icons.Default.Settings, MainRoute.SETTINGS)
         )
     }
     val bounds = remember { mutableStateMapOf<String, ItemBounds>() }
@@ -115,9 +121,8 @@ fun MainBottomBar(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
+        color = MaterialTheme.colorScheme.surface, // White background
+        shadowElevation = 8.dp, // Add shadow
         shape = RoundedCornerShape(50.dp)
     ) {
         Box(
@@ -173,7 +178,7 @@ private fun BottomBarPill(x: Float, width: Float, scale: Float, height: Dp) {
                 scaleY = scale
             },
         shape = RoundedCornerShape(50),
-        color = Color(0xFFE0E0FF)
+        color = Color.LightGray.copy(alpha = 0.3f)
     ) {}
 }
 
@@ -206,7 +211,7 @@ private fun BottomBarItem(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            painter = painterResource(item.iconRes),
+            imageVector = item.icon,
             contentDescription = item.label,
             tint = fgColor,
             modifier = Modifier.size(iconSize)

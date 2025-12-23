@@ -23,7 +23,7 @@ class CategoryRepositoryImpl @Inject constructor(
     override fun getCategories(): Flow<PagingData<Category>> {
         return Pager(
             config = PagingConfig(
-                pageSize = 20,
+                pageSize = 10,
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { CategoryPagingSource(categoryApi) }

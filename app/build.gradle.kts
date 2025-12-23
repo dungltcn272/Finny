@@ -93,7 +93,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.common)
     implementation(libs.androidx.hilt.work)
-    implementation(libs.androidx.paging.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -139,8 +138,8 @@ dependencies {
     implementation(libs.calendar.compose )
 
     // Paging Compose
-    implementation("androidx.paging:paging-common:3.3.6")
-    implementation("androidx.paging:paging-compose:3.3.6")
+    implementation(libs.androidx.paging.common)
+    implementation(libs.androidx.paging.compose)
 
 
     // wheel date time picker
@@ -152,13 +151,11 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
-    //  Chart
-    implementation("io.github.dautovicharis:charts:2.0.1")
-
     // Preferences DataStore for locale persistence
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation(libs.androidx.datastore.preferences)
 
-    implementation("dev.muazkadan:switchy-compose:0.7.0")
+    implementation(libs.switchy.compose)
 
-    implementation("io.github.rizmaulana:compose-stacked-snackbar:1.0.4")
+    // Splash
+    implementation(libs.androidx.core.splashscreen)
 }

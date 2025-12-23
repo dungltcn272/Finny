@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +45,7 @@ fun ImageCard(
         fontSize = 12.sp,
         color = Color.Black
     ),
-    icon: Painter? = null,
+    icon: ImageVector? = null,
     iconTint: Color = Color.White,
     iconBg: Color = Color(0xFF444444),
     iconSize: Dp = 45.dp,
@@ -111,7 +112,7 @@ fun ImageCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = icon,
+                            imageVector = icon,
                             contentDescription = null,
                             tint = iconTint
                         )
@@ -121,5 +122,3 @@ fun ImageCard(
         }
     }
 }
-
-

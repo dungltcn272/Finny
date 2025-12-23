@@ -11,7 +11,7 @@ data class Transaction(
     val name: String,
     val budgetId: String,
     val type: TransactionType,
-    val amount: Long,
+    val amount: Double,
     val dateTime: ZonedDateTime,
     val description: String?,
     val image: String?,
@@ -41,7 +41,7 @@ data class RecurringTransaction(
     val name: String,
     val budgetId: String,
     val type: TransactionType,
-    val amount: Long,
+    val amount: Double,
     val description: String?,
     val image: String?,
     val active: Boolean,
@@ -59,6 +59,6 @@ data class RecurringTransaction(
 data class TransactionFilter(
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
-    val categoryId: String? = null
+    val budgetId: String? = null
 )
 

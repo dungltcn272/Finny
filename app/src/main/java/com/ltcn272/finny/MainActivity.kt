@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.facebook.CallbackManager
 import com.ltcn272.finny.core.Gate
 import com.ltcn272.finny.core.OnboardingManager
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var callbackManager: CallbackManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         callbackManager = CallbackManager.Factory.create()

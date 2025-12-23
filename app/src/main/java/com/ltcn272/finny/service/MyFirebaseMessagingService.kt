@@ -1,5 +1,6 @@
 package com.ltcn272.finny.service
 
+import android.util.Log // <<< THÊM IMPORT
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -20,6 +21,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     lateinit var fcmRepository: FcmRepository
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val TAG = "MyFirebaseMsgService" // <<< THÊM TAG ĐỂ LỌC LOG
 
     override fun onCreate() {
         super.onCreate()
@@ -38,6 +40,24 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)
 
+        // --- BẮT ĐẦU LOGGING ---
+        Log.d(TAG, "-------------------------------------------------")
+        Log.d(TAG, "From: ${remoteMessage.from}")
+
+        // 1. Log toàn bộ Data Payload
+        if (remoteMessage.data.isNotEmpty()) {
+            Log.d(TAG, "Message Data payload: ${remoteMessage.data}")
+        }
+
+        // 2. Log Notification Payload (nếu có)
+        remoteMessage.notification?.let {
+            Log.d(TAG, "Message Notification Title: ${it.title}")
+            Log.d(TAG, "Message Notification Body: ${it.body}")
+        }
+        Log.d(TAG, "-------------------------------------------------")
+        // --- KẾT THÚC LOGGING ---
+
+
         val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Finny"
         val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: ""
 
@@ -50,8 +70,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         ioScope.launch {
 
             fcmRepository.updateOrCreateFcmToken(token)
-                .catch { }
+                .catch { e -> Log.e(TAG, "Failed to send FCM token to server", e) } // Thêm log lỗi
                 .collect()
         }
     }
 }
+

@@ -8,25 +8,27 @@ import java.time.ZonedDateTime
 data class Budget(
     val serverId: String?,
     val name: String,
-    val amount: Long,
-    val limit: Long,
+    val amount: Double,
+    val limit: Double,
     val currency: String,
     val startDate: ZonedDateTime,
     val recurring: RecurringConfig?,
     val isSingle: Boolean,
 
-    val totalIncome: Long,
-    val totalOutcome: Long,
-    val progress: Float,
-    val daysRemaining: Int?,
-    val expectedAvg: Long
+    val totalIncome: Double = 0.0,
+    val totalOutcome: Double = 0.0,
+    val progress: Double = 0.0,
+    val daysRemaining: Double? = null,
+    val expectedAvg: Double = 0.0,
+    val actualAvg: Double = 0.0,
+    val diffAvg: Double = 0.0
 ) : Parcelable
 
 @Parcelize
 data class RecurringConfig(
     val unit: RecurringIntervalUnit,
     val value: Int,
-    val topupAmount: Long,
+    val topupAmount: Double,
     val nextRunAt: ZonedDateTime?,
     val lastRunAt: ZonedDateTime?
 ) : Parcelable

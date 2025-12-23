@@ -12,11 +12,16 @@ interface TransactionRepository {
 
     suspend fun getRecentTransactions(): AppResult<List<Transaction>>
 
+    suspend fun getAllTransactionsByBudget(budgetId: String): AppResult<List<Transaction>>
+
     fun getRecurringTransactions(): Flow<PagingData<RecurringTransaction>>
 
     suspend fun createTransaction(transaction: Transaction): Flow<AppResult<Transaction>>
 
-    suspend fun updateTransaction(transaction: Transaction): Flow<AppResult<Transaction>>
+    suspend fun updateTransaction(
+        transactionId: String,
+        updateMap: Map<String, Any?>
+    ): Flow<AppResult<Transaction>>
 
     suspend fun deleteTransaction(id: String): Flow<AppResult<Unit>>
 

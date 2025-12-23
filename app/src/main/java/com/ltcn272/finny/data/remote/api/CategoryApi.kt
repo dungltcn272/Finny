@@ -27,7 +27,7 @@ interface CategoryApi {
     @PUT("categories/{id}")
     suspend fun update(
         @Path("id") id: String,
-        @Body body: Map<String,Any?>
+        @Body body: Map<String,@JvmSuppressWildcards Any?>
     ): ApiResponse<CategoryResponseDto>
 
     @DELETE("categories/{id}")

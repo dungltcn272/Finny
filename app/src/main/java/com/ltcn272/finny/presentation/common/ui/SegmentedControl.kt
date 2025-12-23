@@ -36,9 +36,9 @@ fun <T> SegmentedControl(
     options: List<T>,
     selected: T,
     onOptionClicked: (T) -> Unit,
-    titleForItem: @Composable (T) -> String,
+    titleForItem: (T) -> String,
 
-    containerColor: Color = Color(0xFFEEEEEF),
+    containerColor: Color = Color(0xFFEFEFF4),
     indicatorColor: Color = Color.White,
     indicatorPadding: Dp = 0.dp,
 

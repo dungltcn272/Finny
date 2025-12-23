@@ -1,8 +1,10 @@
 package com.ltcn272.finny.data.repository
 
+import android.util.Log
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.messaging.FirebaseMessaging
 import com.ltcn272.finny.core.TokenManager
 import com.ltcn272.finny.data.SettingDataStore
 import com.ltcn272.finny.data.mapper.toAuthToken
@@ -11,6 +13,7 @@ import com.ltcn272.finny.data.remote.api.AuthApi
 import com.ltcn272.finny.domain.model.AuthToken
 import com.ltcn272.finny.domain.model.User
 import com.ltcn272.finny.domain.repository.AuthRepository
+import com.ltcn272.finny.domain.repository.FcmRepository
 import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.domain.util.ErrorType
 import com.ltcn272.finny.domain.util.toErrorType
@@ -24,7 +27,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val tokenManager: TokenManager,
     private val firebaseAuth: FirebaseAuth,
-    private val settingDataStore: SettingDataStore
+    private val settingDataStore: SettingDataStore,
+    private val fcmRepository: FcmRepository
 ) : AuthRepository {
 
     private val _isLoggedIn = MutableStateFlow(!tokenManager.getAccessToken().isNullOrBlank())
@@ -41,6 +45,13 @@ class AuthRepositoryImpl @Inject constructor(
                 if (name.isNotBlank()) {
                     settingDataStore.saveUsername(name)
                 }
+            }
+            try {
+                val fcmToken = FirebaseMessaging.getInstance().token.await()
+                Log.d("FCM", "Login success. Got FCM token, now sending to server: $fcmToken")
+                fcmRepository.updateOrCreateFcmToken(fcmToken).collect()
+            } catch (e: Exception) {
+                Log.e("FCM", "Failed to get or send FCM token after login.", e)
             }
             AppResult.Success(Pair(user, newAuthToken))
         } catch (e: Exception) {
@@ -59,7 +70,7 @@ class AuthRepositoryImpl @Inject constructor(
                 ?: return AppResult.Error(ErrorType.UNKNOWN)
 
             when (val backendResult = backendLogin(firebaseIdToken)) {
-                is AppResult.Success -> AppResult.Success(backendResult.data.first) // Trả về User
+                is AppResult.Success -> AppResult.Success(backendResult.data.first) // Return User
                 is AppResult.Error -> backendResult
                 is AppResult.Loading -> AppResult.Loading
             }
@@ -105,9 +116,11 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout() {
+        FirebaseMessaging.getInstance().deleteToken()
         firebaseAuth.signOut()
         tokenManager.clearTokens()
         _isLoggedIn.value = false
         settingDataStore.clearUsername()
+        settingDataStore.saveEnableNotifications(false)
     }
 }

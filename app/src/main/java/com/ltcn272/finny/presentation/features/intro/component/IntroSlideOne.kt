@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,7 +79,7 @@ fun IntroSlideOne() {
             cardHeightFraction = 1f,
             valueText = stringResource(id = R.string.intro_slide_one_value),
             descriptionText = stringResource(id = R.string.intro_slide_one_description),
-            icon = painterResource(R.drawable.ic_arrow_right)
+            icon = Icons.AutoMirrored.Filled.ArrowForward
         )
         Spacer(Modifier.height(40.dp))
     }

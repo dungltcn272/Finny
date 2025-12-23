@@ -5,5 +5,5 @@ import java.time.LocalDate
 data class DaySection(
     val date: LocalDate,
     val transactions: List<Transaction>,
-    val totalAmount: Long
+    val totalAmount: Double
 )

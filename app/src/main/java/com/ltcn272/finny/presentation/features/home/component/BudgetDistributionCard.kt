@@ -10,144 +10,100 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import com.ltcn272.finny.R
-import com.ltcn272.finny.presentation.common.util.formatCurrency
-import io.github.dautovicharis.charts.PieChart
-import io.github.dautovicharis.charts.model.ChartDataSet
-import io.github.dautovicharis.charts.style.PieChartDefaults
 
-data class LegendData(
-    val name: String,
-    val amount: Long,
-    val color: Color
-)
+import androidx.compose.ui.unit.dp
+import com.ltcn272.finny.presentation.common.ui.ChartLegend
+import com.ltcn272.finny.presentation.common.ui.DonutChart
+import com.ltcn272.finny.presentation.common.ui.DonutChartWaiting
+import com.ltcn272.finny.presentation.common.ui.DonutData
+import com.ltcn272.finny.presentation.common.ui.shimmerEffect
 
 @Composable
 fun BudgetDistributionCard(
-    chartDataSet: ChartDataSet,
-    legendData: List<LegendData>,
-    totalRemainder: Long,
-    currencyCode: String,
-    pieColors: List<Color>,
-    modifier: Modifier = Modifier,
+    reportData: List<DonutData>,
+    totalAmount: Double,
+    modifier: Modifier = Modifier
 ) {
-    val style = PieChartDefaults.style(
-        borderColor = MaterialTheme.colorScheme.surface,
-        donutPercentage = 60f,
-        borderWidth = 2f,
-        pieColors = pieColors
-    )
-
-    Card(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(20.dp),
+        shadowElevation = 2.dp
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.budget_distribution),
-                style = MaterialTheme.typography.titleMedium,
+        Column {
+            Text("Budget Distribution",
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                modifier = Modifier.padding(start = 12.dp, top = 15.dp)
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically){
+                DonutChart(
+                    items = reportData,
+                    totalLabel = "Total Spent",
+                    totalAmount = totalAmount,
+                    modifier = Modifier.weight(1f)
+                )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Chart Box
-                Box(
-                    modifier = Modifier.size(150.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    PieChart(
-                        dataSet = chartDataSet,
-                        style = style
-                    )
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = formatCurrency(totalRemainder, currencyCode),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            text = stringResource(R.string.total_remainder),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
 
-                Spacer(modifier = Modifier.width(16.dp))
+                ChartLegend(
+                    items = reportData,
+                    maxVisibleItems = 3,
+                    modifier= Modifier.weight(0.5f)
+                )
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    legendData.take(3).forEach { item ->
-                        LegendItem(
-                            color = item.color,
-                            name = item.name,
-                            amount = formatCurrency(item.amount, currencyCode)
-                        )
-                    }
-                    if (legendData.size > 3) {
-                        Text(
-                            text = stringResource(R.string.more_items, legendData.size - 3),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                Spacer(modifier.weight(0.1f))
             }
         }
     }
 }
-
 @Composable
-private fun LegendItem(
-    color: Color,
-    name: String,
-    amount: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+fun BudgetDistributionCardShimmer(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        shadowElevation = 2.dp
     ) {
-        Spacer(
-            modifier = Modifier
-                .size(8.dp)
-                .drawBehind { drawCircle(color) }
-        )
         Column {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            // Title shimmer
+            Box(
+                modifier = Modifier
+                    .padding(start = 12.dp, top = 15.dp, bottom = 8.dp)
+                    .height(20.dp)
+                    .width(150.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
             )
-            Text(
-                text = amount,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Donut Chart Waiting
+                DonutChartWaiting(
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Legend Shimmer
+                Column(
+                    modifier = Modifier.weight(0.5f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(3) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).shimmerEffect())
+                            Spacer(Modifier.width(8.dp))
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Box(modifier = Modifier.height(14.dp).width(60.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+                                Box(modifier = Modifier.height(12.dp).width(40.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier.weight(0.1f))
+            }
         }
     }
 }

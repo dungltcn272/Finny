@@ -28,7 +28,6 @@ fun HomeHeader(
     username: String,
     currentDate: String,
     onNotificationClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -46,8 +45,7 @@ fun HomeHeader(
 
         // RIGHT
         HomeHeaderActions(
-            onNotificationClick = onNotificationClick,
-            onSettingsClick = onSettingsClick
+            onNotificationClick = onNotificationClick
         )
     }
 }
@@ -80,26 +78,16 @@ private fun HomeGreeting(
 
 @Composable
 private fun HomeHeaderActions(
-    onNotificationClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onNotificationClick: () -> Unit
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        HeaderIconButton(
-            icon = Icons.Default.Notifications,
-            contentDescription = null,
-            onClick = onNotificationClick
-        )
+    HeaderIconButton(
+        icon = Icons.Default.Notifications,
+        contentDescription = null,
+        onClick = onNotificationClick
+    )
 
-        HeaderIconButton(
-            icon = Icons.Default.Settings,
-            contentDescription = null,
-            onClick = onSettingsClick
-        )
-    }
 }
+
 @Composable
 private fun HeaderIconButton(
     icon: ImageVector,

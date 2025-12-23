@@ -34,17 +34,17 @@ fun PriceApiResponseDto.toPriceDomain(): List<PricePlan> {
 private fun featureDtoToReadableString(feature: FeatureDto): String? {
     return try {
         val featureName = when (feature.code.lowercase()) {
-            "ai-advance", "ai_advance" -> "AI Nâng cao"
-            "prompt" -> "Số lượng prompt"
+            "ai-advance", "ai_advance" -> "Advanced AI"
+            "prompt" -> "Number of prompts"
             else -> feature.code.replaceFirstChar { it.uppercase() }
         }
 
         val featureValue = when {
             feature.value.isJsonPrimitive && feature.value.asJsonPrimitive.isBoolean -> {
-                if (feature.value.asBoolean) "Có" else "Không"
+                if (feature.value.asBoolean) "Yes" else "No"
             }
             feature.value.isJsonPrimitive && feature.value.asJsonPrimitive.isString -> {
-                if (feature.value.asString.equals("unlimited", ignoreCase = true)) "Không giới hạn"
+                if (feature.value.asString.equals("unlimited", ignoreCase = true)) "Unlimited"
                 else feature.value.asString
             }
             feature.value.isJsonPrimitive && feature.value.asJsonPrimitive.isNumber -> {

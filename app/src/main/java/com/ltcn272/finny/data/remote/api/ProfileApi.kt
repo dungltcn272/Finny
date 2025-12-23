@@ -12,5 +12,5 @@ interface ProfileApi {
     suspend fun getProfile(): ApiResponse<ProfileUserDto>
 
     @POST("users/profile")
-    suspend fun updateProfile(@Body body: Map<String, Any?>): ApiResponse<ProfileUserDto>
+    suspend fun updateProfile(@Body body: Map<String, @JvmSuppressWildcards Any?>): ApiResponse<ProfileUserDto>
 }

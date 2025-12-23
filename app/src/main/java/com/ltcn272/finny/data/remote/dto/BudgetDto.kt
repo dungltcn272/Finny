@@ -2,19 +2,14 @@ package com.ltcn272.finny.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-
 data class BudgetListDataDto(
-
     @SerializedName("data")
     val data: List<BudgetResponseDto>,
-
     @SerializedName("pagination")
     val pagination: PaginationDto
 )
 
-
 data class BudgetResponseDto(
-
     @SerializedName("_id")
     val id: String,
 
@@ -25,25 +20,49 @@ data class BudgetResponseDto(
     val userId: String,
 
     @SerializedName("amount")
-    val amount: Long,
+    val amount: Double,
 
     @SerializedName("start_date")
     val startDate: String,
 
     @SerializedName("limit")
-    val limit: Long,
+    val limit: Double,
 
-    @SerializedName("currency")
-    val currency: String,
+    @SerializedName("created_at")
+    val createdAt: String,
+
+    @SerializedName("updated_at")
+    val updatedAt: String,
+
+    @SerializedName("days_remaining")
+    val daysRemaining: Double?,
+
+    @SerializedName("days_passed")
+    val daysPassed: Double,
+
+    @SerializedName("actual_avg")
+    val actualAvg: Double,
+
+    @SerializedName("expected_avg")
+    val expectedAvg: Double,
+
+    @SerializedName("diff_avg")
+    val diffAvg: Double,
+
+    @SerializedName("progress")
+    val progress: Double,
+
+    @SerializedName("total_income")
+    val totalIncome: Double,
+
+    @SerializedName("total_outcome")
+    val totalOutcome: Double,
 
     @SerializedName("recurring_topup_amount")
-    val recurringTopupAmount: Long,
-
-    @SerializedName("threshold_level_notified")
-    val thresholdLevelNotified: Int,
+    val recurringTopupAmount: Double,
 
     @SerializedName("recurring_interval_unit")
-    val recurringIntervalUnit: String?,
+    val recurringIntervalUnit: String,
 
     @SerializedName("recurring_interval_value")
     val recurringIntervalValue: Int,
@@ -55,71 +74,31 @@ data class BudgetResponseDto(
     val recurringNextRunAt: String?,
 
     @SerializedName("recurring_last_run_at")
-    val recurringLastRunAt: String?,
-
-    @SerializedName("created_at")
-    val createdAt: String,
-
-    @SerializedName("updated_at")
-    val updatedAt: String,
-
-    @SerializedName("days_remaining")
-    val daysRemaining: Int?,
-
-    @SerializedName("days_passed")
-    val daysPassed: Int,
-
-    @SerializedName("total_income")
-    val totalIncome: Long,
-
-    @SerializedName("total_outcome")
-    val totalOutcome: Long,
-
-    @SerializedName("actual_avg")
-    val actualAvg: Long,
-
-    @SerializedName("expected_avg")
-    val expectedAvg: Long,
-
-    @SerializedName("diff_avg")
-    val diffAvg: Long,
-
-    @SerializedName("progress")
-    val progress: Float,
-
-    @SerializedName("is_single")
-    val isSingle: Boolean
+    val recurringLastRunAt: String?
 )
 
 data class CreateBudgetRequestDto(
-
     @SerializedName("name")
     val name: String,
 
     @SerializedName("amount")
-    val amount: Long,
+    val amount: Double,
 
     @SerializedName("start_date")
     val startDate: String,
 
-    // ===== Optional fields =====
-
     @SerializedName("limit")
-    val limit: Long? = null,
-
-    @SerializedName("currency")
-    val currency: String? = null,
+    val limit: Double? = null,
 
     @SerializedName("recurring_active")
     val recurringActive: Boolean? = null,
 
     @SerializedName("recurring_interval_unit")
     val recurringIntervalUnit: String? = null,
-    // "day" | "week" | "month" | "year"
 
     @SerializedName("recurring_interval_value")
     val recurringIntervalValue: Int? = null,
 
     @SerializedName("recurring_topup_amount")
-    val recurringTopupAmount: Long? = null
+    val recurringTopupAmount: Double? = null
 )

@@ -129,7 +129,7 @@ fun FinnyDatePickerDialog(
                         },
                         enabled = selectedDate != null
                     ) {
-                        Text(stringResource(id = R.string.ok))
+                        Text(stringResource(id = R.string.confirm))
                     }
                 }
             }

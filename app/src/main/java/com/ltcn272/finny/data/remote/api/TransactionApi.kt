@@ -15,7 +15,7 @@ interface TransactionApi {
         @Query("page") page: Int
     ): ApiResponse<RecurringTransactionListDataDto>
 
-    @POST("transactions")
+    @POST("transactions/create")
     suspend fun createTransaction(
         @Body body: CreateTransactionRequestDto
     ): ApiResponse<TransactionResponseDto>
@@ -24,7 +24,7 @@ interface TransactionApi {
     @PUT("transactions/{id}")
     suspend fun updateTransaction(
         @Path("id") id: String,
-        @Body body: Map<String, Any?>
+        @Body body: Map<String, @JvmSuppressWildcards Any?>
     ): ApiResponse<TransactionResponseDto>
 
     @DELETE("transactions/{id}")

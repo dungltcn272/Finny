@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,7 +54,7 @@ fun IntroSlideTwo(
             cardHeightFraction = 0.35f,
             valueText = "2",
             descriptionText = stringResource(id = R.string.intro_slide_two_description),
-            icon = painterResource(R.drawable.ic_arrow_right)
+            icon = Icons.AutoMirrored.Filled.ArrowForward
         )
         Spacer(Modifier.height(12.dp))
         FinnyHeader(
@@ -86,7 +88,7 @@ fun IntroSlideTwo(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_arrow_right),
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = Color.White
                 )

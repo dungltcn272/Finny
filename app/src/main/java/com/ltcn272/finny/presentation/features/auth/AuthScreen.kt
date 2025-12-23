@@ -5,6 +5,8 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -99,7 +101,7 @@ fun AuthScreen(
                 cardHeightFraction = 0.35f,
                 valueText = "5000+",
                 descriptionText = "Daily users",
-                icon = painterResource(R.drawable.ic_arrow_right)
+                icon = Icons.AutoMirrored.Filled.ArrowForward,
             )
             Spacer(Modifier.height(12.dp))
             FinnyHeader(

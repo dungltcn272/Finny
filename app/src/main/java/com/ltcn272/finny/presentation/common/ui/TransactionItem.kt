@@ -2,7 +2,6 @@ package com.ltcn272.finny.presentation.common.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,28 +22,33 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Category
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.presentation.common.util.formatCurrency
-import com.ltcn272.finny.presentation.common.util.formatDateTime
+import com.ltcn272.finny.presentation.common.util.formatDate
 import java.time.ZonedDateTime
+import kotlin.math.max
 
 @Composable
 fun TransactionItem(
     transaction: Transaction,
     modifier: Modifier = Modifier,
     currencyCode: String,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit) = {}
 ) {
     val isIncome = transaction.type == TransactionType.INCOME
 
@@ -55,26 +59,31 @@ fun TransactionItem(
     val iconBgLight = iconBgStrong.copy(alpha = 0.15f)
 
     val amountText = formatCurrency(transaction.amount, currencyCode)
-    val dateText = formatDateTime(transaction.dateTime)
+    val dateText = formatDate(transaction.dateTime)
+
+    val attachmentString = if (transaction.image != null)
+        " • ${stringResource(R.string.transaction_image_count, 1)}"
+    else ""
+    val secondaryInfoText = "$dateText$attachmentString"
+    val adaptiveAmountFontSize = remember(amountText) {
+        calculateAdaptiveFontSize(amountText)
+    }
 
     Surface(
+        onClick = onClick,
         modifier = modifier
-            .fillMaxWidth()
-            .then(
-                if (onClick != null) Modifier.clickable { onClick() }
-                else Modifier
-            ),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
         color = Color.White,
-        shadowElevation = 0.dp
+        shadowElevation = 0.dp,
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            /** LEFT ICON **/
+            // LEFT ICON
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -101,7 +110,7 @@ fun TransactionItem(
 
             Spacer(Modifier.width(12.dp))
 
-            /** CENTER **/
+            // CENTER
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -114,37 +123,38 @@ fun TransactionItem(
 
                 Spacer(Modifier.height(2.dp))
 
-                Row {
+                Text(
+                    text = secondaryInfoText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // AMOUNT
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = stringResource(
+                        R.string.transaction_amount_format,
+                        sign,
+                        amountText
+                    ),
+                    color = amountColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = adaptiveAmountFontSize,
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip
+                )
+                transaction.category?.name?.let { categoryName ->
+                    Spacer(Modifier.height(2.dp))
                     Text(
-                        text = dateText,
+                        text = categoryName,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
-
-                    if (transaction.image != null) {
-                        Spacer(Modifier.width(6.dp))
-                        Text(
-                            text = stringResource(
-                                R.string.transaction_image_count,
-                                1
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                    }
                 }
             }
-
-            /** AMOUNT **/
-            Text(
-                text = stringResource(
-                    R.string.transaction_amount_format,
-                    sign,
-                    amountText
-                ),
-                color = amountColor,
-                fontWeight = FontWeight.Bold
-            )
 
             Spacer(Modifier.width(8.dp))
 
@@ -157,49 +167,100 @@ fun TransactionItem(
     }
 }
 
+private fun calculateAdaptiveFontSize(amountText: String): TextUnit {
+    val baseSize = 16.sp
+    val minSize = 12.sp
 
-@Preview(showBackground = true, name = "Outcome Transaction")
-@Composable
-fun TransactionItemOutcomePreview() {
-    val sampleTransaction = Transaction(
-        serverId = "1",
-        name = "Ăn tối cùng bạn bè",
-        budgetId = "b1",
-        type = TransactionType.OUTCOME,
-        amount = 150000,
-        dateTime = ZonedDateTime.now(),
-        description = null,
-        image = "has_image", // Giả sử có ảnh để hiển thị "1 Attachment"
-        category = Category("c1", "Ăn uống", isDefault = true),
-        isRecurring = false,
-        recurringInfo = null
-    )
-    TransactionItem(
-        transaction = sampleTransaction,
-        currencyCode = "VND",
-        onClick = {}
-    )
+    val digitCount = amountText.count { it.isDigit() }
+
+    if (digitCount <= 6) {
+        return baseSize
+    }
+
+    val reductionSteps = (digitCount - 6) / 2
+    val reducedSizeValue = baseSize.value - (reductionSteps * 1.5f)
+    val reducedSize = reducedSizeValue.sp
+    return max(minSize.value, reducedSize.value).sp
 }
 
-@Preview(showBackground = true, name = "Income Transaction")
 @Composable
-fun TransactionItemIncomePreview() {
-    val sampleTransaction = Transaction(
-        serverId = "2",
-        name = "Tiền lương tháng 10",
-        budgetId = "b2",
-        type = TransactionType.INCOME,
-        amount = 10000000,
-        dateTime = ZonedDateTime.now().minusDays(2),
-        description = null,
-        image = null, // Không có ảnh
-        category = Category("c1", "Ăn uống", isDefault = true),
-        isRecurring = false,
-        recurringInfo = null
-    )
-    TransactionItem(
-        transaction = sampleTransaction,
-        currencyCode = "VND",
-        onClick = {}
-    )
+fun TransactionItemShimmer(
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color(0xFFF0F0F0)), // Lighter border for unloaded feel
+        color = Color.White
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // LEFT ICON SHIMMER
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .shimmerEffect()
+            )
+
+            Spacer(Modifier.width(12.dp))
+
+            // CENTER TEXT SHIMMER
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.4f)
+                        .height(12.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
+            }
+
+            // RIGHT AMOUNT SHIMMER
+            Column(horizontalAlignment = Alignment.End) {
+                // Simulate Amount
+                Box(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(12.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .shimmerEffect()
+            )
+        }
+    }
 }
