@@ -21,7 +21,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     lateinit var fcmRepository: FcmRepository
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
-    private val TAG = "MyFirebaseMsgService" // <<< THÊM TAG ĐỂ LỌC LOG
+    private val TAG = "MyFirebaseMsgService"
 
     override fun onCreate() {
         super.onCreate()

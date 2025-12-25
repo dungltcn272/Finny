@@ -5,6 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.facebook.CallbackManager
 import com.ltcn272.finny.core.Gate
@@ -46,7 +48,7 @@ class MainActivity : ComponentActivity() {
                 AppNav(
                     startRoute = startRoute,
                     callbackManager = callbackManager,
-                    onboardingManager
+                    onboardingManager = onboardingManager
                 )
             }
         }

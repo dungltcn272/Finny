@@ -9,14 +9,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.media.RingtoneManager
 import android.os.Bundle
 import androidx.annotation.DrawableRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
@@ -24,9 +18,10 @@ import androidx.core.graphics.toColorInt
 import com.ltcn272.finny.MainActivity
 import com.ltcn272.finny.R
 import androidx.core.graphics.createBitmap
+import androidx.core.net.toUri
 
 object NotificationUtils {
-    private const val DEFAULT_CHANNEL_ID = "finny_default_channel_v2"
+    private const val DEFAULT_CHANNEL_ID = "finny_default_channel_v7"
     private const val DEFAULT_CHANNEL_NAME = "Finny Notifications"
 
     private fun getManager(ctx: Context): NotificationManager {
@@ -35,19 +30,19 @@ object NotificationUtils {
 
     private fun ensureDefaultChannel(ctx: Context) {
         val mgr = getManager(ctx)
-
         if (mgr.getNotificationChannel(DEFAULT_CHANNEL_ID) == null) {
+            val soundUri = "android.resource://${ctx.packageName}/${R.raw.message_sound}".toUri()
             val chan = NotificationChannel(
                 DEFAULT_CHANNEL_ID,
                 DEFAULT_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH // <<< QUAN TRỌNG: Để có Heads-up notification
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "General app notifications"
                 enableLights(true)
                 lightColor = Color.BLUE
                 enableVibration(true)
                 vibrationPattern = longArrayOf(100, 200, 300, 400, 500)
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), null)
+                setSound(soundUri, null)
             }
             mgr.createNotificationChannel(chan)
         }
@@ -58,11 +53,10 @@ object NotificationUtils {
 
         val notificationType = data["type"] ?: "unknown"
         val displayInfo = getNotificationDisplayInfo(notificationType)
-        val smallIconResId = imageVectorToDrawableRes(displayInfo.icon)
 
         val largeIconBitmap = createCircularBitmapFromVector(
             context = ctx,
-            vectorResId = smallIconResId,
+            vectorResId = displayInfo.iconRes,
             backgroundColor = displayInfo.color,
             iconColor = Color.WHITE
         )
@@ -78,18 +72,18 @@ object NotificationUtils {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val soundUri = "android.resource://${ctx.packageName}/${R.raw.message_sound}".toUri()
 
         val builder = NotificationCompat.Builder(ctx, DEFAULT_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification) // Small icon PHẢI là icon đơn sắc, trắng
-            .setLargeIcon(largeIconBitmap) // <<< SỬ DỤNG LARGE ICON
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setLargeIcon(largeIconBitmap)
             .setColor(displayInfo.color)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-            .setSound(defaultSoundUri)
+            .setSound(soundUri)
             .setVibrate(longArrayOf(100, 200, 300, 400, 500))
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // <<< QUAN TRỌNG: Ưu tiên cao cho Heads-up
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
 
@@ -97,28 +91,37 @@ object NotificationUtils {
         getManager(ctx).notify(notificationId, builder.build())
     }
 
-    private data class NotificationDisplayInfo(val icon: ImageVector, val color: Int)
+    private data class NotificationDisplayInfo(
+        @DrawableRes val iconRes: Int,
+        val color: Int
+    )
 
     private fun getNotificationDisplayInfo(type: String): NotificationDisplayInfo {
         return when (type.uppercase()) {
-            "OUTCOME", "INCOME", "TRANSACTION_CREATED", "TRANSACTION_UPDATED" -> NotificationDisplayInfo(
-                Icons.Default.Sync, "#4A8BFF".toColorInt()
+            "INCOME" -> NotificationDisplayInfo(
+                iconRes = R.drawable.ic_income,
+                color = "#2E7D32".toColorInt()
+            )
+            "OUTCOME" -> NotificationDisplayInfo(
+                iconRes = R.drawable.ic_outcome,
+                color = "#C62828".toColorInt()
+            )
+            "TRANSACTION_CREATED" -> NotificationDisplayInfo(
+                iconRes = R.drawable.ic_add_transaction,
+                color = "#4A8BFF".toColorInt()
+            )
+            "TRANSACTION_UPDATED" -> NotificationDisplayInfo(
+                iconRes = R.drawable.ic_edit_transaction,
+                color = "#4A8BFF".toColorInt()
             )
             "BUDGET_THRESHOLD_REACHED" -> NotificationDisplayInfo(
-                Icons.Default.Warning, "#FD7F6B".toColorInt()
+                iconRes = R.drawable.ic_warning,
+                color = "#FD7F6B".toColorInt()
             )
             else -> NotificationDisplayInfo(
-                Icons.Default.Notifications, Color.BLUE
+                iconRes = R.drawable.ic_notification,
+                color = "#4A8BFF".toColorInt()
             )
-        }
-    }
-
-    @DrawableRes
-    private fun imageVectorToDrawableRes(imageVector: ImageVector): Int {
-        return when (imageVector.name) {
-            Icons.Default.Sync.name -> R.drawable.ic_transaction
-            Icons.Default.Warning.name -> R.drawable.ic_warning
-            else -> R.drawable.ic_notification
         }
     }
 
@@ -127,23 +130,22 @@ object NotificationUtils {
         @DrawableRes vectorResId: Int,
         backgroundColor: Int,
         iconColor: Int,
-        sizeDp: Int = 64 // <<< TĂNG KÍCH THƯỚC ICON LÊN
+        sizeDp: Int = 48
     ): Bitmap {
         val sizePx = (sizeDp * context.resources.displayMetrics.density).toInt()
         val bitmap = createBitmap(sizePx, sizePx)
         val canvas = Canvas(bitmap)
 
-        // Vẽ nền tròn
         val paint = Paint().apply {
             this.color = backgroundColor
             isAntiAlias = true
         }
         canvas.drawCircle(sizePx / 2f, sizePx / 2f, sizePx / 2f, paint)
 
-        // Vẽ icon ở giữa
         val drawable = ContextCompat.getDrawable(context, vectorResId)!!
         DrawableCompat.setTint(drawable, iconColor)
-        val iconSize = (sizePx * 0.6).toInt() // Giữ tỷ lệ icon bên trong
+
+        val iconSize = (sizePx * 0.6).toInt()
         val halfIconSize = iconSize / 2
         val left = (sizePx / 2) - halfIconSize
         val top = (sizePx / 2) - halfIconSize

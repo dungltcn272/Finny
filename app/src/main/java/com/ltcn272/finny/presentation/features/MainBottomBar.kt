@@ -3,6 +3,7 @@ package com.ltcn272.finny.presentation.features
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 // --- ADD NEW IMPORTS ---
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
@@ -43,6 +45,7 @@ import androidx.compose.ui.graphics.vector.ImageVector // <<< ADD IMPORT
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -73,6 +76,7 @@ fun MainBottomBar(
         listOf(
             NavItem("Home", Icons.Default.Home, MainRoute.HOME),
             NavItem("Transaction", Icons.Default.SwapHoriz, MainRoute.TRANSACTION),
+            NavItem("AI", Icons.Default.Assistant, MainRoute.CHAT),
             NavItem("Dashboard", Icons.Default.BarChart, MainRoute.DASHBOARD),
             NavItem("Settings", Icons.Default.Settings, MainRoute.SETTINGS)
         )
@@ -222,7 +226,9 @@ private fun BottomBarItem(
             color = fgColor,
             style = MaterialTheme.typography.labelSmall,
             fontSize = textSize,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.basicMarquee()
         )
     }
 }

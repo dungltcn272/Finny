@@ -190,4 +190,28 @@
     <string name="change_vs_period_up">↑ %s vs period</string>
     <string name="change_vs_period_down">↓ %s vs period</string>
 
+    <!-- Chat Screen -->
+    <string name="ai_assistant">AI Assistant</string>
+    <string name="ask_anything">Ask anything…</string>
+    <string name="back">Back</string>
+    <string name="send">Send</string>
+
+    <!-- Time Ago Strings -->
+    <string name="time_ago_now">Just now</string>
+    <string name="time_ago_seconds">a few seconds ago</string>
+    <string name="time_ago_minutes">%d minutes ago</string>
+    <string name="time_ago_hours">%d hours ago</string>
+    <string name="time_ago_yesterday">Yesterday</string>
+
+    <!-- Error Messages -->
+    <string name="error_network">Network error, please check your connection.</string>
+    <string name="error_timeout">Request timed out. Please try again.</string>
+    <string name="error_unauthorized">Session expired. Please log in again.</string>
+    <string name="error_server">The server is having trouble. Please try again later.</string>
+    <string name="error_unknown">An unknown error occurred.</string>
+
+    <!-- Transaction Types in Chat -->
+    <string name="chat_card_income">Income</string>
+    <string name="chat_card_outcome">Outcome</string>
+
 </resources>

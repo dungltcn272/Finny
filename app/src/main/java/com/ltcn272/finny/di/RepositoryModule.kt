@@ -3,6 +3,7 @@ package com.ltcn272.finny.di
 import com.ltcn272.finny.data.repository.AuthRepositoryImpl
 import com.ltcn272.finny.data.repository.BudgetRepositoryImpl
 import com.ltcn272.finny.data.repository.CategoryRepositoryImpl
+import com.ltcn272.finny.data.repository.ChatRepositoryImpl
 import com.ltcn272.finny.data.repository.DashboardRepositoryImpl
 import com.ltcn272.finny.data.repository.FcmRepositoryImpl
 import com.ltcn272.finny.data.repository.NotificationRepositoryImpl
@@ -12,6 +13,7 @@ import com.ltcn272.finny.data.repository.TransactionRepositoryImpl
 import com.ltcn272.finny.domain.repository.AuthRepository
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.CategoryRepository
+import com.ltcn272.finny.domain.repository.ChatRepository
 import com.ltcn272.finny.domain.repository.DashboardRepository
 import com.ltcn272.finny.domain.repository.FcmRepository
 import com.ltcn272.finny.domain.repository.NotificationRepository
@@ -58,6 +60,9 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDashboardRepository(dashboardRepositoryImpl: DashboardRepositoryImpl): DashboardRepository
+    @Binds
+    @Singleton
+    abstract fun bindChatRepository(chatRepositoryImpl: ChatRepositoryImpl): ChatRepository
 
 }
 

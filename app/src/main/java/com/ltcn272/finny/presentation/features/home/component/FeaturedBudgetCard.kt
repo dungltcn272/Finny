@@ -1,7 +1,6 @@
 package com.ltcn272.finny.presentation.features.home.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,9 +36,9 @@ fun FeaturedBudgetCard(
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onCardClick,
         modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onCardClick),
+            .fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -181,32 +180,86 @@ fun FeaturedBudgetCardShimmer(
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             // Title
-            Box(modifier = Modifier.height(20.dp).fillMaxWidth(0.4f).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+            Box(
+                modifier = Modifier
+                    .height(20.dp)
+                    .fillMaxWidth(0.4f)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
             Spacer(Modifier.height(2.dp))
             // Amount
-            Box(modifier = Modifier.height(36.dp).fillMaxWidth(0.7f).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+            Box(
+                modifier = Modifier
+                    .height(36.dp)
+                    .fillMaxWidth(0.7f)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
             // Limit
-            Box(modifier = Modifier.height(16.dp).fillMaxWidth(0.5f).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+            Box(
+                modifier = Modifier
+                    .height(16.dp)
+                    .fillMaxWidth(0.5f)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
 
             Spacer(Modifier.height(6.dp))
 
             // Progress bar
-            Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
 
             Spacer(Modifier.height(2.dp))
 
             // Days & Saved
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Box(modifier = Modifier.height(12.dp).width(80.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
-                Box(modifier = Modifier.height(12.dp).width(100.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier
+                        .height(12.dp)
+                        .width(80.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
+                Box(
+                    modifier = Modifier
+                        .height(12.dp)
+                        .width(100.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
             }
 
             Spacer(Modifier.height(6.dp))
 
             // Info Chips
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(modifier = Modifier.weight(1f).height(60.dp).clip(RoundedCornerShape(12.dp)).shimmerEffect())
-                Box(modifier = Modifier.weight(1f).height(60.dp).clip(RoundedCornerShape(12.dp)).shimmerEffect())
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .shimmerEffect()
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .shimmerEffect()
+                )
             }
         }
     }

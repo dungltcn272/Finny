@@ -4,6 +4,7 @@ import com.ltcn272.finny.data.remote.AuthInterceptor
 import com.ltcn272.finny.data.remote.api.AuthApi
 import com.ltcn272.finny.data.remote.api.BudgetApi
 import com.ltcn272.finny.data.remote.api.CategoryApi
+import com.ltcn272.finny.data.remote.api.ChatApi
 import com.ltcn272.finny.data.remote.api.DashboardApi
 import com.ltcn272.finny.data.remote.api.FcmApi
 import com.ltcn272.finny.data.remote.api.NotificationApi
@@ -120,4 +121,9 @@ object NetworkModule {
         return retrofit.create(DashboardApi::class.java)
     }
 
+    @Provides
+    @Singleton
+    fun provideChatApi(@AuthedRetrofit retrofit: Retrofit): ChatApi {
+        return retrofit.create(ChatApi::class.java)
+    }
 }

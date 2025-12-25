@@ -183,4 +183,26 @@
     <string name="change_vs_period_up">↑ %s cùng kỳ</string>
     <string name="change_vs_period_down">↓ %s cùng kỳ</string>
 
+    <!-- Chat Screen -->
+    <string name="ai_assistant">Trợ lý AI</string>
+    <string name="ask_anything">Hỏi bất cứ điều gì…</string>
+    <string name="back">Quay lại</string>
+    <string name="send">Gửi</string>
+
+    <string name="time_ago_now">Vừa xong</string>
+    <string name="time_ago_seconds">vài giây trước</string>
+    <string name="time_ago_minutes">%d phút trước</string>
+    <string name="time_ago_hours">%d giờ trước</string>
+    <string name="time_ago_yesterday">Hôm qua</string>
+
+    <!-- Error Messages -->
+    <string name="error_network">Lỗi mạng, vui lòng kiểm tra lại kết nối.</string>
+    <string name="error_timeout">Yêu cầu đã quá hạn. Vui lòng thử lại.</string>
+    <string name="error_unauthorized">Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</string>
+    <string name="error_server">Máy chủ đang gặp sự cố. Vui lòng thử lại sau.</string>
+    <string name="error_unknown">Đã có lỗi không xác định xảy ra.</string>
+    <!-- Transaction Types in Chat -->
+    <string name="chat_card_income">Thu nhập</string>
+    <string name="chat_card_outcome">Chi tiêu</string>
+
 </resources>
