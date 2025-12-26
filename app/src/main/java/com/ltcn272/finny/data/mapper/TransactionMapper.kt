@@ -6,6 +6,7 @@ import com.ltcn272.finny.data.remote.dto.TransactionFilterDto
 import com.ltcn272.finny.data.remote.dto.TransactionResponseDto
 import com.ltcn272.finny.domain.model.RecurringIntervalUnit
 import com.ltcn272.finny.domain.model.RecurringTransaction
+import com.ltcn272.finny.domain.model.RecurringTransactionInfo
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionFilter
 import com.ltcn272.finny.domain.model.TransactionType
@@ -119,5 +120,25 @@ fun TransactionFilter.toFilterDto(): TransactionFilterDto {
         startDate = this.startDate?.format(formatter),
         endDate = this.endDate?.format(formatter),
         budgetId = this.budgetId
+    )
+}
+
+fun RecurringTransaction.toTransactionDomain(): Transaction {
+    return Transaction(
+        serverId = this.serverId,
+        name = this.name,
+        budgetId = this.budgetId,
+        type = this.type,
+        amount = this.amount,
+        dateTime = ZonedDateTime.now(),
+        description = this.description,
+        image = this.image,
+        category = this.category,
+        isRecurring = true,
+        recurringInfo = RecurringTransactionInfo(
+            startDate = this.startDate,
+            intervalUnit = this.intervalUnit,
+            intervalValue = this.intervalValue
+        )
     )
 }

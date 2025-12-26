@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.facebook.CallbackManager
 import com.ltcn272.finny.core.OnboardingManager
+import com.ltcn272.finny.data.mapper.toTransactionDomain
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.presentation.common.ui.GradientFloatingActionButton
@@ -41,6 +42,7 @@ import com.ltcn272.finny.presentation.features.notification.NotificationScreen
 import com.ltcn272.finny.presentation.features.profile.ProfileScreen
 import com.ltcn272.finny.presentation.features.setting.SettingScreen
 import com.ltcn272.finny.presentation.features.transaction.create_edit.CreateEditTransactionScreen
+import com.ltcn272.finny.presentation.features.transaction.recurring_transaction.RecurringTransactionScreen
 import com.ltcn272.finny.presentation.features.transaction.transaction_list.TransactionScreen
 import java.time.LocalDate
 
@@ -133,7 +135,8 @@ fun AppNav(
                             )
                             nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION)
                         },
-                        onNavigateToBudgetSettings = { nav.navigate(MainRoute.LIST_BUDGET) }
+                        onNavigateToBudgetSettings = { nav.navigate(MainRoute.LIST_BUDGET) },
+                        onNavigateToRecurring = { nav.navigate(MainRoute.LIST_RECURRING_TRANSACTION) }
                     )
                 }
 
@@ -172,6 +175,21 @@ fun AppNav(
                                 budget
                             ); nav.navigate(MainRoute.BUDGET_DETAIL)
                         })
+                }
+                composable(MainRoute.LIST_RECURRING_TRANSACTION) {
+                    RecurringTransactionScreen(
+                        onBack = { nav.popBackStack() },
+                        onTransactionClick = { recurringTransaction ->
+                            val transactionToEdit = recurringTransaction.toTransactionDomain()
+                            nav.currentBackStackEntry?.savedStateHandle?.set(
+                                "transaction_to_edit",
+                                transactionToEdit
+                            )
+                            nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION)
+                        }, onCreateNew = {
+                            nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION)
+                        }
+                    )
                 }
                 composable(route = MainRoute.CREATE_EDIT_BUDGET) {
                     val budgetToEdit =

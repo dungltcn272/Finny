@@ -92,13 +92,19 @@ class CreateEditTransactionViewModel @Inject constructor(
             this.budgetIdToResolve = transaction.budgetId
             this.originalTransaction = transaction
 
+            val initialDateTime = if (transaction.isRecurring) {
+                transaction.recurringInfo?.startDate ?: ZonedDateTime.now()
+            } else {
+                transaction.dateTime
+            }
+
             _uiState.update {
                 it.copy(
                     mode = TransactionMode.EDIT,
                     name = transaction.name,
                     amount = transaction.amount.toString().removeSuffix(".0"),
                     transactionType = transaction.type,
-                    dateTime = transaction.dateTime,
+                    dateTime = initialDateTime,
                     description = transaction.description,
                     imageUri = transaction.image,
                     selectedCategory = transaction.category,
@@ -109,7 +115,6 @@ class CreateEditTransactionViewModel @Inject constructor(
                 )
             }
         } else {
-            // --- CHẾ ĐỘ CREATE ---
             this.budgetIdToResolve = predefinedBudgetId
             this.originalTransaction = null
             val initialDate = predefinedDate?.atTime(LocalTime.now())?.atZone(ZoneId.systemDefault()) ?: ZonedDateTime.now()

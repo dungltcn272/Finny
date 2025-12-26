@@ -76,6 +76,17 @@
     <string name="no_transactions_in_period">Không có giao dịch nào trong khoảng thời gian này.</string>
     <string name="select_budget">Chọn ngân sách</string>
     <string name="select_category">Chọn danh mục</string>
+    <string name="recurring_transactions_title">Giao dịch cố định</string>
+    <string name="no_recurring_transactions_found">No recurring transactions found.</string>
+    <string name="next_run_on">Lần tới: %1$s</string>
+    <string name="n_a">N/A</string>
+    <string name="create_new_recurring_transaction">Tạo giao dịch định kỳ mới</string>
+    <string name="every_interval">Hàng %1$s</string>
+    <string name="every_n_interval">Mỗi %1$d %2$s</string>
+    <string name="unit_day_lowercase">ngày</string>
+    <string name="unit_week_lowercase">tuần</string>
+    <string name="unit_month_lowercase">tháng</string>
+    <string name="unit_year_lowercase">năm</string>
 
 
     <!-- Transactions -->

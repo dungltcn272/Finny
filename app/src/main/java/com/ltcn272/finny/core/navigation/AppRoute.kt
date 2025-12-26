@@ -29,6 +29,7 @@ object MainRoute {
     const val LIST_BUDGET = "listBudget"
     const val SETTINGS = "settings"
     const val LIST_CATEGORY = "listCategory"
+    const val LIST_RECURRING_TRANSACTION = "listRecurringTransaction"
 }
 
 val BottomRoutes = setOf(

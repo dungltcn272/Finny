@@ -82,7 +82,17 @@
     <string name="no_transactions_in_period">No transactions found in this period.</string>
     <string name="select_budget">Select Budget</string>
     <string name="select_category">Select Category</string>
-
+    <string name="recurring_transactions_title">Recurring Transactions</string>
+    <string name="no_recurring_transactions_found">No recurring transactions found.</string>
+    <string name="next_run_on">Next run: %1$s</string>
+    <string name="n_a">N/A</string>
+    <string name="create_new_recurring_transaction">Create new recurring transaction</string>
+    <string name="every_interval">Every %1$s</string>
+    <string name="every_n_interval">Every %1$d %2$s</string>
+    <string name="unit_day_lowercase">day</string>
+    <string name="unit_week_lowercase">week</string>
+    <string name="unit_month_lowercase">month</string>
+    <string name="unit_year_lowercase">year</string>
 
     <!-- Transactions -->
     <string name="transaction_image_count">%1$d ảnh</string>
