@@ -1,12 +1,15 @@
 package com.ltcn272.finny.presentation.common.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -18,23 +21,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.commandiron.wheel_picker_compose.WheelDateTimePicker
+import com.ltcn272.finny.R
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-
-@Preview
-@Composable
-fun WheelDateTimePickerDialogPreview() {
-    WheelDateTimePickerDialog(
-        startDateTime = LocalDateTime.now(),
-        onDismiss = {},
-        onConfirm = {}
-    )
-}
 
 @Composable
 fun WheelDateTimePickerDialog(
@@ -61,26 +55,43 @@ fun WheelDateTimePickerDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End
+                        .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Text(
-                        text = "Cancel",
+                    Button(
+                        onClick = onDismiss,
                         modifier = Modifier
-                            .clickable { onDismiss() }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "Confirm",
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(50), // Hình viên thuốc
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray.copy(alpha = 0.2f),
+                            contentColor = Color.Gray.copy(alpha = 0.8f)
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.cancel),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            onConfirm(snappedDateTime.truncatedTo(ChronoUnit.MINUTES))
+                        },
                         modifier = Modifier
-                            .clickable {
-                                onConfirm(snappedDateTime.truncatedTo(ChronoUnit.MINUTES))
-                            }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(50), // Hình viên thuốc
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50), // Màu xanh lá cây
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.confirm),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

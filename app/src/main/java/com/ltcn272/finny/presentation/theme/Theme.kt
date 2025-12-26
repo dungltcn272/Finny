@@ -1,6 +1,5 @@
 package com.ltcn272.finny.presentation.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -20,7 +19,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color.Blue,
+    primary = FinnyPrimary,
     secondary = PurpleGrey40,
     tertiary = Pink40,
     background = Color.White,
@@ -52,7 +51,7 @@ fun FinnyTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = AppTypography,
         content = content
     )
 }

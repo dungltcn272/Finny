@@ -32,16 +32,17 @@ import com.ltcn272.finny.presentation.features.auth.AuthScreen
 import com.ltcn272.finny.presentation.features.budget.budget_detail.BudgetDetailScreen
 import com.ltcn272.finny.presentation.features.budget.budget_list.BudgetListScreen
 import com.ltcn272.finny.presentation.features.budget.create_edit.CreateEditBudgetScreen
+import com.ltcn272.finny.presentation.features.category.CategoryScreen
 import com.ltcn272.finny.presentation.features.chat.ChatScreen
 import com.ltcn272.finny.presentation.features.dashboard.DashboardScreen
 import com.ltcn272.finny.presentation.features.home.HomeScreen
 import com.ltcn272.finny.presentation.features.intro.IntroScreen
 import com.ltcn272.finny.presentation.features.notification.NotificationScreen
+import com.ltcn272.finny.presentation.features.profile.ProfileScreen
 import com.ltcn272.finny.presentation.features.setting.SettingScreen
 import com.ltcn272.finny.presentation.features.transaction.create_edit.CreateEditTransactionScreen
 import com.ltcn272.finny.presentation.features.transaction.transaction_list.TransactionScreen
 import java.time.LocalDate
-import java.time.format.DateTimeParseException
 
 @Composable
 fun AppNav(
@@ -54,7 +55,6 @@ fun AppNav(
     val routeSet = entry?.destination?.hierarchy?.mapNotNull { it.route }?.toSet().orEmpty()
     val currentTab = routeSet.firstOrNull { it in BottomRoutes }
 
-    // Logic hiển thị bây giờ rất đơn giản: chỉ hiện khi là một trong các tab chính
     val showBottomBarAndFab = currentTab != null
 
     Box(Modifier.fillMaxSize()) {
@@ -98,8 +98,21 @@ fun AppNav(
                             nav.navigate(MainRoute.BUDGET_DETAIL)
                         },
                         onTransactionClick = { transaction ->
-                            nav.currentBackStackEntry?.savedStateHandle?.set("transaction_to_edit", transaction)
-                            nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION_BASE)
+                            nav.currentBackStackEntry?.savedStateHandle?.set(
+                                "transaction_to_edit",
+                                transaction
+                            )
+                            nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION)
+                        },
+                        onSeeAllBudgets = {
+                            nav.navigate(MainRoute.LIST_BUDGET)
+                        },
+                        onSeeAllTransactions = {
+                            nav.navigate(MainRoute.TRANSACTION) {
+                                launchSingleTop = true
+                                restoreState = true
+                                popUpTo(Graph.MAIN) { saveState = true }
+                            }
                         }
                     )
                 }
@@ -107,8 +120,18 @@ fun AppNav(
                 composable(MainRoute.TRANSACTION) {
                     TransactionScreen(
                         onTransactionClick = { transaction ->
-                            nav.currentBackStackEntry?.savedStateHandle?.set("transaction_to_edit", transaction)
-                            nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION_BASE)
+                            nav.currentBackStackEntry?.savedStateHandle?.set(
+                                "transaction_to_edit",
+                                transaction
+                            )
+                            nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION)
+                        },
+                        onAddTransactionWithDate = { date ->
+                            nav.currentBackStackEntry?.savedStateHandle?.set(
+                                NavArgs.DATE,
+                                date
+                            )
+                            nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION)
                         },
                         onNavigateToBudgetSettings = { nav.navigate(MainRoute.LIST_BUDGET) }
                     )
@@ -124,6 +147,10 @@ fun AppNav(
                             popUpTo(Graph.MAIN) { inclusive = true }
                             launchSingleTop = true
                         }
+                    }, onNavigateToProfile = {
+                        nav.navigate(MainRoute.PROFILE)
+                    }, onNavigateToCategories = {
+                        nav.navigate(MainRoute.LIST_CATEGORY)
                     })
                 }
 
@@ -135,37 +162,79 @@ fun AppNav(
 
                 // Các composable khác
                 composable(MainRoute.NOTIFICATION) { NotificationScreen(onBack = { nav.popBackStack() }) }
-                composable(MainRoute.LIST_BUDGET) { BudgetListScreen(onBack = { nav.popBackStack() }, onCreateNew = { nav.navigate(MainRoute.CREATE_EDIT_BUDGET) }, onBudgetClick = { budget -> nav.currentBackStackEntry?.savedStateHandle?.set("budget_arg", budget); nav.navigate(MainRoute.BUDGET_DETAIL) }) }
-                composable(route = MainRoute.CREATE_EDIT_BUDGET) {
-                    val budgetToEdit = nav.previousBackStackEntry?.savedStateHandle?.get<Budget>("budget_to_edit")
-                    CreateEditBudgetScreen(budgetToEdit = budgetToEdit, onBack = { nav.popBackStack() })
-                    LaunchedEffect(Unit) { nav.previousBackStackEntry?.savedStateHandle?.remove<Budget>("budget_to_edit") }
+                composable(MainRoute.LIST_BUDGET) {
+                    BudgetListScreen(
+                        onBack = { nav.popBackStack() },
+                        onCreateNew = { nav.navigate(MainRoute.CREATE_EDIT_BUDGET) },
+                        onBudgetClick = { budget ->
+                            nav.currentBackStackEntry?.savedStateHandle?.set(
+                                "budget_arg",
+                                budget
+                            ); nav.navigate(MainRoute.BUDGET_DETAIL)
+                        })
                 }
-                composable(route = MainRoute.CREATE_EDIT_TRANSACTION_BASE) { backStackEntry ->
-                    val transactionToEdit = nav.previousBackStackEntry?.savedStateHandle?.get<Transaction>("transaction_to_edit")
-                    val predefinedBudgetId: String? = backStackEntry.arguments?.getString(NavArgs.BUDGET_ID)
-                    val predefinedDateStr: String? = backStackEntry.arguments?.getString(NavArgs.DATE)
-                    val predefinedDate = predefinedDateStr?.let { try { LocalDate.parse(it) } catch (e: DateTimeParseException) { null } }
+                composable(route = MainRoute.CREATE_EDIT_BUDGET) {
+                    val budgetToEdit =
+                        nav.previousBackStackEntry?.savedStateHandle?.get<Budget>("budget_to_edit")
+                    CreateEditBudgetScreen(
+                        budgetToEdit = budgetToEdit,
+                        onBack = { nav.popBackStack() })
+                    LaunchedEffect(Unit) {
+                        nav.previousBackStackEntry?.savedStateHandle?.remove<Budget>(
+                            "budget_to_edit"
+                        )
+                    }
+                }
+                composable(route = MainRoute.CREATE_EDIT_TRANSACTION) { backStackEntry ->
+                    val previousHandle = nav.previousBackStackEntry?.savedStateHandle
+                    val transactionToEdit = previousHandle?.get<Transaction>("transaction_to_edit")
+
+                    val predefinedDate = previousHandle?.get<LocalDate>(NavArgs.DATE)
+
+                    val predefinedBudgetId: String? =
+                        backStackEntry.arguments?.getString(NavArgs.BUDGET_ID)
+
                     CreateEditTransactionScreen(
                         transactionToEdit = transactionToEdit,
                         predefinedBudgetId = predefinedBudgetId,
                         predefinedDate = predefinedDate,
                         onBack = { nav.popBackStack() }
                     )
-                    DisposableEffect(Unit) { onDispose { nav.currentBackStackEntry?.savedStateHandle?.remove<Transaction>("transaction_to_edit") } }
+
+                    DisposableEffect(Unit) {
+                        onDispose {
+                            previousHandle?.remove<Transaction>("transaction_to_edit")
+                            previousHandle?.remove<LocalDate>(NavArgs.DATE)
+                        }
+                    }
                 }
                 composable(route = MainRoute.BUDGET_DETAIL) {
-                    val budget = nav.previousBackStackEntry?.savedStateHandle?.get<Budget>("budget_arg")
+                    val budget =
+                        nav.previousBackStackEntry?.savedStateHandle?.get<Budget>("budget_arg")
                     if (budget != null)
                         BudgetDetailScreen(
                             budget = budget,
                             onBack = { nav.popBackStack() },
-                            onTransactionClick = { transaction -> nav.currentBackStackEntry?.savedStateHandle?.set("transaction_arg", transaction) },
+                            onTransactionClick = { transaction ->
+                                nav.currentBackStackEntry?.savedStateHandle?.set(
+                                    "transaction_arg",
+                                    transaction
+                                )
+                            },
                             onEditBudget = { budgetToEdit ->
-                                nav.currentBackStackEntry?.savedStateHandle?.set("budget_to_edit", budgetToEdit)
+                                nav.currentBackStackEntry?.savedStateHandle?.set(
+                                    "budget_to_edit",
+                                    budgetToEdit
+                                )
                                 nav.navigate(MainRoute.CREATE_EDIT_BUDGET)
                             }
                         )
+                }
+                composable(MainRoute.PROFILE) {
+                    ProfileScreen(onBackClick = { nav.popBackStack() })
+                }
+                composable(MainRoute.LIST_CATEGORY) {
+                    CategoryScreen(onBack = { nav.popBackStack() })
                 }
             }
         }
@@ -206,7 +275,7 @@ fun AppNav(
             exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut()
         ) {
             GradientFloatingActionButton(
-                onClick = { nav.navigate(MainRoute.createEditTransactionUrl()) }
+                onClick = { nav.navigate(MainRoute.CREATE_EDIT_TRANSACTION) }
             )
         }
     }

@@ -19,7 +19,7 @@ interface CategoryApi {
         @Query("page") page: Int = 1
     ): ApiResponse<CategoryListDataDto>
 
-    @POST("categories")
+    @POST("categories/create")
     suspend fun create(
         @Body body: CreateCategoryDto
     ): ApiResponse<CategoryResponseDto>

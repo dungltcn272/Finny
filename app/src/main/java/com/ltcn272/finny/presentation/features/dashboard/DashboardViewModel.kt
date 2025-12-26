@@ -1,8 +1,10 @@
 package com.ltcn272.finny.presentation.features.dashboard
 
+import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.BudgetReport
 import com.ltcn272.finny.domain.model.CategoryReport
 import com.ltcn272.finny.domain.model.ReportTotals
@@ -12,6 +14,7 @@ import com.ltcn272.finny.presentation.common.ui.DonutData
 import com.ltcn272.finny.presentation.common.util.formatCurrencyNonComposable
 import com.ltcn272.finny.presentation.common.util.generateHarmonicColors
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -20,7 +23,9 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
+import java.util.Locale
 import javax.inject.Inject
 
 enum class ReportTab { BUDGETS, CATEGORIES }
@@ -30,18 +35,26 @@ data class DashboardUiState(
     val selectedTab: ReportTab = ReportTab.BUDGETS,
     val startDate: ZonedDateTime = ZonedDateTime.now(),
     val endDate: ZonedDateTime = ZonedDateTime.now(),
-    val showDatePicker: Boolean = false, // <<< ADD THIS STATE
+    val showDatePicker: Boolean = false,
+    val timeRangeTitle: String = "",
 
     val totals: ReportTotals? = null,
 
-    // Processed data for UI
     val donutChartData: List<DonutData> = emptyList(),
     val reportDetailItems: List<Any> = emptyList(),
 )
 
+private fun getStartOfWeek(date: LocalDate): LocalDate =
+    date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
+private fun getEndOfWeek(date: LocalDate): LocalDate =
+    date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
+
+
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val dashboardRepository: DashboardRepository
+    private val dashboardRepository: DashboardRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -63,7 +76,6 @@ class DashboardViewModel @Inject constructor(
         processDataForUi()
     }
 
-    // --- NEW FUNCTIONS TO HANDLE DATE PICKER ---
     fun onShowDatePicker() {
         _uiState.update { it.copy(showDatePicker = true) }
     }
@@ -79,7 +91,6 @@ class DashboardViewModel @Inject constructor(
         val endDateTime = end.atTime(23, 59, 59).atZone(zone)
         setDateRangeAndFetch(startDateTime, endDateTime)
     }
-    // ------------------------------------------
 
     fun nextDateRange() {
         val currentStart = _uiState.value.startDate
@@ -97,7 +108,7 @@ class DashboardViewModel @Inject constructor(
 
     private fun setDateRangeAndFetch(start: ZonedDateTime, end: ZonedDateTime) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, startDate = start, endDate = end) }
+            _uiState.update { it.copy(isLoading = true, startDate = start, endDate = end, timeRangeTitle = formatRangeTitle(start.toLocalDate(), end.toLocalDate())) }
 
             val budgetResultDeferred = viewModelScope.launch {
                 when (val result = dashboardRepository.getBudgetReport(start, end)) {
@@ -132,7 +143,7 @@ class DashboardViewModel @Inject constructor(
             return
         }
 
-        val baseColor = Color(0xFFFFA726) // Orange color
+        val baseColor = Color(0xFFFFA726)
         val colors = generateHarmonicColors(baseColor, pieItems.size)
         val donutData = pieItems.mapIndexed { index, pieItem ->
             DonutData(
@@ -150,6 +161,18 @@ class DashboardViewModel @Inject constructor(
                 donutChartData = donutData,
                 reportDetailItems = detailItems
             )
+        }
+    }
+
+    private fun formatRangeTitle(start: LocalDate, end: LocalDate): String {
+        val today = LocalDate.now(_uiState.value.startDate.zone)
+        val startOfWeek = getStartOfWeek(today)
+        val endOfWeek = getEndOfWeek(today)
+        return if (start == startOfWeek && end == endOfWeek) {
+            context.getString(R.string.this_week)
+        } else {
+            val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault())
+            "${start.format(formatter)} - ${end.format(formatter)}"
         }
     }
 }

@@ -25,6 +25,15 @@ data class SnackbarState(
     val onActionClick: (() -> Unit)? = null
 )
 
+// TẠO UI STATE DATA CLASS
+data class SettingUiState(
+    val username: String? = null,
+    val selectedCurrency: String = "VND",
+    val actualNotificationStatus: Boolean = false,
+    val isLoggingOut: Boolean = false,
+    val snackbarState: SnackbarState = SnackbarState()
+)
+
 @HiltViewModel
 class SettingViewModel @Inject constructor(
     private val application: Application,
@@ -32,22 +41,30 @@ class SettingViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    val selectedCurrency: StateFlow<String> = settingDataStore.getSelectedCurrency
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "VND")
-
-    val username: StateFlow<String?> = settingDataStore.usernameFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-
     private val hasSystemPermission = MutableStateFlow(PermissionUtils.hasNotificationPermission(application))
-
-    val actualNotificationStatus: StateFlow<Boolean> = settingDataStore.getEnableNotifications
-        .combine(hasSystemPermission) { userPreference, hasPermission ->
-            userPreference && hasPermission
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-
     private val _isLoggingOut = MutableStateFlow(false)
-    val isLoggingOut: StateFlow<Boolean> = _isLoggingOut
+    private val _snackbarState = MutableStateFlow(SnackbarState())
+
+    val uiState: StateFlow<SettingUiState> = combine(
+        settingDataStore.usernameFlow,
+        settingDataStore.getSelectedCurrency,
+        settingDataStore.getEnableNotifications.combine(hasSystemPermission) { pref, perm -> pref && perm },
+        _isLoggingOut,
+        _snackbarState
+    ) { username, currency, notificationStatus, isLoggingOut, snackbar ->
+        SettingUiState(
+            username = username,
+            selectedCurrency = currency,
+            actualNotificationStatus = notificationStatus,
+            isLoggingOut = isLoggingOut,
+            snackbarState = snackbar
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SettingUiState()
+    )
+
 
     private val _logoutEvent = MutableSharedFlow<Unit>(replay = 0)
     val logoutEvent = _logoutEvent.asSharedFlow()
@@ -55,8 +72,6 @@ class SettingViewModel @Inject constructor(
     private val _notificationEvent = MutableSharedFlow<SettingNotificationEvent>()
     val notificationEvent = _notificationEvent.asSharedFlow()
 
-    private val _snackbarState = MutableStateFlow(SnackbarState())
-    val snackbarState: StateFlow<SnackbarState> = _snackbarState.asStateFlow()
 
     fun onCurrencySelected(currency: String) {
         viewModelScope.launch {
@@ -69,7 +84,8 @@ class SettingViewModel @Inject constructor(
             if (!hasSystemPermission.value) {
                 _notificationEvent.emit(SettingNotificationEvent.RequestPermission)
             } else {
-                val currentPreference = actualNotificationStatus.value
+                // Lấy giá trị hiện tại từ StateFlow
+                val currentPreference = uiState.value.actualNotificationStatus
                 setEnableNotifications(!currentPreference)
             }
         }

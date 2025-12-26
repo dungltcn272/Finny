@@ -1,6 +1,7 @@
 package com.ltcn272.finny.data.remote.api
 
 import com.ltcn272.finny.data.remote.dto.*
+import okhttp3.MultipartBody
 import retrofit2.http.*
 
 interface TransactionApi {
@@ -36,4 +37,11 @@ interface TransactionApi {
     suspend fun deleteRecurringTransaction(
         @Path("id") id: String
     ): ApiResponse<Unit>
+
+    @Multipart
+    @POST("upload/image")
+    suspend fun uploadImage(
+        @Part image: MultipartBody.Part
+    ): ApiResponse<UploadImageDataDto>
+
 }

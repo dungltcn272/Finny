@@ -1,5 +1,8 @@
 package com.ltcn272.finny.presentation.features.chat
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -29,9 +32,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.util.ErrorType
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
@@ -40,6 +44,7 @@ import com.ltcn272.finny.presentation.features.chat.component.MessageInput
 import com.ltcn272.finny.presentation.features.chat.component.MessageItem
 import com.ltcn272.finny.presentation.features.chat.component.TypingIndicator
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
+import kotlinx.coroutines.launch
 import java.time.Duration
 import kotlin.math.abs
 
@@ -50,8 +55,13 @@ fun ChatScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val messages = viewModel.messages.collectAsLazyPagingItems()
+    val scope = rememberCoroutineScope()
+    val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = viewModel::onPermissionResult
+    )
 
-    val snackbarMessage = uiState.snackbarState.errorType?.let {
+    val snackbarMessage = uiState.snackbarState.message ?: uiState.snackbarState.errorType?.let {
         when (it) {
             ErrorType.NETWORK -> stringResource(R.string.error_network)
             ErrorType.TIMEOUT -> stringResource(R.string.error_timeout)
@@ -60,6 +70,7 @@ fun ChatScreen(
             ErrorType.UNKNOWN -> stringResource(R.string.error_unknown)
         }
     } ?: ""
+
 
     LaunchedEffect(uiState.refreshTrigger) {
         if (uiState.refreshTrigger > 0) {
@@ -100,7 +111,7 @@ fun ChatScreen(
             val focusManager = LocalFocusManager.current
 
             LaunchedEffect(messages.itemCount, uiState.pendingMessages.size, uiState.isAiTyping) {
-                if (listState.firstVisibleItemIndex <= 1) {
+                if (messages.itemCount > 0) {
                     listState.animateScrollToItem(0)
                 }
             }
@@ -127,14 +138,14 @@ fun ChatScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     reverseLayout = true
                 ) {
-                    item(key = "typing_indicator") {
-                        if (uiState.isAiTyping) {
+                    if (uiState.isAiTyping) {
+                        item(key = "typing_indicator") {
                             TypingIndicator()
                         }
                     }
 
                     items(
-                        items = uiState.pendingMessages.reversed(),
+                        items = uiState.pendingMessages,
                         key = { "pending_${it.id}" }
                     ) { message ->
                         MessageItem(
@@ -148,7 +159,7 @@ fun ChatScreen(
 
                     items(
                         count = messages.itemCount,
-                        key = { index -> "confirmed_${messages.peek(index)?.id}" }
+                        key = messages.itemKey { it.id }
                     ) { index ->
                         val message = messages[index]
                         if (message != null) {
@@ -156,7 +167,8 @@ fun ChatScreen(
                             val nextMessage = if (index > 0) messages.peek(index - 1) else null
 
                             val isFirstInGroup = prevMessage == null || prevMessage.isFromUser != message.isFromUser
-                            val isLastInGroup = nextMessage == null || nextMessage.isFromUser != message.isFromUser
+                            val isLastInGroup = (nextMessage == null && uiState.pendingMessages.isEmpty()) ||
+                                    (nextMessage != null && nextMessage.isFromUser != message.isFromUser)
 
                             val showTimestamp = isLastInGroup || (nextMessage != null && abs(
                                 Duration.between(message.timestamp, nextMessage.timestamp).toMinutes()) >= 1)
@@ -186,7 +198,26 @@ fun ChatScreen(
                 }
             }
 
-            MessageInput(onMessageSent = viewModel::sendMessage)
+            MessageInput(
+                text = uiState.recognizedText,
+                onTextChanged = viewModel::onRecognizedTextChanged,
+                onMessageSent = {
+                    viewModel.sendMessage(it)
+                    scope.launch {
+                        listState.animateScrollToItem(0)
+                    }
+                },
+                enabled = !uiState.isAiTyping,
+                isListening = uiState.isListening,
+                onMicPress = {
+                    if (uiState.hasRecordPermission) {
+                        viewModel.startListening()
+                    } else {
+                        recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    }
+                },
+                onMicRelease = viewModel::stopListening
+            )
         }
 
         FinnySnackbar(

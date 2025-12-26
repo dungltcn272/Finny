@@ -133,4 +133,10 @@ data class TransactionFilterDto(
     val budgetId: String? = null
 )
 
+data class UploadImageDataDto(
+    @SerializedName("url") val url: String,
+    @SerializedName("fileId") val fileId: String,
+    @SerializedName("filePath") val filePath: String
+)
+
 

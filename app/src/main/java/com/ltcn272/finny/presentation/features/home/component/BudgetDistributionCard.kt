@@ -18,9 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.unit.dp
+import com.ltcn272.finny.R
 import com.ltcn272.finny.presentation.common.ui.ChartLegend
 import com.ltcn272.finny.presentation.common.ui.DonutChart
 import com.ltcn272.finny.presentation.common.ui.DonutChartWaiting
@@ -39,14 +41,17 @@ fun BudgetDistributionCard(
         shadowElevation = 2.dp
     ) {
         Column {
-            Text("Budget Distribution",
+            Text(
+                stringResource(
+                    id = R.string.budget_distribution
+                ),
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 12.dp, top = 15.dp)
             )
-            Row(verticalAlignment = Alignment.CenterVertically){
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 DonutChart(
                     items = reportData,
-                    totalLabel = "Total Spent",
+                    totalLabel = stringResource(R.string.total_spent),
                     totalAmount = totalAmount,
                     modifier = Modifier.weight(1f)
                 )
@@ -55,7 +60,7 @@ fun BudgetDistributionCard(
                 ChartLegend(
                     items = reportData,
                     maxVisibleItems = 3,
-                    modifier= Modifier.weight(0.5f)
+                    modifier = Modifier.weight(0.5f)
                 )
 
                 Spacer(modifier.weight(0.1f))
@@ -63,6 +68,7 @@ fun BudgetDistributionCard(
         }
     }
 }
+
 @Composable
 fun BudgetDistributionCardShimmer(modifier: Modifier = Modifier) {
     Surface(
@@ -93,11 +99,28 @@ fun BudgetDistributionCardShimmer(modifier: Modifier = Modifier) {
                 ) {
                     repeat(3) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).shimmerEffect())
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .shimmerEffect()
+                            )
                             Spacer(Modifier.width(8.dp))
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Box(modifier = Modifier.height(14.dp).width(60.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
-                                Box(modifier = Modifier.height(12.dp).width(40.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
+                                Box(
+                                    modifier = Modifier
+                                        .height(14.dp)
+                                        .width(60.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .shimmerEffect()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .height(12.dp)
+                                        .width(40.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .shimmerEffect()
+                                )
                             }
                         }
                     }

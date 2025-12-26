@@ -6,5 +6,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface ProfileRepository {
     fun getProfile(): Flow<AppResult<User>>
-    fun updateProfile(user: User): Flow<AppResult<User>>
+    fun updateProfile(data: Map<String, Any>): Flow<AppResult<User>>
 }

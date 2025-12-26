@@ -30,17 +30,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ltcn272.finny.R
-import com.ltcn272.finny.domain.model.Category
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.presentation.common.util.formatCurrency
 import com.ltcn272.finny.presentation.common.util.formatDate
-import java.time.ZonedDateTime
 import kotlin.math.max
 
 @Composable

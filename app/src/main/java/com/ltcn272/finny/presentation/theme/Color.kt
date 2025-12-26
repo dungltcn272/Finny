@@ -4,11 +4,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
+val FinnyPrimary = Color(0xFF2196F3)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
 
-val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
@@ -20,6 +19,7 @@ val LightGradientBlue = Color(0xFFCFDBF8)
 val BackgroundBottom = Color(0xFFF5F6FA)
 
 val PinkTop = Color(0xFFF8BBD0)
+val TransactionBlueTop = Color(0xFFE3E9F7)
 
 val IntroBackgroundBrush= Brush.verticalGradient(
     colorStops = arrayOf(
@@ -30,8 +30,8 @@ val IntroBackgroundBrush= Brush.verticalGradient(
 
 val MainBackgroundBrush: Brush = Brush.linearGradient(
     colorStops = arrayOf(
-        0.3f to LightGradientBlue.copy(alpha = 0.3f), // Start with light blue
-        1.0f to BackgroundBottom // End with light gray instead of white
+        0.3f to LightGradientBlue.copy(alpha = 0.3f),
+        1.0f to BackgroundBottom
     )
 )
 val BudgetBackgroundBrush = Brush.linearGradient(
@@ -44,8 +44,8 @@ val BudgetBackgroundBrush = Brush.linearGradient(
 )
 val TransactionBackgroundBrush = Brush.linearGradient(
     colorStops = arrayOf(
-        0.0f to PinkTop,
-        0.9f to Color(0xFFF5F2F4),
+        0.0f to TransactionBlueTop,
+        1.0f to Color(0xFFFFFFFF)
     ),
     start = Offset.Zero,
     end = Offset(0f, Float.POSITIVE_INFINITY)

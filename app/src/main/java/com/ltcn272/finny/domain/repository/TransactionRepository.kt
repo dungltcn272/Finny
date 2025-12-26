@@ -6,6 +6,7 @@ import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionFilter
 import com.ltcn272.finny.domain.util.AppResult
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 
 interface TransactionRepository {
     fun getTransactions(filter: TransactionFilter?): Flow<PagingData<Transaction>>
@@ -26,4 +27,6 @@ interface TransactionRepository {
     suspend fun deleteTransaction(id: String): Flow<AppResult<Unit>>
 
     suspend fun deleteRecurringTransaction(id: String): Flow<AppResult<Unit>>
+
+    suspend fun uploadImage(imageFile: File): Flow<AppResult<String>>
 }

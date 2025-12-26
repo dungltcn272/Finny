@@ -37,12 +37,14 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.ltcn272.finny.R
 import java.text.DecimalFormat
 import kotlin.math.abs
 import kotlin.math.cos
@@ -249,32 +251,34 @@ fun ChartLegend(
 }
 
 
-fun formatAmountShort(value: Double, useApproximateSymbol: Boolean = true): String {
+@Composable
+fun formatAmountShort(value: Double): String {
     val absValue = abs(value)
     if (absValue < 1000) return value.toLong().toString()
 
-    val formatter = DecimalFormat("#.#") // Format to one decimal place
+    val formatter = remember { DecimalFormat("#.#") }
+
+    val billionSuffix = stringResource(id = R.string.amount_billion_short)
+    val millionSuffix = stringResource(id = R.string.amount_million_short)
+    val thousandSuffix = stringResource(id = R.string.amount_thousand_short)
 
     return when {
         absValue >= 1_000_000_000 -> {
             val billions = value / 1_000_000_000.0
             val formatted = formatter.format(billions)
-            val prefix = if (useApproximateSymbol && value % 1_000_000_000.0 != 0.0) "~" else ""
-            "$prefix${formatted}B"
+            "${formatted}${billionSuffix}"
         }
 
         absValue >= 1_000_000 -> {
             val millions = value / 1_000_000.0
             val formatted = formatter.format(millions)
-            val prefix = if (useApproximateSymbol && value % 1_000_000.0 != 0.0) "~" else ""
-            "$prefix${formatted}M"
+            "${formatted}${millionSuffix}"
         }
 
         absValue >= 1_000 -> {
             val thousands = value / 1_000.0
-            val formatted = thousands.toLong()
-            val prefix = if (useApproximateSymbol && value % 1_000.0 != 0.0) "~" else ""
-            "$prefix${formatted}k"
+            val formatted = formatter.format(thousands)
+            "${formatted}${thousandSuffix}"
         }
 
         else -> value.toLong().toString()

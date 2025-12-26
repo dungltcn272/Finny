@@ -1,5 +1,6 @@
 package com.ltcn272.finny.presentation.features.chat.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -148,7 +149,8 @@ fun MessageTransactionCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = backgroundColor,
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),

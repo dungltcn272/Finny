@@ -20,6 +20,10 @@ import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.domain.util.toErrorType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 import javax.inject.Inject
 
 class TransactionRepositoryImpl @Inject constructor(
@@ -126,6 +130,18 @@ class TransactionRepositoryImpl @Inject constructor(
             transactionApi.deleteRecurringTransaction(id)
             emit(AppResult.Success(Unit))
         } catch (e: Exception) {
+            emit(AppResult.Error(e.toErrorType()))
+        }
+    }
+
+    override suspend fun uploadImage(imageFile: File): Flow<AppResult<String>> = flow {emit(AppResult.Loading)
+        try {
+            val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+            val body = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+            val response = transactionApi.uploadImage(body)
+            emit(AppResult.Success(response.data.url))
+        } catch (e: Exception) {
+            Log.e(TAG, "Error uploading image: ${e.message}", e)
             emit(AppResult.Error(e.toErrorType()))
         }
     }

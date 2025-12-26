@@ -187,18 +187,24 @@ fun <T> SelectionDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                        .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Button(
                         onClick = { onDismiss() },
-                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Gray.copy(alpha = 0.2f),
-                            contentColor = Color.Gray
+                            contentColor = Color.Gray.copy(alpha = 0.8f)
                         )
                     ) {
-                        Text(stringResource(id = R.string.cancel))
+                        Text(
+                            text = stringResource(id = R.string.cancel),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Button(
                         onClick = {
@@ -208,13 +214,19 @@ fun <T> SelectionDialog(
                             }
                             onDismiss()
                         },
-                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4CAF50),
                             contentColor = Color.White
                         )
                     ) {
-                        Text(stringResource(id = R.string.confirm))
+                        Text(
+                            text = stringResource(id = R.string.confirm),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

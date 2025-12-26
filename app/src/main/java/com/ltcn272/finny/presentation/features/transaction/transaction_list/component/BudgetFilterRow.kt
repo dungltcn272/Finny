@@ -42,7 +42,6 @@ fun BudgetFilterRow(
             unselectedText = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.width(8.dp))
 
         IconButton(onClick = onSettingClick) {
             Icon(

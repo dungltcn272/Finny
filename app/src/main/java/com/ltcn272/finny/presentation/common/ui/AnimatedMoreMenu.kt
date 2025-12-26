@@ -25,15 +25,17 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ltcn272.finny.R
 
 @Composable
 fun AnimatedMoreMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
+    onEditClick: (() -> Unit)? = null,
+    onDeleteClick: (() -> Unit)? = null,
     offset: DpOffset = DpOffset(0.dp, 0.dp)
 ) {
     val density = LocalDensity.current
@@ -76,7 +78,10 @@ fun AnimatedMoreMenu(
 
             Card(
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                ),
+                // ---------------------
                 modifier = Modifier
                     .graphicsLayer {
                         scaleX = scale
@@ -88,20 +93,23 @@ fun AnimatedMoreMenu(
                     .width(IntrinsicSize.Max)
             ) {
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                    if (onEditClick != null) {
+                        MenuItemContent(
+                            icon = Icons.Default.Edit,
+                            text = stringResource(R.string.edit),
+                            onClick = onEditClick,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
-                    MenuItemContent(
-                        icon = Icons.Default.Edit,
-                        text = "Edit",
-                        onClick = onEditClick,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-
-                    MenuItemContent(
-                        icon = Icons.Default.Delete,
-                        text = "Delete",
-                        onClick = onDeleteClick,
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                    if (onDeleteClick != null) {
+                        MenuItemContent(
+                            icon = Icons.Default.Delete,
+                            text = stringResource(R.string.delete),
+                            onClick = onDeleteClick,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

@@ -25,11 +25,10 @@ class ProfileRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun updateProfile(user: User): Flow<AppResult<User>> = flow {
+    override fun updateProfile(data: Map<String, Any>): Flow<AppResult<User>> = flow {
         emit(AppResult.Loading)
         try {
-            val requestBody = user.toUpdateMap()
-            val response = profileApi.updateProfile(requestBody)
+            val response = profileApi.updateProfile(data)
             emit(AppResult.Success(response.data.toUserDomain()))
         } catch (e: Exception) {
             emit(AppResult.Error(e.toErrorType()))

@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ltcn272.finny.R
@@ -28,6 +29,25 @@ import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.presentation.common.ui.FinnyProgressIndicator
 import com.ltcn272.finny.presentation.common.ui.shimmerEffect
 import com.ltcn272.finny.presentation.common.util.formatCurrency
+import java.time.ZonedDateTime
+
+@Preview
+@Composable
+fun FeaturedBudgetCardPreview() {
+    FeaturedBudgetCard(
+        budget = Budget(
+            serverId = "1",
+            name = "Monthly Groceries",
+            amount = 150.0,
+            limit = 500.0,
+            currency = "USD",
+            startDate = ZonedDateTime.now(),
+            recurring = null,
+            isSingle = true
+        ),
+        onCardClick = {}
+    )
+}
 
 @Composable
 fun FeaturedBudgetCard(
@@ -111,7 +131,7 @@ fun FeaturedBudgetCard(
                 }
             }
 
-            Spacer(Modifier.height(6.dp)) // Reduce spacer
+            Spacer(Modifier.height(6.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

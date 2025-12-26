@@ -1,27 +1,29 @@
 package com.ltcn272.finny.presentation.features.transaction.create_edit
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.ltcn272.finny.domain.model.Budget
-import com.ltcn272.finny.domain.model.Category
-import com.ltcn272.finny.domain.model.RecurringIntervalUnit
-import com.ltcn272.finny.domain.model.RecurringTransactionInfo
-import com.ltcn272.finny.domain.model.Transaction
-import com.ltcn272.finny.domain.model.TransactionType
+import com.ltcn272.finny.R
+import com.ltcn272.finny.domain.model.*
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.CategoryRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.presentation.common.ui.TopSnackbarType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -31,10 +33,16 @@ import javax.inject.Inject
 
 enum class TransactionMode { CREATE, EDIT }
 
+data class SnackbarState(
+    val visible: Boolean = false,
+    val message: String = "",
+    val type: TopSnackbarType = TopSnackbarType.INFO
+)
+
 data class CreateEditTransactionUiState(
     val mode: TransactionMode = TransactionMode.CREATE,
     val isSubmitting: Boolean = false,
-    val error: String? = null,
+    val snackbarState: SnackbarState = SnackbarState(),
     val finished: Boolean = false,
     val name: String = "",
     val amount: String = "",
@@ -48,11 +56,15 @@ data class CreateEditTransactionUiState(
     val recurringStartDate: ZonedDateTime = ZonedDateTime.now(),
     val recurringIntervalUnit: RecurringIntervalUnit = RecurringIntervalUnit.MONTH,
     val recurringIntervalValue: Int = 1,
-    val isBudgetSelectionHidden: Boolean = false
+    val isBudgetSelectionHidden: Boolean = false,
+    val isUploadingImage: Boolean = false,
+    val showDeleteConfirmDialog: Boolean = false,
+    val transactionNameToDelete: String = ""
 )
 
 @HiltViewModel
 class CreateEditTransactionViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val transactionRepository: TransactionRepository,
     private val budgetRepository: BudgetRepository,
     private val categoryRepository: CategoryRepository
@@ -63,8 +75,6 @@ class CreateEditTransactionViewModel @Inject constructor(
 
     private var transactionIdToEdit: String? = null
     private var budgetIdToResolve: String? = null
-
-    // Lưu lại giao dịch gốc khi sửa để so sánh
     private var originalTransaction: Transaction? = null
 
     val budgetsPagingFlow: Flow<PagingData<Budget>> = budgetRepository.getBudgets().cachedIn(viewModelScope)
@@ -75,13 +85,12 @@ class CreateEditTransactionViewModel @Inject constructor(
         predefinedBudgetId: String?,
         predefinedDate: LocalDate?
     ) {
-        if (originalTransaction != null) return // Tránh initialize lại
+        if (originalTransaction != null) return
 
         if (transaction != null) {
-            // --- CHẾ ĐỘ EDIT ---
             this.transactionIdToEdit = transaction.serverId
             this.budgetIdToResolve = transaction.budgetId
-            this.originalTransaction = transaction // LƯU LẠI GIAO DỊCH GỐC
+            this.originalTransaction = transaction
 
             _uiState.update {
                 it.copy(
@@ -114,7 +123,6 @@ class CreateEditTransactionViewModel @Inject constructor(
             }
         }
     }
-
     fun resolveDependencies(allBudgets: List<Budget>, allCategories: List<Category>) {
         _uiState.update { currentState ->
             val finalBudget = currentState.selectedBudget ?: allBudgets.find { it.serverId == budgetIdToResolve } ?: allBudgets.firstOrNull()
@@ -126,6 +134,61 @@ class CreateEditTransactionViewModel @Inject constructor(
             )
         }
     }
+
+
+    fun uploadImage(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUploadingImage = true) }
+
+            // Tạo file tạm từ Uri
+            val file = try {
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val tempFile = File.createTempFile("upload_", ".jpg", context.cacheDir)
+                    FileOutputStream(tempFile).use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                    tempFile
+                }
+            } catch (e: Exception) {
+                Log.e("CreateEditVM", "Error creating temp file: ${e.message}", e)
+                _uiState.update {
+                    it.copy(
+                        isUploadingImage = false,
+                        snackbarState = SnackbarState(visible = true, message = context.getString(R.string.error_read_image_file), type = TopSnackbarType.ERROR)
+                    )
+                }
+                null
+            }
+
+            if (file == null) return@launch
+
+            // Gọi repository để upload
+            transactionRepository.uploadImage(file).collectLatest { result ->
+                when (result) {
+                    is AppResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isUploadingImage = false,
+                                imageUri = result.data // Lưu URL trả về
+                            )
+                        }
+                    }
+                    is AppResult.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isUploadingImage = false,
+                                snackbarState = SnackbarState(visible = true, message = context.getString(R.string.error_upload_image), type = TopSnackbarType.ERROR)
+                            )
+                        }
+                    }
+                    is AppResult.Loading -> { /* Đã xử lý isUploadingImage */ }
+                }
+            }
+            // Xóa file tạm sau khi upload
+            file.delete()
+        }
+    }
+
 
     private fun createUpdateMap(): Map<String, Any?> {
         val original = originalTransaction ?: return emptyMap()
@@ -158,9 +221,11 @@ class CreateEditTransactionViewModel @Inject constructor(
         if (original.description != currentDescription) {
             updateMap["description"] = currentDescription
         }
-        // Thêm logic cho is_recurring và các trường liên quan nếu cần
         if (original.isRecurring != current.isRecurring) {
             updateMap["is_recurring"] = current.isRecurring
+        }
+        if (original.image != current.imageUri) {
+            updateMap["image"] = current.imageUri
         }
 
         return updateMap
@@ -168,7 +233,7 @@ class CreateEditTransactionViewModel @Inject constructor(
 
     fun submit() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true, error = null) }
+            _uiState.update { it.copy(isSubmitting = true, snackbarState = it.snackbarState.copy(visible = false)) }
             val currentState = _uiState.value
 
             val name = currentState.name.trim()
@@ -177,19 +242,19 @@ class CreateEditTransactionViewModel @Inject constructor(
             val category = currentState.selectedCategory
 
             if (name.isBlank()) {
-                _uiState.update { it.copy(isSubmitting = false, error = "Tên giao dịch không được để trống") }
+                _uiState.update { it.copy(isSubmitting = false, snackbarState = SnackbarState(visible = true, message = context.getString(R.string.error_transaction_name_empty), type = TopSnackbarType.WARNING)) }
                 return@launch
             }
             if (amount == null || amount <= 0) {
-                _uiState.update { it.copy(isSubmitting = false, error = "Số tiền phải lớn hơn 0") }
+                _uiState.update { it.copy(isSubmitting = false, snackbarState = SnackbarState(visible = true, message = context.getString(R.string.error_amount_must_be_positive), type = TopSnackbarType.WARNING)) }
                 return@launch
             }
             if (budget == null) {
-                _uiState.update { it.copy(isSubmitting = false, error = "Vui lòng chọn một ngân sách") }
+                _uiState.update { it.copy(isSubmitting = false, snackbarState = SnackbarState(visible = true, message = context.getString(R.string.error_select_budget), type = TopSnackbarType.WARNING)) }
                 return@launch
             }
             if (category == null) {
-                _uiState.update { it.copy(isSubmitting = false, error = "Vui lòng chọn một danh mục") }
+                _uiState.update { it.copy(isSubmitting = false, snackbarState = SnackbarState(visible = true, message = context.getString(R.string.error_select_category), type = TopSnackbarType.WARNING)) }
                 return@launch
             }
 
@@ -206,26 +271,78 @@ class CreateEditTransactionViewModel @Inject constructor(
             } else {
                 val updateMap = createUpdateMap()
                 if (updateMap.isEmpty()) {
-                    _uiState.update { it.copy(isSubmitting = false, finished = true, error = "Không có thay đổi nào.") }
+                    _uiState.update { it.copy(isSubmitting = false, finished = true) }
                     return@launch
                 }
-                Log.d("CreateEditVM", "Đang gửi Map để cập nhật: $updateMap")
                 transactionRepository.updateTransaction(transactionIdToEdit!!, updateMap)
             }
 
             resultFlow.collectLatest { result ->
                 when (result) {
                     is AppResult.Success -> _uiState.update { it.copy(isSubmitting = false, finished = true) }
-                    is AppResult.Error -> _uiState.update { it.copy(isSubmitting = false, error = "Lỗi: ${result.errorType}") }
+                    is AppResult.Error -> _uiState.update { it.copy(isSubmitting = false, snackbarState = SnackbarState(visible = true, message = "Lỗi: ${result.errorType}", type = TopSnackbarType.ERROR)) }
                     is AppResult.Loading -> { /* Đã xử lý isSubmitting */ }
                 }
             }
         }
     }
 
-    // Các hàm xử lý thay đổi input từ UI
+    fun requestDeleteTransaction() {
+        _uiState.update {
+            it.copy(
+                showDeleteConfirmDialog = true,
+                transactionNameToDelete = it.name
+            )
+        }
+    }
+
+    fun cancelDelete() {
+        _uiState.update { it.copy(showDeleteConfirmDialog = false) }
+    }
+
+    fun confirmDeleteTransaction() {
+        val transactionId = transactionIdToEdit ?: return
+        _uiState.update { it.copy(showDeleteConfirmDialog = false, isSubmitting = true) }
+
+        viewModelScope.launch {
+            transactionRepository.deleteTransaction(transactionId).collectLatest { result ->
+                when (result) {
+                    is AppResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                finished = true,
+                                snackbarState = SnackbarState(
+                                    visible = false,
+                                    message = context.getString(R.string.transaction_deleted_successfully)
+                                )
+                            )
+                        }
+                    }
+                    is AppResult.Error -> {
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                snackbarState = SnackbarState(
+                                    visible = true,
+                                    message = "Lỗi khi xóa giao dịch",
+                                    type = TopSnackbarType.ERROR
+                                )
+                            )
+                        }
+                    }
+                    is AppResult.Loading -> { }
+                }
+            }
+        }
+    }
+
+
     fun onNameChange(value: String) = _uiState.update { it.copy(name = value) }
-    fun onAmountChange(value: String) = _uiState.update { it.copy(amount = value) }
+    fun onAmountChange(newAmount: String) {
+        val cleanValue = newAmount.filter { it.isDigit() }
+        _uiState.update { it.copy(amount = cleanValue) }
+    }
     fun onBudgetSelected(budget: Budget) = _uiState.update { it.copy(selectedBudget = budget) }
     fun onTypeSelected(type: TransactionType) = _uiState.update { it.copy(transactionType = type) }
     fun onDateTimeChange(dateTime: ZonedDateTime) = _uiState.update { it.copy(dateTime = dateTime) }
@@ -235,5 +352,5 @@ class CreateEditTransactionViewModel @Inject constructor(
     fun onRecurringIntervalChange(unit: RecurringIntervalUnit, value: Int) = _uiState.update { it.copy(recurringIntervalUnit = unit, recurringIntervalValue = value) }
     fun onDescriptionChange(desc: String?) = _uiState.update { it.copy(description = desc) }
     fun onImageSelected(uri: String?) = _uiState.update { it.copy(imageUri = uri) }
-    fun errorShown() = _uiState.update { it.copy(error = null) }
+    fun onSnackbarDismissed() = _uiState.update { it.copy(snackbarState = it.snackbarState.copy(visible = false)) }
 }

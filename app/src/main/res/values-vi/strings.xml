@@ -50,6 +50,12 @@
     <string name="saved_amount">Đã tiết kiệm %1$s</string>
 
     <string name="budget_distribution">Phân bổ ngân sách</string>
+    <string name="total_spent">Tổng chi</string>
+
+    <string name="amount_billion_short">Tỷ</string>
+    <string name="amount_million_short">Tr</string>
+    <string name="amount_thousand_short">N</string>
+
     <string name="total_remainder">Tổng số dư</string>
     <string name="more_items">+%d mục khác…</string>
     <string name="see_all">Xem tất cả</string>
@@ -93,6 +99,11 @@
     <string name="start_date">Ngày bắt đầu</string>
     <string name="next_top_up_on">Lần nạp tiếp theo:</string>
     <string name="error_name_amount_required">Tên và số tiền không được để trống</string>
+    <string name="error_budget_name_empty">Tên ngân sách không được để trống.</string>
+    <string name="error_recurring_amount_positive">Số tiền nạp định kỳ phải lớn hơn 0.</string>
+    <string name="budget_created_successfully">Tạo ngân sách thành công</string>
+    <string name="budget_updated_successfully">Cập nhật ngân sách thành công</string>
+
 
     <!-- RecurringIntervalUnit -->
     <string name="unit_day">Ngày</string>
@@ -115,11 +126,30 @@
     <string name="add_description">Thêm mô tả</string>
     <string name="delete">Xoá</string>
     <string name="attachments">Ảnh</string>
+    <string name="description_placeholder">Ngon lắm nhé…</string>
     <string name="choose_image">Chọn ảnh</string>
     <string name="select_and_upload_receipt">Chọn và tải ảnh thông tin hoá đơn của bạn.</string>
     <string name="budget">Ngân sách</string>
     <string name="time">Thời gian</string>
     <string name="select">Chọn</string>
+    <string name="transaction_deleted_successfully">Xóa giao dịch thành công</string>
+    <string name="delete_transaction_confirmation_title">Xóa giao dịch</string>
+    <string name="delete_transaction_confirmation_text">Bạn có chắc là muốn xóa vĩnh viễn giao dịch \"%1$s\" không? Hành động này không thể hoàn tác.</string>
+    <string name="more_options">Tùy chọn khác</string>
+    <string name="error_deleting_transaction">Lỗi khi xóa giao dịch</string>
+    <!-- ... các chuỗi khác ... -->
+    <!-- Transaction Create/Edit Success -->
+    <string name="transaction_created_successfully">Tạo giao dịch thành công</string>
+    <string name="transaction_updated_successfully">Cập nhật giao dịch thành công</string>
+
+    <!-- Validation & Upload Errors -->
+    <string name="error_transaction_name_empty">Tên giao dịch không được để trống.</string>
+    <string name="error_amount_must_be_positive">Số tiền phải lớn hơn 0.</string>
+    <string name="error_select_budget">Vui lòng chọn một ngân sách.</string>
+    <string name="error_select_category">Vui lòng chọn một danh mục.</string>
+    <string name="error_read_image_file">Không thể đọc được file ảnh.</string>
+    <string name="error_upload_image">Tải ảnh lên thất bại.</string>
+
 
     <!-- Category Screen -->
     <string name="category">Danh mục</string>
@@ -139,7 +169,6 @@
     <string name="settings">Cài đặt</string>
     <string name="user_name_placeholder">Tên người dùng</string>
     <string name="currency">Tiền tệ</string>
-    <string name="category_management">Quản lý danh mục</string>
     <string name="enable_notifications">Bật thông báo</string>
     <string name="export_data">Xuất dữ liệu</string>
     <string name="suggest_feature">Đề xuất tính năng</string>
@@ -204,5 +233,30 @@
     <!-- Transaction Types in Chat -->
     <string name="chat_card_income">Thu nhập</string>
     <string name="chat_card_outcome">Chi tiêu</string>
+    <string name="listening">Đang nghe…</string>
 
+    <!-- Profile Screen -->
+    <string name="profile_title">Thông tin cá nhân</string>
+    <string name="save">Lưu</string>
+    <string name="display_name">Tên hiển thị</string>
+    <string name="account">Tài khoản</string>
+    <string name="plan">Gói</string>
+    <string name="member_since">Thành viên từ</string>
+    <string name="error_display_name_empty">Tên hiển thị không được để trống.</string>
+    <string name="profile_updated_successfully">Cập nhật thông tin thành công!</string>
+
+    <!-- Category Management Screen -->
+    <string name="category_management">Quản lý danh mục</string>
+    <string name="your_categories">Danh mục của bạn</string>
+    <string name="add_category">Thêm danh mục</string>
+    <string name="edit">Sửa</string>
+    <string name="done">Xong</string>
+    <string name="delete_category_confirmation_title">Xóa danh mục?</string>
+    <string name="delete_category_confirmation_text">Bạn có chắc chắn muốn xóa danh mục \"%1$s\" không?</string>
+    <string name="enter_category_name">Nhập tên danh mục</string>
+    <string name="add">Thêm</string>
+    <string name="cannot_delete_default_category">Không thể xóa danh mục mặc định.</string>
+    <string name="category_deleted_successfully">Đã xóa danh mục thành công.</string>
+    <string name="category_created_successfully">Đã tạo danh mục thành công.</string>
+    <string name="category_name_cannot_be_empty">Tên danh mục không được để trống.</string>
 </resources>

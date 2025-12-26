@@ -85,7 +85,7 @@ internal fun TotalStatsCard(
             // Amount
             Text(
                 text = formatCurrency(amount, "VND"),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 2.dp)

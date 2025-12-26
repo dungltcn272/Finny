@@ -14,21 +14,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
@@ -42,7 +46,10 @@ import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek
+import com.kizitonwose.calendar.core.nextMonth
+import com.kizitonwose.calendar.core.previousMonth
 import com.ltcn272.finny.R
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -57,6 +64,7 @@ fun DateRangePickerDialog(
 ) {
     var startDate by remember { mutableStateOf<LocalDate?>(null) }
     var endDate by remember { mutableStateOf<LocalDate?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(24) }
@@ -70,13 +78,11 @@ fun DateRangePickerDialog(
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier
-                    .wrapContentHeight()
-                    .padding(vertical = 15.dp, horizontal = 5.dp),
+                    .padding(vertical = 15.dp, horizontal = 16.dp), // Tăng padding horizontal
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val calendarState = rememberCalendarState(
@@ -86,18 +92,42 @@ fun DateRangePickerDialog(
                     firstDayOfWeek = daysOfWeek.first()
                 )
 
+                // --- SỬA LẠI TOP BAR ---
                 val monthYearFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", currentLocale) }
-                Text(
-                    text = calendarState.firstVisibleMonth.yearMonth.format(monthYearFormatter),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 20.dp),
-                    fontSize = 16.sp
-                )
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    CircleNavigationButton(
+                        icon = Icons.AutoMirrored.Default.KeyboardArrowLeft,
+                        onClick = {
+                            coroutineScope.launch {
+                                calendarState.animateScrollToMonth(calendarState.firstVisibleMonth.yearMonth.previousMonth)
+                            }
+                        }
+                    )
+                    Text(
+                        text = calendarState.firstVisibleMonth.yearMonth.format(monthYearFormatter),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    CircleNavigationButton(
+                        icon = Icons.AutoMirrored.Default.KeyboardArrowRight,
+                        onClick = {
+                            coroutineScope.launch {
+                                calendarState.animateScrollToMonth(calendarState.firstVisibleMonth.yearMonth.nextMonth)
+                            }
+                        }
+                    )
+                }
+
+
+                Row(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     for (dayOfWeek in daysOfWeek) {
                         Text(
@@ -134,14 +164,26 @@ fun DateRangePickerDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 10.dp),
-                    horizontalArrangement = Arrangement.End
+                        .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    TextButton(onClick = onDismissRequest) {
-                        Text(stringResource(id = R.string.cancel))
+                    Button(
+                        onClick = onDismissRequest,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray.copy(alpha = 0.2f),
+                            contentColor = Color.Gray.copy(alpha = 0.8f)
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.cancel),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(
+                    Button(
                         onClick = {
                             val finalStartDate = startDate
                             val finalEndDate = endDate ?: finalStartDate
@@ -151,11 +193,23 @@ fun DateRangePickerDialog(
                                 }
                             }
                         },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50),
+                            contentColor = Color.White
+                        ),
                         enabled = startDate != null
                     ) {
-                        Text(stringResource(id = R.string.confirm))
+                        Text(
+                            text = stringResource(id = R.string.confirm),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
+                // --- KẾT THÚC SỬA NÚT BẤM ---
             }
         }
     }

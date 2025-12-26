@@ -4,17 +4,16 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.ltcn272.finny.data.mapper.toCategoryDomain
-import com.ltcn272.finny.data.mapper.toCreateDto
-import com.ltcn272.finny.data.mapper.toUpdateMap
 import com.ltcn272.finny.data.paging.CategoryPagingSource
 import com.ltcn272.finny.data.remote.api.CategoryApi
+import com.ltcn272.finny.data.remote.dto.CreateCategoryDto
 import com.ltcn272.finny.domain.model.Category
 import com.ltcn272.finny.domain.repository.CategoryRepository
 import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.domain.util.toErrorType
-import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
     private val categoryApi: CategoryApi
@@ -30,10 +29,10 @@ class CategoryRepositoryImpl @Inject constructor(
         ).flow
     }
 
-    override suspend fun createCategory(category: Category): Flow<AppResult<Category>> = flow {
+    override fun createCategory(name: String): Flow<AppResult<Category>> = flow {
         emit(AppResult.Loading)
         try {
-            val requestDto = category.toCreateDto()
+            val requestDto = CreateCategoryDto(name = name)
             val response = categoryApi.create(requestDto)
             emit(AppResult.Success(response.data.toCategoryDomain()))
         } catch (e: Exception) {
@@ -41,20 +40,17 @@ class CategoryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateCategory(category: Category): Flow<AppResult<Category>> = flow {
+    override fun updateCategory(id: String, data: Map<String, Any>): Flow<AppResult<Category>> = flow {
         emit(AppResult.Loading)
         try {
-            val categoryId = category.serverId
-                ?: throw IllegalArgumentException("Category serverId cannot be null for update")
-            val requestBody = category.toUpdateMap()
-            val response = categoryApi.update(categoryId, requestBody)
+            val response = categoryApi.update(id, data)
             emit(AppResult.Success(response.data.toCategoryDomain()))
         } catch (e: Exception) {
             emit(AppResult.Error(e.toErrorType()))
         }
     }
 
-    override suspend fun deleteCategory(id: String): Flow<AppResult<Unit>> = flow {
+    override fun deleteCategory(id: String): Flow<AppResult<Unit>> = flow {
         emit(AppResult.Loading)
         try {
             categoryApi.delete(id)

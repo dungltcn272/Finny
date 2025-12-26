@@ -39,8 +39,9 @@ fun SettingScreen(
     onNavigateToCategories: () -> Unit = {},
     onLoggedOut: () -> Unit = {}
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    val uiState by viewModel.uiState.collectAsState()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -60,11 +61,6 @@ fun SettingScreen(
     }
 
     var showCurrencyMenu by remember { mutableStateOf(false) }
-    val selectedCurrency by viewModel.selectedCurrency.collectAsState()
-    val username by viewModel.username.collectAsState()
-    val isLoggingOut by viewModel.isLoggingOut.collectAsState()
-    val enableNotifications by viewModel.actualNotificationStatus.collectAsState()
-    val snackbarState by viewModel.snackbarState.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.logoutEvent.collect { onLoggedOut() }
@@ -112,21 +108,24 @@ fun SettingScreen(
                 item {
                     SettingsCard {
                         SettingItem(
-                            text = username ?: stringResource(id = R.string.user_name_placeholder),
+                            // Sử dụng state từ uiState
+                            text = uiState.username ?: stringResource(id = R.string.user_name_placeholder),
                             onClick = onNavigateToProfile
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
                         Box {
                             SettingItem(
                                 text = stringResource(id = R.string.currency),
-                                value = selectedCurrency,
+                                // Sử dụng state từ uiState
+                                value = uiState.selectedCurrency,
                                 onClick = { showCurrencyMenu = true }
                             )
                             AnimatedCurrencyMenu(
                                 expanded = showCurrencyMenu,
                                 onDismissRequest = { showCurrencyMenu = false },
                                 currencies = listOf("VND", "USD"),
-                                selectedCurrency = selectedCurrency,
+                                // Sử dụng state từ uiState
+                                selectedCurrency = uiState.selectedCurrency,
                                 onCurrencyClick = {
                                     viewModel.onCurrencySelected(it)
                                     showCurrencyMenu = false
@@ -143,10 +142,12 @@ fun SettingScreen(
                 }
 
                 item {
+                    val context = LocalContext.current
                     SettingsCard {
                         SettingSwitchItem(
                             text = stringResource(R.string.enable_notifications),
-                            checked = enableNotifications,
+                            // Sử dụng state từ uiState
+                            checked = uiState.actualNotificationStatus,
                             onCheckedChange = { viewModel.onEnableNotificationsToggled() }
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
@@ -170,7 +171,8 @@ fun SettingScreen(
                 item {
                     Button(
                         onClick = viewModel::logout,
-                        enabled = !isLoggingOut,
+                        // Sử dụng state từ uiState
+                        enabled = !uiState.isLoggingOut,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -180,7 +182,8 @@ fun SettingScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        if (isLoggingOut) {
+                        // Sử dụng state từ uiState
+                        if (uiState.isLoggingOut) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.error, strokeWidth = 2.dp)
                         } else {
                             Text(text = stringResource(id = R.string.logout), fontWeight = FontWeight.Bold)
@@ -190,14 +193,15 @@ fun SettingScreen(
             }
         }
         FinnySnackbar(
-            visible = snackbarState.visible,
-            message = snackbarState.message,
-            type = snackbarState.type,
-            action = snackbarState.actionTitle?.let { title ->
+            // Sử dụng state từ uiState
+            visible = uiState.snackbarState.visible,
+            message = uiState.snackbarState.message,
+            type = uiState.snackbarState.type,
+            action = uiState.snackbarState.actionTitle?.let { title ->
                 {
                     TextButton(
                         onClick = {
-                            snackbarState.onActionClick?.invoke()
+                            uiState.snackbarState.onActionClick?.invoke()
                             viewModel.onSnackbarDismissed()
                         },
                         colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
@@ -227,4 +231,3 @@ private fun SettingsCard(
         }
     }
 }
-

@@ -55,7 +55,7 @@ fun TransactionScreen(
     onTransactionClick: (Transaction) -> Unit = {},
     onNavigateToRecurring: () -> Unit = {},
     onNavigateToBudgetSettings: () -> Unit = {},
-    onAddTransaction: (LocalDate?) -> Unit = {}
+    onAddTransactionWithDate: (LocalDate?) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lazyBudgets = viewModel.budgetsPagingFlow.collectAsLazyPagingItems()
@@ -136,12 +136,12 @@ fun TransactionScreen(
                 onSettingClick = onNavigateToBudgetSettings
             )
         }
-
-        Spacer(Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         RecurringTransactionLink(
             modifier = Modifier.padding(horizontal = 16.dp),
             onClick = onNavigateToRecurring
         )
+        Spacer(modifier = Modifier.height(4.dp))
 
         Box(modifier = Modifier.pullRefresh(pullRefreshState)) {
             LazyColumn(
@@ -178,7 +178,7 @@ fun TransactionScreen(
                             TransactionDayGroup(
                                 daySection = daySection,
                                 currencyCode = uiState.currency,
-                                onAddTransactionForDate = { date -> onAddTransaction(date) },
+                                onAddTransactionForDate = { date -> onAddTransactionWithDate(date) },
                                 onTransactionClick = { transaction -> onTransactionClick(transaction) }
                             )
                         }

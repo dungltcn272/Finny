@@ -19,17 +19,15 @@ import com.ltcn272.finny.domain.model.BudgetReportDetail
 import com.ltcn272.finny.domain.model.CategoryReportDetail
 import com.ltcn272.finny.presentation.common.ui.DateRangePickerDialog
 import com.ltcn272.finny.presentation.common.ui.DonutChart
-import com.ltcn272.finny.presentation.common.ui.DonutChartWaiting // <<< IMPORT ADDED
+import com.ltcn272.finny.presentation.common.ui.DonutChartWaiting
 import com.ltcn272.finny.presentation.common.ui.SegmentedControl
 import com.ltcn272.finny.presentation.common.util.formatCurrency
 import com.ltcn272.finny.presentation.features.dashboard.component.DashboardTopBar
 import com.ltcn272.finny.presentation.features.dashboard.component.ReportDetailItem
-import com.ltcn272.finny.presentation.features.dashboard.component.ReportDetailItemShimmer // <<< IMPORT ADDED
+import com.ltcn272.finny.presentation.features.dashboard.component.ReportDetailItemShimmer
 import com.ltcn272.finny.presentation.features.dashboard.component.TotalStatsCard
-import com.ltcn272.finny.presentation.features.dashboard.component.TotalStatsCardShimmer // <<< IMPORT ADDED
+import com.ltcn272.finny.presentation.features.dashboard.component.TotalStatsCardShimmer
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @Composable
 fun DashboardScreen(
@@ -43,9 +41,6 @@ fun DashboardScreen(
             ReportTab.CATEGORIES to R.string.categories
         )
     }.mapValues { stringResource(id = it.value) }
-
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault()) }
-    val dateRangeTitle = "${uiState.startDate.format(dateFormatter)} - ${uiState.endDate.format(dateFormatter)}"
 
     if (uiState.showDatePicker) {
         DateRangePickerDialog(
@@ -64,7 +59,7 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            title = dateRangeTitle,
+            title = uiState.timeRangeTitle,
             onBack = viewModel::previousDateRange,
             onNext = viewModel::nextDateRange,
             onTitleClick = viewModel::onShowDatePicker
@@ -181,7 +176,9 @@ fun DashboardScreen(
                             if (uiState.reportDetailItems.isEmpty()) {
                                 Text(
                                     text = stringResource(R.string.no_data_available),
-                                    modifier = Modifier.padding(vertical = 32.dp).align(Alignment.CenterHorizontally),
+                                    modifier = Modifier
+                                        .padding(vertical = 32.dp)
+                                        .align(Alignment.CenterHorizontally),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -190,7 +187,12 @@ fun DashboardScreen(
                                     when (item) {
                                         is BudgetReportDetail -> ReportDetailItem(
                                             name = item.name,
-                                            amountText = "${formatCurrency(item.outcome, "VND")}/${formatCurrency(item.limit, "VND")}",
+                                            amountText = "${formatCurrency(item.outcome, "VND")}/${
+                                                formatCurrency(
+                                                    item.limit,
+                                                    "VND"
+                                                )
+                                            }",
                                             progress = item.ratio.toFloat()
                                         )
                                         is CategoryReportDetail -> ReportDetailItem(
