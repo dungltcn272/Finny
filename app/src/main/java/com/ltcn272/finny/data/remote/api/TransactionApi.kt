@@ -44,4 +44,7 @@ interface TransactionApi {
         @Part image: MultipartBody.Part
     ): ApiResponse<UploadImageDataDto>
 
+    @GET("transactions/statement/preview")
+    suspend fun getTransactionStatement(): StatementResponseDto
+
 }

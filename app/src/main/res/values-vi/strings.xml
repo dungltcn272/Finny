@@ -175,6 +175,12 @@
     <string name="rate_app">Đánh giá App</string>
     <string name="logout">Đăng xuất</string>
     <string name="feature_in_development">Chức năng đang phát triển</string>
+    <string name="exporting_pdf">Đang xuất PDF…</string>
+    <string name="error_exporting_pdf">Lỗi khi xuất sao kê.</string>
+    <string name="pdf_exported_successfully">Đã xuất sao kê thành công.</string>
+    <string name="pdf_saved_to_downloads">Đã lưu vào thư mục Tải về: %1$s</string>
+    <string name="no_pdf_viewer_found">Không tìm thấy ứng dụng đọc PDF.</string>
+    <string name="error_saving_pdf">Lỗi khi lưu file PDF.</string>
 
     <!-- Notification Messages -->
     <string name="notification_permission_denied_title">Quyền thông báo bị từ chối</string>

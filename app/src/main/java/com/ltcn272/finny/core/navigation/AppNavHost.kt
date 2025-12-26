@@ -270,7 +270,7 @@ fun AppNav(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
-                .padding(bottom = 90.dp, end = 24.dp),
+                .padding(bottom = 90.dp, end = 16.dp),
             enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut()
         ) {

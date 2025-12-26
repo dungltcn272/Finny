@@ -178,6 +178,14 @@
     <string name="logout">Log Out</string>
     <string name="feature_in_development">Feature in development</string>
 
+    <string name="exporting_pdf">Exporting PDF…</string>
+    <string name="error_exporting_pdf">Error exporting statement.</string>
+    <string name="pdf_exported_successfully">Statement exported successfully.</string>
+
+    <string name="pdf_saved_to_downloads">Saved to Downloads: %1$s</string>
+    <string name="no_pdf_viewer_found">No PDF viewer application found.</string>
+    <string name="error_saving_pdf">Error while saving PDF.</string>
+
     <!-- Notification Messages -->
     <string name="notification_permission_denied_title">Notification Permission Denied</string>
     <string name="notification_permission_denied">To receive notifications, you need to grant permission in the app settings.</string>

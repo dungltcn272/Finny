@@ -90,7 +90,11 @@ fun AnimatedCurrencyMenu(
 
             Card(
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(
+                        alpha = 0.9f
+                    )
+                ),
                 modifier = Modifier
                     .graphicsLayer {
                         scaleX = scale

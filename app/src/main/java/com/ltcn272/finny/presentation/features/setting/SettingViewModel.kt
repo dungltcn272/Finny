@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.ltcn272.finny.R
 import com.ltcn272.finny.data.SettingDataStore
 import com.ltcn272.finny.domain.repository.AuthRepository
+import com.ltcn272.finny.domain.repository.TransactionRepository
+import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.presentation.common.ui.TopSnackbarType
 import com.ltcn272.finny.util.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,38 +27,52 @@ data class SnackbarState(
     val onActionClick: (() -> Unit)? = null
 )
 
-// TẠO UI STATE DATA CLASS
 data class SettingUiState(
     val username: String? = null,
     val selectedCurrency: String = "VND",
     val actualNotificationStatus: Boolean = false,
     val isLoggingOut: Boolean = false,
+    val isExportingPdf: Boolean = false,
     val snackbarState: SnackbarState = SnackbarState()
 )
+
 
 @HiltViewModel
 class SettingViewModel @Inject constructor(
     private val application: Application,
     private val settingDataStore: SettingDataStore,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val transactionRepository: TransactionRepository
 ) : ViewModel() {
 
     private val hasSystemPermission = MutableStateFlow(PermissionUtils.hasNotificationPermission(application))
     private val _isLoggingOut = MutableStateFlow(false)
+    private val _isExportingPdf = MutableStateFlow(false)
     private val _snackbarState = MutableStateFlow(SnackbarState())
 
     val uiState: StateFlow<SettingUiState> = combine(
-        settingDataStore.usernameFlow,
-        settingDataStore.getSelectedCurrency,
-        settingDataStore.getEnableNotifications.combine(hasSystemPermission) { pref, perm -> pref && perm },
-        _isLoggingOut,
-        _snackbarState
-    ) { username, currency, notificationStatus, isLoggingOut, snackbar ->
+        flows = listOf(
+            settingDataStore.usernameFlow,
+            settingDataStore.getSelectedCurrency,
+            settingDataStore.getEnableNotifications.combine(hasSystemPermission) { pref, perm -> pref && perm },
+            _isLoggingOut,
+            _isExportingPdf,
+            _snackbarState
+        )
+    ) { values ->
+        val username = values[0] as String?
+        val currency = values[1] as String
+        val notificationStatus = values[2] as Boolean
+        val isLoggingOut = values[3] as Boolean
+        val isExporting = values[4] as Boolean
+        val snackbar = values[5] as SnackbarState
+
         SettingUiState(
             username = username,
             selectedCurrency = currency,
             actualNotificationStatus = notificationStatus,
             isLoggingOut = isLoggingOut,
+            isExportingPdf = isExporting,
             snackbarState = snackbar
         )
     }.stateIn(
@@ -72,6 +88,62 @@ class SettingViewModel @Inject constructor(
     private val _notificationEvent = MutableSharedFlow<SettingNotificationEvent>()
     val notificationEvent = _notificationEvent.asSharedFlow()
 
+    fun exportStatement(onSuccess: (base64: String) -> Unit) {
+        viewModelScope.launch {
+            transactionRepository.exportStatement().collect { result ->
+                when (result) {
+                    is AppResult.Loading -> {
+                        _isExportingPdf.value = true
+                    }
+                    is AppResult.Success -> {
+                        _isExportingPdf.value = false
+                        onSuccess(result.data)
+                    }
+                    is AppResult.Error -> {
+                        _isExportingPdf.value = false
+                        showSnackbar(
+                            application.getString(R.string.error_exporting_pdf),
+                            TopSnackbarType.ERROR
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+
+    fun showPdfExportSuccess(fileName: String) {
+        showSnackbar(
+            application.getString(R.string.pdf_saved_to_downloads , fileName),
+            TopSnackbarType.SUCCESS
+        )
+    }
+
+    fun showPdfExportError() {
+        showSnackbar(
+            application.getString(R.string.error_saving_pdf),
+            TopSnackbarType.ERROR
+        )
+    }
+
+    fun showNoPdfViewerFound() {
+        showSnackbar(
+            application.getString(R.string.no_pdf_viewer_found),
+            TopSnackbarType.WARNING
+        )
+    }
+
+    private fun showSnackbar(message: String, type: TopSnackbarType) {
+        _snackbarState.value = SnackbarState(
+            visible = true,
+            message = message,
+            type = type
+        )
+    }
+
+    fun onSnackbarDismissed() {
+        _snackbarState.update { it.copy(visible = false) }
+    }
 
     fun onCurrencySelected(currency: String) {
         viewModelScope.launch {
@@ -84,7 +156,6 @@ class SettingViewModel @Inject constructor(
             if (!hasSystemPermission.value) {
                 _notificationEvent.emit(SettingNotificationEvent.RequestPermission)
             } else {
-                // Lấy giá trị hiện tại từ StateFlow
                 val currentPreference = uiState.value.actualNotificationStatus
                 setEnableNotifications(!currentPreference)
             }
@@ -132,17 +203,13 @@ class SettingViewModel @Inject constructor(
         }
     }
 
-    fun onSnackbarDismissed() {
-        _snackbarState.update { it.copy(visible = false) }
-    }
-
     fun logout() {
         viewModelScope.launch {
             _isLoggingOut.value = true
             try {
                 authRepository.logout()
                 _logoutEvent.emit(Unit)
-            } catch (_: Exception) {
+            } catch (_: Exception) { 
             } finally {
                 _isLoggingOut.value = false
             }

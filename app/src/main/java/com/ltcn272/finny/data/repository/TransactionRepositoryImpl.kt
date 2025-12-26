@@ -17,6 +17,7 @@ import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionFilter
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.domain.util.ErrorType
 import com.ltcn272.finny.domain.util.toErrorType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -145,4 +146,20 @@ class TransactionRepositoryImpl @Inject constructor(
             emit(AppResult.Error(e.toErrorType()))
         }
     }
+
+    override suspend fun exportStatement(): Flow<AppResult<String>> = flow {
+        emit(AppResult.Loading)
+        try {
+            val response = transactionApi.getTransactionStatement()
+            if (response.success) {
+                emit(AppResult.Success(response.pdfBase64))
+            } else {
+                emit(AppResult.Error(ErrorType.SERVER_ERROR))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error exporting statement: ${e.message}", e)
+            emit(AppResult.Error(e.toErrorType()))
+        }
+    }
+
 }

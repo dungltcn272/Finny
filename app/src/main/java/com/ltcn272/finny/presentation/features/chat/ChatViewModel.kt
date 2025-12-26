@@ -2,8 +2,6 @@ package com.ltcn272.finny.presentation.features.chat
 
 import android.Manifest
 import android.app.Application
-import android.speech.SpeechRecognizer
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -48,12 +46,11 @@ data class ChatUiState(
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val application: Application, // 'application' context được Hilt cung cấp sẵn
+    private val application: Application,
     private val chatRepository: ChatRepository,
     private val settingDataStore: SettingDataStore
 ) : ViewModel() {
 
-    // --- THAY ĐỔI: KHỞI TẠO THỦ CÔNG ---
     private val speechRecognizerManager = SpeechRecognizerManager()
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -155,7 +152,6 @@ class ChatViewModel @Inject constructor(
 
     fun startListening() {
         _uiState.update { it.copy(recognizedText = "") }
-        // --- THAY ĐỔI: TRUYỀN CONTEXT VÀO ---
         speechRecognizerManager.startListening(application)
     }
 

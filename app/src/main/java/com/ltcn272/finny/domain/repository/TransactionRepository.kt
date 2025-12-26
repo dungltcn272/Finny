@@ -29,4 +29,6 @@ interface TransactionRepository {
     suspend fun deleteRecurringTransaction(id: String): Flow<AppResult<Unit>>
 
     suspend fun uploadImage(imageFile: File): Flow<AppResult<String>>
+
+    suspend fun exportStatement(): Flow<AppResult<String>>
 }

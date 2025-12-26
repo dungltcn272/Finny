@@ -1,7 +1,13 @@
 package com.ltcn272.finny.presentation.features.setting
 
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.ContentValues
+import android.content.Intent
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -31,6 +38,11 @@ import com.ltcn272.finny.presentation.common.ui.FinnySnackbar
 import com.ltcn272.finny.presentation.features.setting.component.SettingItem
 import com.ltcn272.finny.presentation.features.setting.component.SettingSwitchItem
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SettingScreen(
@@ -40,8 +52,73 @@ fun SettingScreen(
     onLoggedOut: () -> Unit = {}
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
-
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val saveAndOpenFile: (String) -> Unit = { base64Pdf ->
+        try {
+            val pdfData = Base64.decode(base64Pdf, Base64.DEFAULT)
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "Finny_Statement_$timeStamp.pdf"
+
+            val fileUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10 (Q) trở lên: Dùng MediaStore (An toàn)
+                val contentResolver = context.contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+                val uri =
+                    contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                // Ghi dữ liệu vào file
+                uri?.let {
+                    contentResolver.openOutputStream(it)?.use { outputStream ->
+                        outputStream.write(pdfData)
+                    }
+                }
+                uri
+            } else {
+                // Android 9 (P) trở xuống: Ghi trực tiếp
+                val downloadsDir =
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs()
+                }
+                val pdfFile = File(downloadsDir, fileName)
+                FileOutputStream(pdfFile).use { outputStream ->
+                    outputStream.write(pdfData)
+                }
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    pdfFile
+                )
+            }
+
+            if (fileUri == null) {
+                viewModel.showPdfExportError()
+
+            } else {
+                val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(fileUri, "application/pdf")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+
+                try {
+                    context.startActivity(viewIntent)
+                    viewModel.showPdfExportSuccess(fileName)
+                } catch (e: ActivityNotFoundException) {
+                    viewModel.showNoPdfViewerFound()
+                }
+            }
+
+        } catch (e: Exception) {
+            viewModel.showPdfExportError()
+            e.printStackTrace()
+        }
+    }
+
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -108,15 +185,14 @@ fun SettingScreen(
                 item {
                     SettingsCard {
                         SettingItem(
-                            // Sử dụng state từ uiState
-                            text = uiState.username ?: stringResource(id = R.string.user_name_placeholder),
+                            text = uiState.username
+                                ?: stringResource(id = R.string.user_name_placeholder),
                             onClick = onNavigateToProfile
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
                         Box {
                             SettingItem(
                                 text = stringResource(id = R.string.currency),
-                                // Sử dụng state từ uiState
                                 value = uiState.selectedCurrency,
                                 onClick = { showCurrencyMenu = true }
                             )
@@ -124,13 +200,12 @@ fun SettingScreen(
                                 expanded = showCurrencyMenu,
                                 onDismissRequest = { showCurrencyMenu = false },
                                 currencies = listOf("VND", "USD"),
-                                // Sử dụng state từ uiState
                                 selectedCurrency = uiState.selectedCurrency,
                                 onCurrencyClick = {
                                     viewModel.onCurrencySelected(it)
                                     showCurrencyMenu = false
                                 },
-                                offset = DpOffset(x = (-16).dp, y = 0.dp)
+                                offset = DpOffset(x = 0.dp, y = 38.dp)
                             )
                         }
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
@@ -142,28 +217,50 @@ fun SettingScreen(
                 }
 
                 item {
-                    val context = LocalContext.current
                     SettingsCard {
                         SettingSwitchItem(
                             text = stringResource(R.string.enable_notifications),
-                            // Sử dụng state từ uiState
                             checked = uiState.actualNotificationStatus,
                             onCheckedChange = { viewModel.onEnableNotificationsToggled() }
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
                         SettingItem(
                             text = stringResource(R.string.export_data),
-                            onClick = { Toast.makeText(context, context.getString(R.string.feature_in_development), Toast.LENGTH_SHORT).show() }
+                            onClick = {
+                                if (!uiState.isExportingPdf) {
+                                    viewModel.exportStatement(onSuccess = saveAndOpenFile)
+                                }
+                            },
+                            trailingContent = {
+                                if (uiState.isExportingPdf) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
                         SettingItem(
                             text = stringResource(R.string.suggest_feature),
-                            onClick = { Toast.makeText(context, context.getString(R.string.feature_in_development), Toast.LENGTH_SHORT).show() }
+                            onClick = {
+                                Toast.makeText(
+                                    context,
+                                    R.string.feature_in_development,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
                         SettingItem(
                             text = stringResource(R.string.rate_app),
-                            onClick = { Toast.makeText(context, context.getString(R.string.feature_in_development), Toast.LENGTH_SHORT).show() }
+                            onClick = {
+                                Toast.makeText(
+                                    context,
+                                    R.string.feature_in_development,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         )
                     }
                 }
@@ -171,7 +268,6 @@ fun SettingScreen(
                 item {
                     Button(
                         onClick = viewModel::logout,
-                        // Sử dụng state từ uiState
                         enabled = !uiState.isLoggingOut,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -182,18 +278,23 @@ fun SettingScreen(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        // Sử dụng state từ uiState
                         if (uiState.isLoggingOut) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.error, strokeWidth = 2.dp)
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.error,
+                                strokeWidth = 2.dp
+                            )
                         } else {
-                            Text(text = stringResource(id = R.string.logout), fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(id = R.string.logout),
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
             }
         }
         FinnySnackbar(
-            // Sử dụng state từ uiState
             visible = uiState.snackbarState.visible,
             message = uiState.snackbarState.message,
             type = uiState.snackbarState.type,
