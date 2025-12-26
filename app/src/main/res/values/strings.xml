@@ -4,6 +4,13 @@
     <string name="hi_user">Hi %1$s</string>
     <string name="fb_login_protocol_scheme" translatable="false">fb1457780732175085</string>
 
+    <!-- Bottom Navigation -->
+    <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_transaction">Transaction</string>
+    <string name="bottom_nav_ai">AI</string>
+    <string name="bottom_nav_dashboard">Dashboard</string>
+    <string name="bottom_nav_settings">Settings</string>
+
     <!-- Balance Card -->
     <string name="total_balance">Total Balance</string>
 

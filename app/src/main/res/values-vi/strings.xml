@@ -3,6 +3,13 @@
     <string name="app_name">Finny</string>
     <string name="hi_user">Xin chào %1$s</string>
 
+    <!-- Bottom Navigation -->
+    <string name="bottom_nav_home">Trang chủ</string>
+    <string name="bottom_nav_transaction">Giao dịch</string>
+    <string name="bottom_nav_ai">AI</string>
+    <string name="bottom_nav_dashboard">Thống kê</string>
+    <string name="bottom_nav_settings">Cài đặt</string>
+
     <!-- Balance Card -->
     <string name="total_balance">Tổng số dư</string>
     <!-- Intro Slide One -->

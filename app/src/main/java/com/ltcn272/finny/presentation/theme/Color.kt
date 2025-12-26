@@ -19,7 +19,7 @@ val LightGradientBlue = Color(0xFFCFDBF8)
 val BackgroundBottom = Color(0xFFF5F6FA)
 
 val PinkTop = Color(0xFFF8BBD0)
-val TransactionBlueTop = Color(0xFFE3E9F7)
+val TransactionBlueTop = Color(0xFFCFDBF8)
 
 val IntroBackgroundBrush= Brush.verticalGradient(
     colorStops = arrayOf(
@@ -42,11 +42,10 @@ val BudgetBackgroundBrush = Brush.linearGradient(
     start = Offset.Zero,
     end = Offset(0f, Float.POSITIVE_INFINITY)
 )
-val TransactionBackgroundBrush = Brush.linearGradient(
+val TransactionBackgroundBrush = Brush.verticalGradient(
     colorStops = arrayOf(
-        0.0f to TransactionBlueTop,
-        1.0f to Color(0xFFFFFFFF)
-    ),
-    start = Offset.Zero,
-    end = Offset(0f, Float.POSITIVE_INFINITY)
+        0.0f to TransactionBlueTop.copy(alpha = 0.8f),
+        1.0f to TransactionBlueTop.copy(alpha = 0.2f)
+    )
 )
+

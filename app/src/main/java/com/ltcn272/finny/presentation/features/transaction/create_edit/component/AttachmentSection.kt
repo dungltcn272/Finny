@@ -58,7 +58,7 @@ fun AttachmentSection(
         shape = RoundedCornerShape(16.dp),
         color = Color.White
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -76,21 +76,17 @@ fun AttachmentSection(
                     )
                 }
                 if (imageUri == null) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                Color.LightGray.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .clickable(onClick = onChooseImageClick)
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    Surface(
+                        onClick = onChooseImageClick,
+                        shape = RoundedCornerShape(8.dp),
+                        color =  Color.LightGray.copy(alpha = 0.2f)
                     ) {
-                        // SỬA Ở ĐÂY
                         Text(
                             text = stringResource(R.string.choose_image),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
                 } else {

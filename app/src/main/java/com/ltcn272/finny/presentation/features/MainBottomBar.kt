@@ -17,14 +17,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-// --- ADD NEW IMPORTS ---
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assistant
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SwapHoriz
-// --------------------
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -45,11 +43,13 @@ import androidx.compose.ui.graphics.vector.ImageVector // <<< ADD IMPORT
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ltcn272.finny.R
 import com.ltcn272.finny.core.navigation.MainRoute
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -74,13 +74,26 @@ fun MainBottomBar(
 ) {
     val items = remember {
         listOf(
-            NavItem("Home", Icons.Default.Home, MainRoute.HOME),
-            NavItem("Transaction", Icons.Default.SwapHoriz, MainRoute.TRANSACTION),
-            NavItem("AI", Icons.Default.Assistant, MainRoute.CHAT),
-            NavItem("Dashboard", Icons.Default.BarChart, MainRoute.DASHBOARD),
-            NavItem("Settings", Icons.Default.Settings, MainRoute.SETTINGS)
+            NavItem(label = "Home", icon = Icons.Default.Home, route = MainRoute.HOME),
+            NavItem(label = "Transaction", icon = Icons.Default.SwapHoriz, route = MainRoute.TRANSACTION),
+            NavItem(label = "AI", icon = Icons.Default.Assistant, route = MainRoute.CHAT),
+            NavItem(label = "Dashboard", icon = Icons.Default.BarChart, route = MainRoute.DASHBOARD),
+            NavItem(label = "Settings", icon = Icons.Default.Settings, route = MainRoute.SETTINGS)
         )
     }
+
+    val navItems = items.map {
+        it.copy(label = when(it.route){
+            MainRoute.HOME -> stringResource(id = R.string.bottom_nav_home)
+            MainRoute.TRANSACTION -> stringResource(id = R.string.bottom_nav_transaction)
+            MainRoute.CHAT -> stringResource(id = R.string.bottom_nav_ai)
+            MainRoute.DASHBOARD -> stringResource(id = R.string.bottom_nav_dashboard)
+            MainRoute.SETTINGS -> stringResource(id = R.string.bottom_nav_settings)
+            else -> it.label
+        })
+    }
+
+
     val bounds = remember { mutableStateMapOf<String, ItemBounds>() }
     var isInitialAnimationDone by remember { mutableStateOf(false) }
 
@@ -145,7 +158,7 @@ fun MainBottomBar(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                items.forEach { item ->
+                navItems.forEach { item ->
                     BottomBarItem(
                         modifier = Modifier.weight(1f),
                         item = item,
