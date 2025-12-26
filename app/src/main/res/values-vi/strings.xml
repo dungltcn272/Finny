@@ -104,6 +104,12 @@
     <string name="budgets_title">Ngân sách</string>
     <string name="no_budgets_found">Không tìm thấy ngân sách</string>
 
+    <string name="delete_budget_confirmation_title">Xóa Ngân sách</string>
+    <string name="delete_budget_confirmation_text">Bạn có chắc chắn muốn xóa vĩnh viễn ngân sách \"%1$s\" và tất cả các giao dịch liên quan không? Hành động này không thể hoàn tác.</string>
+    <string name="budget_deleted_successfully">Xóa ngân sách thành công</string>
+
+
+
     <!-- Create/Edit Budget Screen -->
     <string name="create_budget_title">Tạo ngân sách</string>
     <string name="update_budget_title">Cập nhật ngân sách</string>

@@ -109,6 +109,11 @@
     <string name="budgets_title">Budgets</string>
     <string name="no_budgets_found">No Budgets Found</string>
 
+    <string name="delete_budget_confirmation_title">Delete Budget</string>
+    <string name="delete_budget_confirmation_text">Are you sure you want to permanently delete the budget \"%1$s\" and all its associated transactions? This action cannot be undone.</string>
+    <string name="budget_deleted_successfully">Budget deleted successfully</string>
+
+
     <!-- Create/Edit Budget Screen -->
     <string name="create_budget_title">Create Budget</string>
     <string name="update_budget_title">Update Budget</string>

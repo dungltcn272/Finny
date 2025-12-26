@@ -33,6 +33,7 @@ import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.presentation.common.ui.AnimatedMoreMenu
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
+import com.ltcn272.finny.presentation.common.ui.DeleteConfirmationDialog
 import com.ltcn272.finny.presentation.common.ui.TransactionItem
 import com.ltcn272.finny.presentation.common.ui.TransactionItemShimmer
 import com.ltcn272.finny.presentation.features.budget.budget_detail.component.BudgetInfoCard
@@ -51,12 +52,15 @@ fun BudgetDetailScreen(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Lắng nghe các event từ ViewModel (xóa thành công, lỗi)
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collectLatest { event ->
             when (event) {
                 is BudgetDetailEvent.DeleteSuccess -> {
-                    Toast.makeText(context, "Đã xóa ngân sách", Toast.LENGTH_SHORT).show()
-                    onBack()
+                    Toast.makeText(context, R.string.budget_deleted_successfully, Toast.LENGTH_SHORT).show()
+                    onBack() // Quay về màn hình trước sau khi xóa thành công
                 }
 
                 is BudgetDetailEvent.Error -> {
@@ -70,7 +74,16 @@ fun BudgetDetailScreen(
         viewModel.initialize(budget)
     }
 
-    val uiState by viewModel.uiState.collectAsState()
+    if (uiState.showDeleteConfirmDialog) {
+        DeleteConfirmationDialog(
+            title = stringResource(R.string.delete_budget_confirmation_title),
+            text = stringResource(R.string.delete_budget_confirmation_text, uiState.budget?.name ?: ""),
+            onConfirm = viewModel::confirmDeleteBudget,
+            onDismiss = viewModel::cancelDelete
+        )
+    }
+
+
     val transactions = viewModel.transactionsPagingFlow.collectAsLazyPagingItems()
 
     val budgetToShow = uiState.budget ?: budget
@@ -113,7 +126,7 @@ fun BudgetDetailScreen(
                     },
                     onDeleteClick = {
                         menuExpanded = false
-                        viewModel.deleteBudget()
+                        viewModel.requestDeleteBudget()
                     },
                     offset = DpOffset(x = 0.dp, y = 38.dp)
                 )

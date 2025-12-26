@@ -19,14 +19,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.Month // THÊM IMPORT
+import java.time.Month
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle // THÊM IMPORT
 import java.time.temporal.TemporalAdjusters
-import java.util.Locale // THÊM IMPORT
+import java.util.Locale
 import javax.inject.Inject
 
-// Data class và Enum không thay đổi
+
 enum class ChartTimeRange {
     WEEK, MONTH
 }
@@ -41,6 +40,7 @@ data class BudgetDetailUiState(
     val isStatisticsLoading: Boolean = true,
     val isRefreshingByUser: Boolean = false,
     val currency: String = "VND",
+    val showDeleteConfirmDialog: Boolean = false
 )
 
 sealed class BudgetDetailEvent {
@@ -52,13 +52,12 @@ sealed class BudgetDetailEvent {
 @HiltViewModel
 class BudgetDetailViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    private val budgetRepository: BudgetRepository // THÊM REPOSITORY
+    private val budgetRepository: BudgetRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BudgetDetailUiState())
     val uiState: StateFlow<BudgetDetailUiState> = _uiState.asStateFlow()
 
-    // THÊM SHARED FLOW CHO EVENT
     private val _eventFlow = MutableSharedFlow<BudgetDetailEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
@@ -82,16 +81,13 @@ class BudgetDetailViewModel @Inject constructor(
         if (isInitialized) return
         isInitialized = true
 
-        Log.d(TAG, "--- initialize() --- Budget nhận được: ${budget.name}")
-
         _uiState.update {
             it.copy(
                 budget = budget,
                 currency = budget.currency,
-                // Lấy các giá trị ban đầu từ budget để UI có cái hiển thị ngay
-                transactionCount = 0, // Sẽ được cập nhật
+                transactionCount = 0,
                 netAmount = budget.totalIncome - budget.totalOutcome,
-                isStatisticsLoading = true // <<< BẬT LOADING MỚI
+                isStatisticsLoading = true
             )
         }
 
@@ -100,7 +96,7 @@ class BudgetDetailViewModel @Inject constructor(
 
     private fun loadAllTransactionDetails(budgetId: String?) {
         if (budgetId.isNullOrEmpty()) {
-            _uiState.update { it.copy(isStatisticsLoading = false) } // Tắt loading nếu có lỗi
+            _uiState.update { it.copy(isStatisticsLoading = false) }
             Log.e(TAG, "loadAllTransactionDetails thất bại vì budgetId rỗng.")
             return
         }
@@ -110,9 +106,7 @@ class BudgetDetailViewModel @Inject constructor(
                 _uiState.update { it.copy(isStatisticsLoading = true) }
             }
 
-            val result = transactionRepository.getAllTransactionsByBudget(budgetId)
-
-            when (result) {
+            when (val result = transactionRepository.getAllTransactionsByBudget(budgetId)) {
                 is AppResult.Success -> {
                     val transactionList = result.data
                     this@BudgetDetailViewModel.allTransactions = transactionList
@@ -129,7 +123,7 @@ class BudgetDetailViewModel @Inject constructor(
                                 totalIncome = totalIncome,
                                 totalOutcome = totalOutcome
                             ),
-                            isStatisticsLoading = false, // <<< TẮT LOADING
+                            isStatisticsLoading = false,
                             isRefreshingByUser = false
                         )
                     }
@@ -137,7 +131,7 @@ class BudgetDetailViewModel @Inject constructor(
                 }
                 is AppResult.Error -> {
                     Log.e(TAG, "Lỗi khi lấy tất cả giao dịch: ${result.errorType}")
-                    _uiState.update { it.copy(isStatisticsLoading = false, isRefreshingByUser = false) } // <<< TẮT LOADING
+                    _uiState.update { it.copy(isStatisticsLoading = false, isRefreshingByUser = false) }
                 }
                 is AppResult.Loading -> {}
             }
@@ -152,7 +146,6 @@ class BudgetDetailViewModel @Inject constructor(
         }
     }
 
-    // --- SỬA LẠI HÀM NÀY ---
     private fun updateChartData(range: ChartTimeRange) {
         if (range == ChartTimeRange.WEEK) {
             updateChartDataForWeek()
@@ -185,13 +178,16 @@ class BudgetDetailViewModel @Inject constructor(
             .groupBy { it.dateTime.toLocalDate() }
             .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
 
+        // --- SỬA Ở ĐÂY ---
+        val locale = Locale.forLanguageTag("vi")
         val incomeChartData = config.labels.map { date ->
-            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, Locale("vi"))), incomeByDate[date] ?: 0f)
+            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)), incomeByDate[date] ?: 0f)
         }
 
         val outcomeChartData = config.labels.map { date ->
-            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, Locale("vi"))), outcomeByDate[date] ?: 0f)
+            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)), outcomeByDate[date] ?: 0f)
         }
+        // --- KẾT THÚC SỬA ---
 
         _uiState.update {
             it.copy(
@@ -214,28 +210,26 @@ class BudgetDetailViewModel @Inject constructor(
 
         val incomeByMonth = relevantTransactions
             .filter { it.type == TransactionType.INCOME }
-            .groupBy { it.dateTime.month } // Nhóm theo tháng
+            .groupBy { it.dateTime.month }
             .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
 
         val outcomeByMonth = relevantTransactions
             .filter { it.type == TransactionType.OUTCOME }
-            .groupBy { it.dateTime.month } // Nhóm theo tháng
+            .groupBy { it.dateTime.month }
             .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
 
-        // Tạo labels cho 12 tháng
         val allMonths = Month.entries
-        val vietnameseLocale = Locale("vi")
 
         val incomeChartData = allMonths.map { month ->
             LineChartData(
-                label = "T${month.value}", // "T1", "T2", ...
+                label = "T${month.value}",
                 value = incomeByMonth[month] ?: 0f
             )
         }
 
         val outcomeChartData = allMonths.map { month ->
             LineChartData(
-                label = "T${month.value}", // "T1", "T2", ...
+                label = "T${month.value}",
                 value = outcomeByMonth[month] ?: 0f
             )
         }
@@ -251,10 +245,8 @@ class BudgetDetailViewModel @Inject constructor(
     fun onTimeRangeSelected(range: ChartTimeRange) {
         if (range == uiState.value.timeRange) return
         _uiState.update { it.copy(timeRange = range) }
-        // Chỉ cần gọi lại updateChartData với time range mới, không cần gọi lại API
         updateChartData(range)
 
-        // Cập nhật lại filter cho Paging
         val startDate = if (range == ChartTimeRange.WEEK) getStartOfWeek() else getStartOfMonth()
         val endDate = if (range == ChartTimeRange.WEEK) getEndOfWeek() else getEndOfMonth()
         _filterStateForPaging.update { it.copy(startDate = startDate, endDate = endDate) }
@@ -263,17 +255,29 @@ class BudgetDetailViewModel @Inject constructor(
     fun onUserPullToRefresh() {
         if (uiState.value.isRefreshingByUser) return
         _uiState.update { it.copy(isRefreshingByUser = true) }
-        // Khi người dùng kéo để làm mới, gọi lại hàm tải tất cả dữ liệu
         loadAllTransactionDetails(uiState.value.budget?.serverId)
     }
 
-    fun deleteBudget() {
+    fun requestDeleteBudget() {
+        _uiState.update { it.copy(showDeleteConfirmDialog = true) }
+    }
+
+    fun cancelDelete() {
+        _uiState.update { it.copy(showDeleteConfirmDialog = false) }
+    }
+
+    fun confirmDeleteBudget() {
+        _uiState.update { it.copy(showDeleteConfirmDialog = false) }
+
         viewModelScope.launch {
             val budgetToDelete = uiState.value.budget
             if (budgetToDelete?.serverId == null) {
                 _eventFlow.emit(BudgetDetailEvent.Error("Không tìm thấy ID ngân sách để xóa."))
                 return@launch
             }
+
+
+
             budgetRepository.deleteBudget(budgetToDelete.serverId).collectLatest { result ->
                 when(result) {
                     is AppResult.Success -> {
@@ -291,7 +295,6 @@ class BudgetDetailViewModel @Inject constructor(
         }
     }
 
-    // Data class nhỏ này chỉ dùng nội bộ cho hàm updateChartDataForWeek
     private data class ChartConfig(
         val startDate: LocalDate,
         val endDate: LocalDate,
