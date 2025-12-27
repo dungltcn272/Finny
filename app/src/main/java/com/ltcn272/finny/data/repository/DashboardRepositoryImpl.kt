@@ -5,6 +5,7 @@ import com.ltcn272.finny.data.mapper.toCategoryReport
 import com.ltcn272.finny.data.remote.api.DashboardApi
 import com.ltcn272.finny.data.remote.dto.DateRangeDto
 import com.ltcn272.finny.data.remote.dto.ReportRequestDto
+import com.ltcn272.finny.data.remote.dto.ensureSuccess
 import com.ltcn272.finny.domain.model.BudgetReport
 import com.ltcn272.finny.domain.model.CategoryReport
 import com.ltcn272.finny.domain.repository.DashboardRepository
@@ -19,6 +20,8 @@ class DashboardRepositoryImpl @Inject constructor(
     private val dashboardApi: DashboardApi
 ) : DashboardRepository {
 
+
+    private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
     override suspend fun getCategoryReport(
@@ -63,4 +66,20 @@ class DashboardRepositoryImpl @Inject constructor(
             AppResult.Error(e.toErrorType())
         }
     }
+
+    override suspend fun getAiReport(startDate: ZonedDateTime, endDate: ZonedDateTime): AppResult<String> {
+        return try {
+            val request = ReportRequestDto(
+                dateRange = DateRangeDto(
+                    start = startDate.format(dateFormatter),
+                    end = endDate.format(dateFormatter)
+                )
+            )
+            val response = dashboardApi.getAiReport(request).ensureSuccess()
+            AppResult.Success(response.message)
+        } catch (e: Exception) {
+            AppResult.Error(e.toErrorType())
+        }
+    }
+
 }

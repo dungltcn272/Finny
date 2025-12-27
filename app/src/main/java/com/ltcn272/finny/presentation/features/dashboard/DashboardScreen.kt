@@ -17,9 +17,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.BudgetReportDetail
 import com.ltcn272.finny.domain.model.CategoryReportDetail
+import com.ltcn272.finny.presentation.common.ui.AIAssistantBubble
 import com.ltcn272.finny.presentation.common.ui.DateRangePickerDialog
 import com.ltcn272.finny.presentation.common.ui.DonutChart
 import com.ltcn272.finny.presentation.common.ui.DonutChartWaiting
+import com.ltcn272.finny.presentation.common.ui.MessageType
 import com.ltcn272.finny.presentation.common.ui.SegmentedControl
 import com.ltcn272.finny.presentation.common.util.formatCurrency
 import com.ltcn272.finny.presentation.features.dashboard.component.DashboardTopBar
@@ -213,6 +215,13 @@ fun DashboardScreen(
                     }
                 }
             }
+        }
+        uiState.aiMessage?.let { message ->
+            AIAssistantBubble(
+                fullMessage = message,
+                messageType = MessageType.ASSISTANT,
+                initialOffsetY = 600f
+            )
         }
     }
 }

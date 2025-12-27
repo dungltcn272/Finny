@@ -8,4 +8,5 @@ import java.time.ZonedDateTime
 interface DashboardRepository {
     suspend fun getCategoryReport(startDate: ZonedDateTime, endDate: ZonedDateTime): AppResult<CategoryReport>
     suspend fun getBudgetReport(startDate: ZonedDateTime, endDate: ZonedDateTime): AppResult<BudgetReport>
+    suspend fun getAiReport(startDate: ZonedDateTime, endDate: ZonedDateTime): AppResult<String>
 }

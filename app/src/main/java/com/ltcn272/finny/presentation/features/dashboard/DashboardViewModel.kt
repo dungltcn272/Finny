@@ -42,7 +42,9 @@ data class DashboardUiState(
 
     val donutChartData: List<DonutData> = emptyList(),
     val reportDetailItems: List<Any> = emptyList(),
+    val aiMessage: String? = null
 )
+
 
 private fun getStartOfWeek(date: LocalDate): LocalDate =
     date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
@@ -62,6 +64,7 @@ class DashboardViewModel @Inject constructor(
 
     private var budgetReport: BudgetReport? = null
     private var categoryReport: CategoryReport? = null
+    private var aiReportMessage: String? = null
 
     init {
         val now = ZonedDateTime.now()
@@ -125,7 +128,15 @@ class DashboardViewModel @Inject constructor(
                 }
             }
 
-            joinAll(budgetResultDeferred, categoryResultDeferred)
+            val aiResultDeferred = viewModelScope.launch {
+                when (val result = dashboardRepository.getAiReport(start, end)) {
+                    is AppResult.Success -> aiReportMessage = result.data
+                    is AppResult.Error -> aiReportMessage = null
+                    is AppResult.Loading -> {}
+                }
+            }
+
+            joinAll(budgetResultDeferred, categoryResultDeferred, aiResultDeferred)
             processDataForUi()
         }
     }
@@ -159,7 +170,8 @@ class DashboardViewModel @Inject constructor(
                 isLoading = false,
                 totals = totals,
                 donutChartData = donutData,
-                reportDetailItems = detailItems
+                reportDetailItems = detailItems,
+                aiMessage = aiReportMessage
             )
         }
     }
