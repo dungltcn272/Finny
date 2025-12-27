@@ -36,7 +36,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.ltcn272.finny.R
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
 import com.ltcn272.finny.presentation.common.ui.DeleteConfirmationDialog
-import com.ltcn272.finny.presentation.common.ui.FinnySnackbar
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
 import com.ltcn272.finny.presentation.features.category.component.AddCategoryButton
 import com.ltcn272.finny.presentation.features.category.component.CategoryListSection
 import com.ltcn272.finny.presentation.features.category.component.CreateCategorySheet
@@ -55,6 +55,8 @@ fun CategoryScreen(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showBottomSheet by remember { mutableStateOf(false) }
+
+    val snackbarManager = LocalSnackbarManager.current
 
     LaunchedEffect(viewModel.refreshTrigger) {
         viewModel.refreshTrigger.collectLatest {
@@ -76,7 +78,7 @@ fun CategoryScreen(
         DeleteConfirmationDialog(
             title = stringResource(R.string.delete_category_confirmation_title),
             text = stringResource(R.string.delete_category_confirmation_text, uiState.categoryToDelete?.name ?: ""),
-            onConfirm = { viewModel.confirmDeleteCategory() },
+            onConfirm = { viewModel.confirmDeleteCategory(snackbarManager) },
             onDismiss = { viewModel.cancelDelete() }
         )
     }
@@ -110,7 +112,7 @@ fun CategoryScreen(
                     CategoryListSection(
                         categories = categories,
                         isEditMode = uiState.isEditMode,
-                        onDeleteClick = { viewModel.requestDeleteCategory(it) }
+                        onDeleteClick = { viewModel.requestDeleteCategory(it, snackbarManager) }
                     )
                 }
 
@@ -127,16 +129,10 @@ fun CategoryScreen(
                 isCreating = uiState.isCreating,
                 onDismissRequest = { showBottomSheet = false },
                 onNameChange = viewModel::onNewCategoryNameChange,
-                onCreateClick = { viewModel.createCategory() }
+                onCreateClick = { viewModel.createCategory(snackbarManager) }
             )
         }
 
-        FinnySnackbar(
-            visible = uiState.snackbarState.visible,
-            message = uiState.snackbarState.message,
-            type = uiState.snackbarState.type,
-            onDismiss = viewModel::onSnackbarDismissed
-        )
     }
 }
 
@@ -192,4 +188,3 @@ fun CategoryTopBar(
         }
     }
 }
-

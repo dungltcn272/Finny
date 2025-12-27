@@ -12,7 +12,8 @@ import com.ltcn272.finny.domain.model.User
 import com.ltcn272.finny.domain.repository.ProfileRepository
 import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.domain.util.ErrorType
-import com.ltcn272.finny.presentation.common.ui.TopSnackbarType
+import com.ltcn272.finny.presentation.features.snackbar.SnackbarManager
+import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.launchIn
@@ -20,17 +21,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// Thêm data class cho SnackbarState
-data class SnackbarState(
-    val visible: Boolean = false,
-    val message: String = "",
-    val type: TopSnackbarType = TopSnackbarType.INFO,
-)
+// KHÔNG CẦN SnackbarState data class ở đây nữa
 
 data class ProfileUiState(
     val isLoading: Boolean = false,
     val user: User? = null,
-    val snackbarState: SnackbarState = SnackbarState(),
+    // Bỏ snackbarState khỏi UiState
     val displayName: String = "",
     val finished: Boolean = false
 )
@@ -45,11 +41,8 @@ class ProfileViewModel @Inject constructor(
     var uiState by mutableStateOf(ProfileUiState())
         private set
 
-    init {
-        getProfile()
-    }
-
-    private fun getProfile() {
+    // Sửa lại hàm này để nhận SnackbarManager
+    fun getProfile(snackbarManager: SnackbarManager) {
         profileRepository.getProfile().onEach { result ->
             uiState = when (result) {
                 is AppResult.Loading -> uiState.copy(isLoading = true)
@@ -60,14 +53,14 @@ class ProfileViewModel @Inject constructor(
                         displayName = result.data.displayName ?: ""
                     )
                 }
-                is AppResult.Error -> uiState.copy(
-                    isLoading = false,
-                    snackbarState = SnackbarState(
-                        visible = true,
+                is AppResult.Error -> {
+                    // Gọi đến SnackbarManager được truyền vào
+                    snackbarManager.showMessage(
                         message = mapErrorToString(result.errorType),
                         type = TopSnackbarType.ERROR
                     )
-                )
+                    uiState.copy(isLoading = false)
+                }
             }
         }.launchIn(viewModelScope)
     }
@@ -76,28 +69,23 @@ class ProfileViewModel @Inject constructor(
         uiState = uiState.copy(displayName = newName)
     }
 
-    fun onDoneClick() {
+    // Sửa lại hàm này để nhận SnackbarManager
+    fun onDoneClick(snackbarManager: SnackbarManager) {
         val originalUser = uiState.user ?: return
         val newName = uiState.displayName.trim()
 
         if (newName.isBlank()) {
-            uiState = uiState.copy(
-                snackbarState = SnackbarState(
-                    visible = true,
-                    message = context.getString(R.string.error_display_name_empty),
-                    type = TopSnackbarType.WARNING
-                )
+            snackbarManager.showMessage(
+                message = context.getString(R.string.error_display_name_empty),
+                type = TopSnackbarType.WARNING
             )
             return
         }
 
         if (newName == originalUser.displayName) {
-            uiState = uiState.copy(
-                snackbarState = SnackbarState(
-                    visible = true,
-                    message = "Không có gì thay đổi.",
-                    type = TopSnackbarType.INFO
-                )
+            snackbarManager.showMessage(
+                message = "Không có gì thay đổi.",
+                type = TopSnackbarType.INFO
             )
             return
         }
@@ -109,34 +97,29 @@ class ProfileViewModel @Inject constructor(
                     is AppResult.Loading -> uiState.copy(isLoading = true)
                     is AppResult.Success -> {
                         settingDataStore.saveUsername(newName)
-
+                        snackbarManager.showMessage(
+                            message = context.getString(R.string.profile_updated_successfully),
+                            type = TopSnackbarType.SUCCESS
+                        )
                         uiState.copy(
                             isLoading = false,
                             user = result.data,
-                            displayName = newName,
-                            snackbarState = SnackbarState(
-                                visible = true,
-                                message = context.getString(R.string.profile_updated_successfully),
-                                type = TopSnackbarType.SUCCESS
-                            )
+                            displayName = newName
                         )
                     }
-                    is AppResult.Error -> uiState.copy(
-                        isLoading = false,
-                        snackbarState = SnackbarState(
-                            visible = true,
+                    is AppResult.Error -> {
+                        snackbarManager.showMessage(
                             message = mapErrorToString(result.errorType),
                             type = TopSnackbarType.ERROR
                         )
-                    )
+                        uiState.copy(isLoading = false)
+                    }
                 }
             }.launchIn(viewModelScope)
         }
     }
 
-    fun onSnackbarDismissed() {
-        uiState = uiState.copy(snackbarState = uiState.snackbarState.copy(visible = false))
-    }
+    // KHÔNG CẦN onSnackbarDismissed() nữa
 
     private fun mapErrorToString(errorType: ErrorType): String {
         return when (errorType) {

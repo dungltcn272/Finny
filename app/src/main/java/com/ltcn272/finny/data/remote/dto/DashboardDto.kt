@@ -58,6 +58,7 @@ data class BudgetReportDetailDto(
     @SerializedName("ratio") val ratio: Double
 )
 
-data class AiReportResponseDto(
-    @SerializedName("message") val message: String
+data class AiReportDataDto(
+    @SerializedName("insight") val insight: String
 )
+

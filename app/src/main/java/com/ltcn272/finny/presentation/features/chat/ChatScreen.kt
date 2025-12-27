@@ -37,14 +37,16 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.ltcn272.finny.R
-import com.ltcn272.finny.domain.util.ErrorType
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
-import com.ltcn272.finny.presentation.common.ui.FinnySnackbar
 import com.ltcn272.finny.presentation.features.chat.component.MessageInput
 import com.ltcn272.finny.presentation.features.chat.component.MessageItem
 import com.ltcn272.finny.presentation.features.chat.component.TypingIndicator
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
+import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import java.time.Duration
 import kotlin.math.abs
 
@@ -55,27 +57,36 @@ fun ChatScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val messages = viewModel.messages.collectAsLazyPagingItems()
-    val scope = rememberCoroutineScope()
+    val snackbarManager = LocalSnackbarManager.current
+
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
-        onResult = viewModel::onPermissionResult
+        onResult = { isGranted -> viewModel.onPermissionResult(isGranted, snackbarManager) }
     )
 
-    val snackbarMessage = uiState.snackbarState.message ?: uiState.snackbarState.errorType?.let {
-        when (it) {
-            ErrorType.NETWORK -> stringResource(R.string.error_network)
-            ErrorType.TIMEOUT -> stringResource(R.string.error_timeout)
-            ErrorType.UNAUTHORIZED -> stringResource(R.string.error_unauthorized)
-            ErrorType.SERVER_ERROR -> stringResource(R.string.error_server)
-            ErrorType.UNKNOWN -> stringResource(R.string.error_unknown)
-        }
-    } ?: ""
+    val listState = rememberLazyListState()
 
+    LaunchedEffect(Unit) {
+        viewModel.errorEvent.collectLatest { message ->
+            snackbarManager.showMessage(message, TopSnackbarType.ERROR)
+        }
+    }
 
     LaunchedEffect(uiState.refreshTrigger) {
         if (uiState.refreshTrigger > 0) {
             messages.refresh()
         }
+    }
+
+    LaunchedEffect(uiState.pendingMessages, messages.itemCount) {
+        snapshotFlow { messages.loadState.refresh }
+            .distinctUntilChanged()
+            .filter { it is LoadState.NotLoading }
+            .collect {
+                if (listState.firstVisibleItemIndex <= 1) {
+                    listState.animateScrollToItem(0)
+                }
+            }
     }
 
     Box(
@@ -107,11 +118,10 @@ fun ChatScreen(
                 )
             }
 
-            val listState = rememberLazyListState()
             val focusManager = LocalFocusManager.current
 
-            LaunchedEffect(messages.itemCount, uiState.pendingMessages.size, uiState.isAiTyping) {
-                if (messages.itemCount > 0) {
+            LaunchedEffect(uiState.pendingMessages.size) {
+                if (uiState.pendingMessages.isNotEmpty()) {
                     listState.animateScrollToItem(0)
                 }
             }
@@ -202,10 +212,7 @@ fun ChatScreen(
                 text = uiState.recognizedText,
                 onTextChanged = viewModel::onRecognizedTextChanged,
                 onMessageSent = {
-                    viewModel.sendMessage(it)
-                    scope.launch {
-                        listState.animateScrollToItem(0)
-                    }
+                    viewModel.sendMessage(it, snackbarManager)
                 },
                 enabled = !uiState.isAiTyping,
                 isListening = uiState.isListening,
@@ -219,12 +226,5 @@ fun ChatScreen(
                 onMicRelease = viewModel::stopListening
             )
         }
-
-        FinnySnackbar(
-            visible = uiState.snackbarState.visible,
-            message = snackbarMessage,
-            type = uiState.snackbarState.type,
-            onDismiss = viewModel::onSnackbarDismissed
-        )
     }
 }

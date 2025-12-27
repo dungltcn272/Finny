@@ -2,9 +2,15 @@ package com.ltcn272.finny.presentation.common.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -42,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -50,12 +57,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ltcn272.finny.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -70,9 +75,11 @@ fun AIAssistantBubble(
     initialOffsetX: Float = 0f,
     initialOffsetY: Float = 200f,
     fullMessage: String,
+    isLoading: Boolean,
     messageType: MessageType = MessageType.ASSISTANT,
     bubbleSize: Int = 60,
-    typingDelayMs: Long = 40
+    typingDelayMs: Long = 40,
+    paragraphDelayMs: Long = 1500
 ) {
     val offsetX = remember { Animatable(initialOffsetX) }
     val offsetY = remember { Animatable(initialOffsetY) }
@@ -80,10 +87,7 @@ fun AIAssistantBubble(
 
     var displayedText by remember { mutableStateOf("") }
     var isMessageVisible by remember { mutableStateOf(true) }
-
-    // --- LOGIC MỚI: Chỉ typing lần đầu ---
-    var hasTypedOnce by remember { mutableStateOf(false) }
-    // ------------------------------------
+    var hasAppeared by remember { mutableStateOf(false) }
 
     val configuration = LocalConfiguration.current
     val screenWidthPx = with(LocalDensity.current) { configuration.screenWidthDp.dp.toPx() }
@@ -105,20 +109,27 @@ fun AIAssistantBubble(
         label = "bubble_height_anim"
     )
 
-    // Hiệu ứng gõ chữ
-    LaunchedEffect(fullMessage, measured, hasTypedOnce) {
-        if (!measured || hasTypedOnce) return@LaunchedEffect
+    LaunchedEffect(fullMessage, isLoading) {
+        if (isLoading) {
+            measured = false
+            hasAppeared = false
+            displayedText = ""
+        } else if (fullMessage.isNotEmpty() && !hasAppeared) {
+            val paragraphs = fullMessage.split("\n\n")
+            var currentText = ""
 
-        displayedText = ""
-        fullMessage.forEachIndexed { index, char ->
-            displayedText += char
-            if (index > 0) {
-                delay(typingDelayMs)
+            paragraphs.forEachIndexed { index, paragraph ->
+                currentText += (if (index > 0) "\n\n" else "") + paragraph
+                displayedText = currentText
+
+                if (index < paragraphs.size - 1) {
+                    delay(paragraphDelayMs)
+                }
             }
+            hasAppeared = true
         }
-        // Đánh dấu đã gõ xong
-        hasTypedOnce = true
     }
+
 
     Box(modifier = modifier.fillMaxSize()) {
         Row(
@@ -126,7 +137,6 @@ fun AIAssistantBubble(
                 .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
                 .padding(8.dp),
         ) {
-            // 1. Bong bóng Chat (Avatar AI)
             Box(
                 modifier = Modifier
                     .size(bubbleSize.dp)
@@ -143,13 +153,7 @@ fun AIAssistantBubble(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = {
-                            isMessageVisible = !isMessageVisible
-                            // Nếu đã typing xong, chỉ cần hiển thị lại text đầy đủ
-                            if (isMessageVisible && hasTypedOnce) {
-                                displayedText = fullMessage
-                            }
-                        }
+                        onClick = { isMessageVisible = !isMessageVisible }
                     )
                     .pointerInput(Unit) {
                         detectDragGestures(
@@ -190,7 +194,6 @@ fun AIAssistantBubble(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // 2. Khung Text (Lời thoại)
             AnimatedVisibility(
                 visible = isMessageVisible,
                 enter = scaleIn(transformOrigin = TransformOrigin(0f, 1f)) + fadeIn(),
@@ -200,68 +203,98 @@ fun AIAssistantBubble(
                     val surfaceColor: Color
                     val borderColor: Color
                     if (messageType == MessageType.ASSISTANT) {
-                        surfaceColor = Color(0xFFE8F5E9).copy(alpha = 0.95f) // Xanh lá nhạt
-                        borderColor = Color(0xFF2E7D32) // Xanh lá đậm
+                        surfaceColor = Color(0xFFE8F5E9).copy(alpha = 0.95f)
+                        borderColor = Color(0xFF2E7D32)
                     } else {
-                        surfaceColor = Color(0xFFFFEBEE).copy(alpha = 0.95f) // Đỏ nhạt
-                        borderColor = Color(0xFFC62828) // Đỏ đậm
+                        surfaceColor = Color(0xFFFFEBEE).copy(alpha = 0.95f)
+                        borderColor = Color(0xFFC62828)
                     }
 
-                    // Hộp thoại ẩn để đo kích thước
-                    Surface(
-                        shape = RoundedCornerShape(
-                            topStart = 4.dp,
-                            topEnd = 16.dp,
-                            bottomEnd = 16.dp,
-                            bottomStart = 16.dp
-                        ),
-                        modifier = Modifier
-                            .widthIn(max = 250.dp)
-                            .alpha(0f)
-                            .onSizeChanged {
-                                if (!measured) {
-                                    targetWidth = with(density) { it.width.toDp() }
-                                    targetHeight = with(density) { it.height.toDp() }
-                                    measured = true
-                                }
-                            }
-                    ) {
-                        Text(
-                            text = fullMessage,
-                            modifier = Modifier.padding(12.dp),
-                            style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp)
-                        )
-                    }
-
-                    // Hộp thoại thật, sử dụng kích thước đã animate
-                    if (measured) {
+                    if (isLoading) {
                         Surface(
-                            shape = RoundedCornerShape(
-                                topStart = 4.dp,
-                                topEnd = 16.dp,
-                                bottomEnd = 16.dp,
-                                bottomStart = 16.dp
-                            ),
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp),
                             color = surfaceColor,
                             shadowElevation = 4.dp,
                             border = BorderStroke(1.dp, borderColor.copy(alpha = 0.7f)),
+                        ) {
+                            ThinkingIndicator(modifier = Modifier.padding(12.dp))
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp),
                             modifier = Modifier
-                                .width(animatedWidth)
-                                .height(animatedHeight)
+                                .widthIn(max = 250.dp)
+                                .alpha(0f)
+                                .onSizeChanged {
+                                    if (!measured) {
+                                        targetWidth = with(density) { it.width.toDp() }
+                                        targetHeight = with(density) { it.height.toDp() }
+                                        measured = true
+                                    }
+                                }
                         ) {
                             Text(
-                                text = displayedText,
+                                text = fullMessage, // Đo với full message
                                 modifier = Modifier.padding(12.dp),
-                                style = TextStyle(
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    lineHeight = 20.sp
-                                )
+                                style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp)
                             )
+                        }
+
+                        if (measured) {
+                            Surface(
+                                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp),
+                                color = surfaceColor,
+                                shadowElevation = 4.dp,
+                                border = BorderStroke(1.dp, borderColor.copy(alpha = 0.7f)),
+                                modifier = Modifier
+                                    .width(animatedWidth)
+                                    .height(animatedHeight)
+                            ) {
+                                Text(
+                                    text = displayedText,
+                                    modifier = Modifier.padding(12.dp),
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        lineHeight = 20.sp
+                                    )
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ThinkingIndicator(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "thinking_indicator")
+    val dots = List(3) { index ->
+        infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1000, delayMillis = index * 150, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ), label = "dot_$index"
+        )
+    }
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        dots.forEach { anim ->
+            Box(
+                Modifier
+                    .padding(horizontal = 3.dp)
+                    .size(8.dp)
+                    .scale(if (anim.value < 0.5f) (anim.value * 2) else (1 - (anim.value - 0.5f) * 2))
+                    .alpha(if (anim.value < 0.1f || anim.value > 0.9f) 0.5f else 1f)
+                    .background(Color.Gray, CircleShape)
+            )
         }
     }
 }

@@ -34,7 +34,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ltcn272.finny.R
 import com.ltcn272.finny.presentation.common.ui.AnimatedCurrencyMenu
-import com.ltcn272.finny.presentation.common.ui.FinnySnackbar
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
 import com.ltcn272.finny.presentation.features.setting.component.SettingItem
 import com.ltcn272.finny.presentation.features.setting.component.SettingSwitchItem
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
@@ -54,6 +54,7 @@ fun SettingScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val snackbarManager = LocalSnackbarManager.current
 
     val saveAndOpenFile: (String) -> Unit = { base64Pdf ->
         try {
@@ -62,16 +63,13 @@ fun SettingScreen(
             val fileName = "Finny_Statement_$timeStamp.pdf"
 
             val fileUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Android 10 (Q) trở lên: Dùng MediaStore (An toàn)
                 val contentResolver = context.contentResolver
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                     put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
                     put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                 }
-                val uri =
-                    contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-                // Ghi dữ liệu vào file
+                val uri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
                 uri?.let {
                     contentResolver.openOutputStream(it)?.use { outputStream ->
                         outputStream.write(pdfData)
@@ -79,50 +77,36 @@ fun SettingScreen(
                 }
                 uri
             } else {
-                // Android 9 (P) trở xuống: Ghi trực tiếp
-                val downloadsDir =
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                if (!downloadsDir.exists()) {
-                    downloadsDir.mkdirs()
-                }
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) downloadsDir.mkdirs()
                 val pdfFile = File(downloadsDir, fileName)
-                FileOutputStream(pdfFile).use { outputStream ->
-                    outputStream.write(pdfData)
-                }
-                FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider",
-                    pdfFile
-                )
+                FileOutputStream(pdfFile).use { it.write(pdfData) }
+                FileProvider.getUriForFile(context, "${context.packageName}.provider", pdfFile)
             }
 
             if (fileUri == null) {
-                viewModel.showPdfExportError()
-
+                viewModel.showPdfExportError(snackbarManager)
             } else {
                 val viewIntent = Intent(Intent.ACTION_VIEW).apply {
                     setDataAndType(fileUri, "application/pdf")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-
                 try {
                     context.startActivity(viewIntent)
-                    viewModel.showPdfExportSuccess(fileName)
+                    viewModel.showPdfExportSuccess(snackbarManager, fileName)
                 } catch (e: ActivityNotFoundException) {
-                    viewModel.showNoPdfViewerFound()
+                    viewModel.showNoPdfViewerFound(snackbarManager)
                 }
             }
-
         } catch (e: Exception) {
-            viewModel.showPdfExportError()
+            viewModel.showPdfExportError(snackbarManager)
             e.printStackTrace()
         }
     }
 
-
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
-        onResult = viewModel::onNotificationPermissionResult
+        onResult = { isGranted -> viewModel.onNotificationPermissionResult(snackbarManager, isGranted) }
     )
 
     DisposableEffect(lifecycleOwner) {
@@ -132,9 +116,7 @@ fun SettingScreen(
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     var showCurrencyMenu by remember { mutableStateOf(false) }
@@ -150,7 +132,7 @@ fun SettingScreen(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     } else {
-                        viewModel.setEnableNotifications(true)
+                        viewModel.setEnableNotifications(snackbarManager, true)
                     }
                 }
             }
@@ -185,8 +167,7 @@ fun SettingScreen(
                 item {
                     SettingsCard {
                         SettingItem(
-                            text = uiState.username
-                                ?: stringResource(id = R.string.user_name_placeholder),
+                            text = uiState.username ?: stringResource(id = R.string.user_name_placeholder),
                             onClick = onNavigateToProfile
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
@@ -228,15 +209,12 @@ fun SettingScreen(
                             text = stringResource(R.string.export_data),
                             onClick = {
                                 if (!uiState.isExportingPdf) {
-                                    viewModel.exportStatement(onSuccess = saveAndOpenFile)
+                                    viewModel.exportStatement(snackbarManager, onSuccess = saveAndOpenFile)
                                 }
                             },
                             trailingContent = {
                                 if (uiState.isExportingPdf) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        strokeWidth = 2.dp
-                                    )
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                                 }
                             }
                         )
@@ -244,22 +222,14 @@ fun SettingScreen(
                         SettingItem(
                             text = stringResource(R.string.suggest_feature),
                             onClick = {
-                                Toast.makeText(
-                                    context,
-                                    R.string.feature_in_development,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(context, R.string.feature_in_development, Toast.LENGTH_SHORT).show()
                             }
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
                         SettingItem(
                             text = stringResource(R.string.rate_app),
                             onClick = {
-                                Toast.makeText(
-                                    context,
-                                    R.string.feature_in_development,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(context, R.string.feature_in_development, Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -274,45 +244,19 @@ fun SettingScreen(
                             .height(52.dp),
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
                         if (uiState.isLoggingOut) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colorScheme.error,
-                                strokeWidth = 2.dp
-                            )
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.error)
                         } else {
-                            Text(
-                                text = stringResource(id = R.string.logout),
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text(stringResource(id = R.string.logout), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
         }
-        FinnySnackbar(
-            visible = uiState.snackbarState.visible,
-            message = uiState.snackbarState.message,
-            type = uiState.snackbarState.type,
-            action = uiState.snackbarState.actionTitle?.let { title ->
-                {
-                    TextButton(
-                        onClick = {
-                            uiState.snackbarState.onActionClick?.invoke()
-                            viewModel.onSnackbarDismissed()
-                        },
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
-                    ) {
-                        Text(title, fontWeight = FontWeight.Bold)
-                    }
-                }
-            },
-            onDismiss = viewModel::onSnackbarDismissed
-        )
     }
 }
 
@@ -332,3 +276,4 @@ private fun SettingsCard(
         }
     }
 }
+

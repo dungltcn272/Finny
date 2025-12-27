@@ -10,12 +10,15 @@ import com.ltcn272.finny.domain.model.CategoryReport
 import com.ltcn272.finny.domain.model.ReportTotals
 import com.ltcn272.finny.domain.repository.DashboardRepository
 import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.domain.util.ErrorType
 import com.ltcn272.finny.presentation.common.ui.DonutData
 import com.ltcn272.finny.presentation.common.util.formatCurrencyNonComposable
 import com.ltcn272.finny.presentation.common.util.generateHarmonicColors
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.joinAll
@@ -37,21 +40,18 @@ data class DashboardUiState(
     val endDate: ZonedDateTime = ZonedDateTime.now(),
     val showDatePicker: Boolean = false,
     val timeRangeTitle: String = "",
-
     val totals: ReportTotals? = null,
-
     val donutChartData: List<DonutData> = emptyList(),
     val reportDetailItems: List<Any> = emptyList(),
-    val aiMessage: String? = null
+    val aiMessage: String? = null,
+    val isAiLoading: Boolean = false
 )
-
 
 private fun getStartOfWeek(date: LocalDate): LocalDate =
     date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
 private fun getEndOfWeek(date: LocalDate): LocalDate =
     date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
-
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
@@ -62,14 +62,20 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val _dashboardErrorEvent = MutableSharedFlow<String>()
+    val dashboardErrorEvent = _dashboardErrorEvent.asSharedFlow()
+
     private var budgetReport: BudgetReport? = null
     private var categoryReport: CategoryReport? = null
-    private var aiReportMessage: String? = null
 
     init {
         val now = ZonedDateTime.now()
-        val startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate().atStartOfDay(now.zone)
-        val endOfWeek = now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).toLocalDate().atTime(23, 59, 59).atZone(now.zone)
+        val startOfWeek =
+            now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate()
+                .atStartOfDay(now.zone)
+        val endOfWeek =
+            now.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).toLocalDate().atTime(23, 59, 59)
+                .atZone(now.zone)
         setDateRangeAndFetch(startOfWeek, endOfWeek)
     }
 
@@ -98,45 +104,69 @@ class DashboardViewModel @Inject constructor(
     fun nextDateRange() {
         val currentStart = _uiState.value.startDate
         val newStart = currentStart.plusWeeks(1)
-        val newEnd = newStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).toLocalDate().atTime(23, 59, 59).atZone(currentStart.zone)
+        val newEnd =
+            newStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).toLocalDate()
+                .atTime(23, 59, 59).atZone(currentStart.zone)
         setDateRangeAndFetch(newStart, newEnd)
     }
 
     fun previousDateRange() {
         val currentStart = _uiState.value.startDate
         val newStart = currentStart.minusWeeks(1)
-        val newEnd = newStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).toLocalDate().atTime(23, 59, 59).atZone(currentStart.zone)
+        val newEnd =
+            newStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).toLocalDate()
+                .atTime(23, 59, 59).atZone(currentStart.zone)
         setDateRangeAndFetch(newStart, newEnd)
     }
 
     private fun setDateRangeAndFetch(start: ZonedDateTime, end: ZonedDateTime) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, startDate = start, endDate = end, timeRangeTitle = formatRangeTitle(start.toLocalDate(), end.toLocalDate())) }
-
-            val budgetResultDeferred = viewModelScope.launch {
-                when (val result = dashboardRepository.getBudgetReport(start, end)) {
-                    is AppResult.Success -> budgetReport = result.data
-                    is AppResult.Error -> budgetReport = null
-                    is AppResult.Loading -> { /* No-op */ }
-                }
-            }
-            val categoryResultDeferred = viewModelScope.launch {
-                when (val result = dashboardRepository.getCategoryReport(start, end)) {
-                    is AppResult.Success -> categoryReport = result.data
-                    is AppResult.Error -> categoryReport = null
-                    is AppResult.Loading -> { /* No-op */ }
-                }
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    isAiLoading = true,
+                    aiMessage = null,
+                    startDate = start,
+                    endDate = end,
+                    timeRangeTitle = formatRangeTitle(start.toLocalDate(), end.toLocalDate())
+                )
             }
 
-            val aiResultDeferred = viewModelScope.launch {
+            launch {
                 when (val result = dashboardRepository.getAiReport(start, end)) {
-                    is AppResult.Success -> aiReportMessage = result.data
-                    is AppResult.Error -> aiReportMessage = null
+                    is AppResult.Success -> {
+                        _uiState.update { it.copy(aiMessage = result.data, isAiLoading = false) }
+                    }
+                    is AppResult.Error -> {
+                        _dashboardErrorEvent.emit(mapErrorToString(result.errorType))
+                        _uiState.update { it.copy(aiMessage = null, isAiLoading = false) }
+                    }
                     is AppResult.Loading -> {}
                 }
             }
 
-            joinAll(budgetResultDeferred, categoryResultDeferred, aiResultDeferred)
+            val budgetResultJob = launch {
+                when (val result = dashboardRepository.getBudgetReport(start, end)) {
+                    is AppResult.Success -> budgetReport = result.data
+                    is AppResult.Error -> {
+                        budgetReport = null
+                        _dashboardErrorEvent.emit(mapErrorToString(result.errorType))
+                    }
+                    is AppResult.Loading -> {}
+                }
+            }
+            val categoryResultJob = launch {
+                when (val result = dashboardRepository.getCategoryReport(start, end)) {
+                    is AppResult.Success -> categoryReport = result.data
+                    is AppResult.Error -> {
+                        categoryReport = null
+                        _dashboardErrorEvent.emit(mapErrorToString(result.errorType))
+                    }
+                    is AppResult.Loading -> {}
+                }
+            }
+
+            joinAll(budgetResultJob, categoryResultJob)
             processDataForUi()
         }
     }
@@ -150,7 +180,14 @@ class DashboardViewModel @Inject constructor(
         }
 
         if (totals == null || pieItems == null || detailItems == null) {
-            _uiState.update { it.copy(isLoading = false, totals = null, donutChartData = emptyList(), reportDetailItems = emptyList()) }
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    totals = null,
+                    donutChartData = emptyList(),
+                    reportDetailItems = emptyList()
+                )
+            }
             return
         }
 
@@ -170,8 +207,7 @@ class DashboardViewModel @Inject constructor(
                 isLoading = false,
                 totals = totals,
                 donutChartData = donutData,
-                reportDetailItems = detailItems,
-                aiMessage = aiReportMessage
+                reportDetailItems = detailItems
             )
         }
     }
@@ -185,6 +221,16 @@ class DashboardViewModel @Inject constructor(
         } else {
             val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault())
             "${start.format(formatter)} - ${end.format(formatter)}"
+        }
+    }
+
+    private fun mapErrorToString(errorType: ErrorType): String {
+        return when (errorType) {
+            ErrorType.NETWORK -> context.getString(R.string.error_network)
+            ErrorType.TIMEOUT -> context.getString(R.string.error_timeout)
+            ErrorType.UNAUTHORIZED -> context.getString(R.string.error_unauthorized)
+            ErrorType.SERVER_ERROR -> context.getString(R.string.error_server)
+            ErrorType.UNKNOWN -> context.getString(R.string.error_unknown)
         }
     }
 }

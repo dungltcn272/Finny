@@ -75,7 +75,7 @@ fun AttachmentSection(
                         fontWeight = FontWeight.Normal
                     )
                 }
-                if (imageUri == null) {
+                if (imageUri.isNullOrBlank()) {
                     Surface(
                         onClick = onChooseImageClick,
                         shape = RoundedCornerShape(8.dp),
@@ -96,7 +96,7 @@ fun AttachmentSection(
                 }
             }
 
-            AnimatedVisibility(visible = imageUri != null || isUploading) {
+            AnimatedVisibility(visible = !imageUri.isNullOrBlank() || isUploading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,7 +108,7 @@ fun AttachmentSection(
                 ) {
                     if (isUploading) {
                         CircularProgressIndicator()
-                    } else if (imageUri != null) {
+                    } else if (!imageUri.isNullOrBlank()) {
                         AsyncImage(
                             model = imageUri,
                             contentDescription = stringResource(R.string.choose_image),

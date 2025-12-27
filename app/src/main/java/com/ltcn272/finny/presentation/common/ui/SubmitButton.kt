@@ -34,11 +34,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
-import com.ltcn272.finny.presentation.features.budget.create_edit.BudgetMode
+
+enum class ScreenMode {
+    CREATE, EDIT
+}
+
 
 @Composable
-fun SubmitButton(mode: BudgetMode, isSubmitting: Boolean, onClick: () -> Unit) {
-    val (text, backgroundColor, contentColor) = if (mode == BudgetMode.CREATE) {
+fun SubmitButton(
+    mode: ScreenMode,
+    isSubmitting: Boolean,
+    onClick: () -> Unit
+) {
+    val (text, backgroundColor, contentColor) = if (mode == ScreenMode.CREATE) {
         Triple(stringResource(R.string.create_new), Color(0xFFDEDEDE), Color.DarkGray)
     } else {
         Triple(stringResource(R.string.update), Color.Black, Color.White)

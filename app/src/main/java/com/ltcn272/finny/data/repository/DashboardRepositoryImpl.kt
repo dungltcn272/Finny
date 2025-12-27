@@ -21,7 +21,7 @@ class DashboardRepositoryImpl @Inject constructor(
 ) : DashboardRepository {
 
 
-    private val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+    private val localDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
     override suspend fun getCategoryReport(
@@ -69,14 +69,18 @@ class DashboardRepositoryImpl @Inject constructor(
 
     override suspend fun getAiReport(startDate: ZonedDateTime, endDate: ZonedDateTime): AppResult<String> {
         return try {
+            val startLocalDate = startDate.format(localDateFormatter)
+            val endLocalDate = endDate.format(localDateFormatter)
             val request = ReportRequestDto(
                 dateRange = DateRangeDto(
-                    start = startDate.format(dateFormatter),
-                    end = endDate.format(dateFormatter)
+                    start = startLocalDate,
+                    end = endLocalDate
                 )
             )
+
             val response = dashboardApi.getAiReport(request).ensureSuccess()
-            AppResult.Success(response.message)
+            AppResult.Success(response.insight)
+
         } catch (e: Exception) {
             AppResult.Error(e.toErrorType())
         }

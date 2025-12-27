@@ -1,6 +1,6 @@
 package com.ltcn272.finny.data.remote.api
 
-import com.ltcn272.finny.data.remote.dto.AiReportResponseDto
+import com.ltcn272.finny.data.remote.dto.AiReportDataDto
 import com.ltcn272.finny.data.remote.dto.ApiResponse
 import com.ltcn272.finny.data.remote.dto.BudgetReportDataDto
 import com.ltcn272.finny.data.remote.dto.CategoryReportDataDto
@@ -23,5 +23,5 @@ interface DashboardApi {
     @POST("dashboards/reports/ai")
     suspend fun getAiReport(
         @Body body: ReportRequestDto
-    ): ApiResponse<AiReportResponseDto>
+    ): ApiResponse<AiReportDataDto>
 }

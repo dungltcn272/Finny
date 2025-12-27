@@ -31,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,7 +47,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.ltcn272.finny.R
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
-import com.ltcn272.finny.presentation.common.ui.FinnySnackbar
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
 
 @Composable
@@ -55,8 +56,13 @@ fun ProfileScreen(
     onBackClick: () -> Unit
 ) {
     val uiState = viewModel.uiState
-    val snackbarState = uiState.snackbarState
+    // Lấy SnackbarManager từ CompositionLocal
+    val snackbarManager = LocalSnackbarManager.current
 
+    LaunchedEffect(Unit) {
+        // Truyền snackbarManager vào ViewModel khi khởi tạo màn hình
+        viewModel.getProfile(snackbarManager)
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -86,7 +92,8 @@ fun ProfileScreen(
 
                 // Nút Save với loading
                 Surface(
-                    onClick = { viewModel.onDoneClick() },
+                    // Truyền snackbarManager vào ViewModel khi nhấn nút
+                    onClick = { viewModel.onDoneClick(snackbarManager) },
                     enabled = !uiState.isLoading,
                     shape = RoundedCornerShape(50),
                     color = MaterialTheme.colorScheme.primary,
@@ -153,7 +160,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = user.displayName ?: "",
+                            text = uiState.displayName, // Sử dụng state để cập nhật ngay lập tức
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -242,30 +249,31 @@ fun ProfileScreen(
                 }
             }
         }
-
-        FinnySnackbar(
-            visible = snackbarState.visible,
-            message = snackbarState.message,
-            type = snackbarState.type,
-            onDismiss = viewModel::onSnackbarDismissed
-        )
+        // FinnySnackbar đã được chuyển ra AppNavHost, không cần ở đây nữa
     }
 }
 
 @Composable
 fun InfoRow(icon: ImageVector, label: String, value: String) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = label, tint = Color.Gray, modifier = Modifier.size(24.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
         Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(value, style = MaterialTheme.typography.bodyLarge)
-        }
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
     }
 }

@@ -10,7 +10,10 @@ import com.ltcn272.finny.domain.model.Category
 import com.ltcn272.finny.domain.repository.CategoryRepository
 import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.domain.util.ErrorType
-import com.ltcn272.finny.presentation.common.ui.TopSnackbarType
+// --- IMPORT CÁC THÀNH PHẦN MỚI ---
+import com.ltcn272.finny.presentation.features.snackbar.SnackbarManager
+import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
+// ---------------------------------
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -27,16 +30,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SnackbarState(
-    val visible: Boolean = false,
-    val message: String = "",
-    val type: TopSnackbarType = TopSnackbarType.INFO,
-)
-
-// Gom tất cả state vào một data class duy nhất
 data class CategoryUiState(
     val isEditMode: Boolean = false,
-    val snackbarState: SnackbarState = SnackbarState(),
     val categoryToDelete: Category? = null,
     val isCreating: Boolean = false,
     val newCategoryName: String = ""
@@ -48,24 +43,19 @@ class CategoryViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    // Các state có thể thay đổi độc lập
     private val _isEditMode = MutableStateFlow(false)
-    private val _snackbarState = MutableStateFlow(SnackbarState())
     private val _categoryToDelete = MutableStateFlow<Category?>(null)
     private val _isCreating = MutableStateFlow(false)
     private val _newCategoryName = MutableStateFlow("")
 
-    // Combine tất cả các state flow lại thành một uiState duy nhất
     val uiState: StateFlow<CategoryUiState> = combine(
         _isEditMode,
-        _snackbarState,
         _categoryToDelete,
         _isCreating,
         _newCategoryName
-    ) { isEditMode, snackbar, categoryToDelete, isCreating, newCategoryName ->
+    ) { isEditMode, categoryToDelete, isCreating, newCategoryName ->
         CategoryUiState(
             isEditMode = isEditMode,
-            snackbarState = snackbar,
             categoryToDelete = categoryToDelete,
             isCreating = isCreating,
             newCategoryName = newCategoryName
@@ -73,14 +63,12 @@ class CategoryViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = CategoryUiState() // Giá trị khởi tạo
+        initialValue = CategoryUiState()
     )
 
-    // Flow cho PagingData, không nằm trong UiState
     val categories: Flow<PagingData<Category>> = categoryRepository.getCategories()
         .cachedIn(viewModelScope)
 
-    // Flow để trigger refresh Paging
     private val _refreshTrigger = MutableSharedFlow<Unit>(replay = 1)
     val refreshTrigger = _refreshTrigger.asSharedFlow()
 
@@ -102,10 +90,9 @@ class CategoryViewModel @Inject constructor(
         _newCategoryName.value = name
     }
 
-    fun requestDeleteCategory(category: Category) {
+    fun requestDeleteCategory(category: Category, snackbarManager: SnackbarManager) {
         if (category.isDefault) {
-            _snackbarState.value = SnackbarState(
-                visible = true,
+            snackbarManager.showMessage(
                 message = context.getString(R.string.cannot_delete_default_category),
                 type = TopSnackbarType.WARNING
             )
@@ -114,29 +101,27 @@ class CategoryViewModel @Inject constructor(
         _categoryToDelete.value = category
     }
 
-    fun confirmDeleteCategory() {
+    fun confirmDeleteCategory(snackbarManager: SnackbarManager) {
         val categoryId = _categoryToDelete.value?.serverId ?: return
-        _categoryToDelete.value = null // Ẩn dialog ngay
+        _categoryToDelete.value = null
 
         viewModelScope.launch {
             categoryRepository.deleteCategory(categoryId).onEach { result ->
                 when (result) {
                     is AppResult.Success -> {
                         triggerRefresh()
-                        _snackbarState.value = SnackbarState(
-                            visible = true,
+                        snackbarManager.showMessage(
                             message = context.getString(R.string.category_deleted_successfully),
                             type = TopSnackbarType.SUCCESS
                         )
                     }
                     is AppResult.Error -> {
-                        _snackbarState.value = SnackbarState(
-                            visible = true,
+                        snackbarManager.showMessage(
                             message = mapErrorToString(result.errorType),
                             type = TopSnackbarType.ERROR
                         )
                     }
-                    is AppResult.Loading -> { /* Có thể hiển thị loading nếu cần */ }
+                    is AppResult.Loading -> {}
                 }
             }.launchIn(viewModelScope)
         }
@@ -146,11 +131,10 @@ class CategoryViewModel @Inject constructor(
         _categoryToDelete.value = null
     }
 
-    fun createCategory() {
+    fun createCategory(snackbarManager: SnackbarManager) {
         val name = _newCategoryName.value.trim()
         if (name.isBlank()) {
-            _snackbarState.value = SnackbarState(
-                visible = true,
+            snackbarManager.showMessage(
                 message = context.getString(R.string.category_name_cannot_be_empty),
                 type = TopSnackbarType.WARNING
             )
@@ -164,17 +148,15 @@ class CategoryViewModel @Inject constructor(
                     is AppResult.Success -> {
                         triggerRefresh()
                         _isCreating.value = false
-                        _newCategoryName.value = "" // Reset input -> sẽ tự động đóng bottom sheet
-                        _snackbarState.value = SnackbarState(
-                            visible = true,
+                        _newCategoryName.value = ""
+                        snackbarManager.showMessage(
                             message = context.getString(R.string.category_created_successfully),
                             type = TopSnackbarType.SUCCESS
                         )
                     }
                     is AppResult.Error -> {
                         _isCreating.value = false
-                        _snackbarState.value = SnackbarState(
-                            visible = true,
+                        snackbarManager.showMessage(
                             message = mapErrorToString(result.errorType),
                             type = TopSnackbarType.ERROR
                         )
@@ -182,10 +164,6 @@ class CategoryViewModel @Inject constructor(
                 }
             }.launchIn(viewModelScope)
         }
-    }
-
-    fun onSnackbarDismissed() {
-        _snackbarState.update { it.copy(visible = false) }
     }
 
     private fun mapErrorToString(errorType: ErrorType): String {

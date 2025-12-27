@@ -1,4 +1,4 @@
-package com.ltcn272.finny.presentation.common.ui
+package com.ltcn272.finny.presentation.features.snackbar
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable

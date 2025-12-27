@@ -1,6 +1,5 @@
 package com.ltcn272.finny.presentation.features.budget.create_edit
 
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,12 +31,13 @@ import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.RecurringIntervalUnit
 import com.ltcn272.finny.presentation.common.ui.FinnyDatePickerDialog
-import com.ltcn272.finny.presentation.common.ui.FinnySnackbar
+import com.ltcn272.finny.presentation.common.ui.ScreenMode
 import com.ltcn272.finny.presentation.common.ui.SubmitButton
 import com.ltcn272.finny.presentation.features.budget.create_edit.component.BudgetNameAndAmountInputs
 import com.ltcn272.finny.presentation.features.budget.create_edit.component.CreateEditTopBar
 import com.ltcn272.finny.presentation.features.budget.create_edit.component.RecurringConfigSection
 import com.ltcn272.finny.presentation.features.budget.create_edit.component.RecurringToggleSection
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
 import com.ltcn272.finny.presentation.theme.BudgetBackgroundBrush
 import java.time.ZoneId
 
@@ -50,16 +49,10 @@ fun CreateEditBudgetScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showDatePicker by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+    val snackbarManager = LocalSnackbarManager.current
 
     LaunchedEffect(uiState.finished) {
         if (uiState.finished) {
-            val message = if (uiState.mode == BudgetMode.CREATE)
-                context.getString(R.string.budget_created_successfully)
-            else
-                context.getString(R.string.budget_updated_successfully)
-
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             onBack()
         }
     }
@@ -101,7 +94,7 @@ fun CreateEditBudgetScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    val titleRes = if (uiState.mode == BudgetMode.CREATE)
+                    val titleRes = if (uiState.mode == ScreenMode.CREATE)
                         R.string.create_budget_title
                     else
                         R.string.update_budget_title
@@ -148,15 +141,8 @@ fun CreateEditBudgetScreen(
             SubmitButton(
                 mode = uiState.mode,
                 isSubmitting = uiState.isSubmitting,
-                onClick = viewModel::submit
+                onClick = { viewModel.submit(snackbarManager) }
             )
         }
-
-        FinnySnackbar(
-            visible = uiState.snackbarState.visible,
-            message = uiState.snackbarState.message,
-            type = uiState.snackbarState.type,
-            onDismiss = viewModel::onSnackbarDismissed
-        )
     }
 }

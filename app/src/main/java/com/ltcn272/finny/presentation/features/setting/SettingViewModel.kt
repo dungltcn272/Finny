@@ -1,6 +1,10 @@
 package com.ltcn272.finny.presentation.features.setting
 
 import android.app.Application
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ltcn272.finny.R
@@ -8,7 +12,9 @@ import com.ltcn272.finny.data.SettingDataStore
 import com.ltcn272.finny.domain.repository.AuthRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
-import com.ltcn272.finny.presentation.common.ui.TopSnackbarType
+import com.ltcn272.finny.presentation.features.snackbar.SnackbarManager
+import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarDuration
+import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
 import com.ltcn272.finny.util.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -19,23 +25,13 @@ sealed class SettingNotificationEvent {
     data object RequestPermission : SettingNotificationEvent()
 }
 
-data class SnackbarState(
-    val visible: Boolean = false,
-    val message: String = "",
-    val type: TopSnackbarType = TopSnackbarType.INFO,
-    val actionTitle: String? = null,
-    val onActionClick: (() -> Unit)? = null
-)
-
 data class SettingUiState(
     val username: String? = null,
     val selectedCurrency: String = "VND",
     val actualNotificationStatus: Boolean = false,
     val isLoggingOut: Boolean = false,
-    val isExportingPdf: Boolean = false,
-    val snackbarState: SnackbarState = SnackbarState()
+    val isExportingPdf: Boolean = false
 )
-
 
 @HiltViewModel
 class SettingViewModel @Inject constructor(
@@ -48,24 +44,19 @@ class SettingViewModel @Inject constructor(
     private val hasSystemPermission = MutableStateFlow(PermissionUtils.hasNotificationPermission(application))
     private val _isLoggingOut = MutableStateFlow(false)
     private val _isExportingPdf = MutableStateFlow(false)
-    private val _snackbarState = MutableStateFlow(SnackbarState())
 
     val uiState: StateFlow<SettingUiState> = combine(
-        flows = listOf(
-            settingDataStore.usernameFlow,
-            settingDataStore.getSelectedCurrency,
-            settingDataStore.getEnableNotifications.combine(hasSystemPermission) { pref, perm -> pref && perm },
-            _isLoggingOut,
-            _isExportingPdf,
-            _snackbarState
-        )
+        settingDataStore.usernameFlow,
+        settingDataStore.getSelectedCurrency,
+        settingDataStore.getEnableNotifications.combine(hasSystemPermission) { pref, perm -> pref && perm },
+        _isLoggingOut,
+        _isExportingPdf,
     ) { values ->
         val username = values[0] as String?
         val currency = values[1] as String
         val notificationStatus = values[2] as Boolean
         val isLoggingOut = values[3] as Boolean
         val isExporting = values[4] as Boolean
-        val snackbar = values[5] as SnackbarState
 
         SettingUiState(
             username = username,
@@ -73,7 +64,6 @@ class SettingViewModel @Inject constructor(
             actualNotificationStatus = notificationStatus,
             isLoggingOut = isLoggingOut,
             isExportingPdf = isExporting,
-            snackbarState = snackbar
         )
     }.stateIn(
         scope = viewModelScope,
@@ -81,14 +71,13 @@ class SettingViewModel @Inject constructor(
         initialValue = SettingUiState()
     )
 
-
     private val _logoutEvent = MutableSharedFlow<Unit>(replay = 0)
     val logoutEvent = _logoutEvent.asSharedFlow()
 
     private val _notificationEvent = MutableSharedFlow<SettingNotificationEvent>()
     val notificationEvent = _notificationEvent.asSharedFlow()
 
-    fun exportStatement(onSuccess: (base64: String) -> Unit) {
+    fun exportStatement(snackbarManager: SnackbarManager, onSuccess: (base64: String) -> Unit) {
         viewModelScope.launch {
             transactionRepository.exportStatement().collect { result ->
                 when (result) {
@@ -101,7 +90,7 @@ class SettingViewModel @Inject constructor(
                     }
                     is AppResult.Error -> {
                         _isExportingPdf.value = false
-                        showSnackbar(
+                        snackbarManager.showMessage(
                             application.getString(R.string.error_exporting_pdf),
                             TopSnackbarType.ERROR
                         )
@@ -111,38 +100,25 @@ class SettingViewModel @Inject constructor(
         }
     }
 
-
-    fun showPdfExportSuccess(fileName: String) {
-        showSnackbar(
-            application.getString(R.string.pdf_saved_to_downloads , fileName),
+    fun showPdfExportSuccess(snackbarManager: SnackbarManager, fileName: String) {
+        snackbarManager.showMessage(
+            application.getString(R.string.pdf_saved_to_downloads, fileName),
             TopSnackbarType.SUCCESS
         )
     }
 
-    fun showPdfExportError() {
-        showSnackbar(
+    fun showPdfExportError(snackbarManager: SnackbarManager) {
+        snackbarManager.showMessage(
             application.getString(R.string.error_saving_pdf),
             TopSnackbarType.ERROR
         )
     }
 
-    fun showNoPdfViewerFound() {
-        showSnackbar(
+    fun showNoPdfViewerFound(snackbarManager: SnackbarManager) {
+        snackbarManager.showMessage(
             application.getString(R.string.no_pdf_viewer_found),
             TopSnackbarType.WARNING
         )
-    }
-
-    private fun showSnackbar(message: String, type: TopSnackbarType) {
-        _snackbarState.value = SnackbarState(
-            visible = true,
-            message = message,
-            type = type
-        )
-    }
-
-    fun onSnackbarDismissed() {
-        _snackbarState.update { it.copy(visible = false) }
     }
 
     fun onCurrencySelected(currency: String) {
@@ -157,37 +133,40 @@ class SettingViewModel @Inject constructor(
                 _notificationEvent.emit(SettingNotificationEvent.RequestPermission)
             } else {
                 val currentPreference = uiState.value.actualNotificationStatus
-                setEnableNotifications(!currentPreference)
+                // We don't need to pass snackbarManager here, as setEnableNotifications handles it
+                setEnableNotifications(null, !currentPreference)
             }
         }
     }
 
-    fun onNotificationPermissionResult(isGranted: Boolean) {
+    fun onNotificationPermissionResult(snackbarManager: SnackbarManager, isGranted: Boolean) {
         hasSystemPermission.value = isGranted
         viewModelScope.launch {
             if (isGranted) {
-                setEnableNotifications(true)
+                setEnableNotifications(snackbarManager, true)
             } else {
-                setEnableNotifications(false)
-                _snackbarState.value = SnackbarState(
-                    visible = true,
+                setEnableNotifications(snackbarManager, false)
+                snackbarManager.showMessage(
                     message = application.getString(R.string.notification_permission_denied),
                     type = TopSnackbarType.WARNING,
-                    actionTitle = application.getString(R.string.open_settings),
-                    onActionClick = { PermissionUtils.openAppNotificationSettings(application) }
+                    duration = TopSnackbarDuration.LONG,
+                    action = {
+                        TextButton(onClick = { PermissionUtils.openAppNotificationSettings(application) }) {
+                            Text(application.getString(R.string.open_settings), color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 )
             }
         }
     }
 
-    fun setEnableNotifications(enabled: Boolean) {
+    fun setEnableNotifications(snackbarManager: SnackbarManager?, enabled: Boolean) {
         viewModelScope.launch {
             settingDataStore.saveEnableNotifications(enabled)
             if (enabled) {
-                _snackbarState.value = SnackbarState(
-                    visible = true,
-                    message = application.getString(R.string.notifications_enabled),
-                    type = TopSnackbarType.SUCCESS
+                snackbarManager?.showMessage(
+                    application.getString(R.string.notifications_enabled),
+                    TopSnackbarType.SUCCESS
                 )
             }
         }
@@ -209,7 +188,7 @@ class SettingViewModel @Inject constructor(
             try {
                 authRepository.logout()
                 _logoutEvent.emit(Unit)
-            } catch (_: Exception) { 
+            } catch (_: Exception) {
             } finally {
                 _isLoggingOut.value = false
             }

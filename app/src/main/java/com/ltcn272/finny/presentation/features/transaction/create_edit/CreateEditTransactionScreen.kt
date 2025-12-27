@@ -33,11 +33,11 @@ import com.ltcn272.finny.presentation.common.ui.AnimatedMoreMenu
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
 import com.ltcn272.finny.presentation.common.ui.DeleteConfirmationDialog
 import com.ltcn272.finny.presentation.common.ui.FinnyDatePickerDialog
-import com.ltcn272.finny.presentation.common.ui.FinnySnackbar
+import com.ltcn272.finny.presentation.common.ui.ScreenMode
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager // <<< IMPORT MỚI
 import com.ltcn272.finny.presentation.common.ui.SelectionDialog
 import com.ltcn272.finny.presentation.common.ui.SubmitButton
 import com.ltcn272.finny.presentation.common.ui.WheelDateTimePickerDialog
-import com.ltcn272.finny.presentation.features.budget.create_edit.BudgetMode
 import com.ltcn272.finny.presentation.features.transaction.create_edit.component.*
 import com.ltcn272.finny.presentation.theme.TransactionBackgroundBrush
 import java.time.LocalDate
@@ -53,6 +53,7 @@ fun CreateEditTransactionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val snackbarManager = LocalSnackbarManager.current // <<< LẤY SNACKBAR MANAGER
 
     var showMoreMenu by remember { mutableStateOf(false) }
 
@@ -60,14 +61,15 @@ fun CreateEditTransactionScreen(
         DeleteConfirmationDialog(
             title = stringResource(R.string.delete_transaction_confirmation_title),
             text = stringResource(R.string.delete_transaction_confirmation_text, uiState.transactionNameToDelete),
-            onConfirm = { viewModel.confirmDeleteTransaction() },
+            // THAY ĐỔI Ở ĐÂY: Truyền snackbarManager vào hàm confirm
+            onConfirm = { viewModel.confirmDeleteTransaction(snackbarManager) },
             onDismiss = { viewModel.cancelDelete() }
         )
     }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> uri?.let { viewModel.uploadImage(it) } }
+        onResult = { uri -> uri?.let { viewModel.uploadImage(it, snackbarManager) } } // <<< TRUYỀN SNACKBAR MANAGER
     )
 
     val lazyBudgets = viewModel.budgetsPagingFlow.collectAsLazyPagingItems()
@@ -98,10 +100,7 @@ fun CreateEditTransactionScreen(
 
     LaunchedEffect(uiState.finished) {
         if (uiState.finished) {
-            val message = uiState.snackbarState.message
-            if (message.isNotBlank()) {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            }
+            // Toast không còn cần thiết vì Snackbar đã hiển thị
             onBack()
         }
     }
@@ -166,8 +165,7 @@ fun CreateEditTransactionScreen(
                     modifier = Modifier.align(Alignment.CenterStart)
                 )
 
-                // Chỉ hiển thị nút More Vert khi ở chế độ EDIT
-                if (uiState.mode == TransactionMode.EDIT) {
+                if (uiState.mode == ScreenMode.EDIT) {
                     Box(modifier = Modifier.align(Alignment.CenterEnd)) {
                         CircleNavigationButton(icon = Icons.Default.MoreVert, onClick = {
                             showMoreMenu = true
@@ -193,7 +191,7 @@ fun CreateEditTransactionScreen(
             ) {
                 item {
                     val titleRes =
-                        if (uiState.mode == TransactionMode.CREATE) R.string.create_transaction_title else R.string.update_transaction_title
+                        if (uiState.mode == ScreenMode.CREATE) R.string.create_transaction_title else R.string.update_transaction_title
                     Text(
                         text = stringResource(titleRes),
                         style = MaterialTheme.typography.titleMedium,
@@ -274,7 +272,7 @@ fun CreateEditTransactionScreen(
                         onIntervalClick = { showRecurringIntervalPicker = true },
                         onIntervalPickerDismiss = { showRecurringIntervalPicker = false },
                         onIntervalUnitSelected = {
-                            viewModel.onRecurringIntervalChange(it, uiState.recurringIntervalValue)
+                            viewModel.onRecurringIntervalUnitSelected(it)
                             showRecurringIntervalPicker = false
                         }
                     )
@@ -291,30 +289,20 @@ fun CreateEditTransactionScreen(
                     AttachmentSection(
                         imageUri = uiState.imageUri,
                         isUploading = uiState.isUploadingImage,
-                        onChooseImageClick = {
-                            imagePickerLauncher.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
-                                )
-                            )
-                        },
-                        onDeleteImageClick = { viewModel.onImageSelected(null) }
+                        onChooseImageClick = { imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                        onDeleteImageClick = viewModel::onDeleteImageClick
                     )
                 }
+
             }
 
             SubmitButton(
-                mode = if (uiState.mode == TransactionMode.CREATE) BudgetMode.CREATE else BudgetMode.EDIT,
+                mode = uiState.mode,
                 isSubmitting = uiState.isSubmitting,
-                onClick = viewModel::submit
+                onClick = { viewModel.submit(snackbarManager) } // <<< TRUYỀN SNACKBAR MANAGER
             )
         }
 
-        FinnySnackbar(
-            visible = uiState.snackbarState.visible,
-            message = uiState.snackbarState.message,
-            type = uiState.snackbarState.type,
-            onDismiss = viewModel::onSnackbarDismissed
-        )
+        // FinnySnackbar đã được chuyển ra AppNavHost
     }
 }
