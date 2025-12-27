@@ -250,7 +250,7 @@ fun DashboardScreen(
                     isLoading = uiState.isAiLoading,
                     fullMessage = uiState.aiMessage ?: "",
                     messageType = MessageType.ASSISTANT,
-                    initialOffsetY = 500f
+                    initialOffsetY = 400f
                 )
             }
         }
