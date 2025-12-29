@@ -188,6 +188,11 @@
     <string name="week">Tuần</string>
     <string name="month">Tháng</string>
     <string name="no_data_available">Không có dữ liệu</string>
+    <string name="spent_label">Đã chi: %1$s</string>
+    <string name="limit_label">Giới hạn: %1$s</string>
+    <string name="recurring_topup_info">Nạp +%1$s / %2$d %3$s</string>
+    <string name="error_budget_not_found_for_action">Không tìm thấy ngân sách để thực hiện hành động này.</string>
+
 
     <!-- Setting Screen -->
     <string name="settings">Cài đặt</string>

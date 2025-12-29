@@ -1,10 +1,11 @@
 package com.ltcn272.finny.presentation.features.budget.budget_detail
 
-import android.util.Log
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionFilter
@@ -12,8 +13,12 @@ import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.domain.util.ErrorType
 import com.ltcn272.finny.presentation.common.ui.LineChartData
+import com.ltcn272.finny.presentation.features.snackbar.SnackbarManager
+import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -37,6 +42,8 @@ data class BudgetDetailUiState(
     val outcomeChartData: List<LineChartData> = emptyList(),
     val transactionCount: Int = 0,
     val netAmount: Double = 0.0,
+    val totalIncome: Double = 0.0,
+    val totalOutcome: Double = 0.0,
     val isStatisticsLoading: Boolean = true,
     val isRefreshingByUser: Boolean = false,
     val currency: String = "VND",
@@ -45,14 +52,15 @@ data class BudgetDetailUiState(
 
 sealed class BudgetDetailEvent {
     data object DeleteSuccess : BudgetDetailEvent()
-    data class Error(val message: String) : BudgetDetailEvent()
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class BudgetDetailViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    private val budgetRepository: BudgetRepository
+    private val budgetRepository: BudgetRepository,
+    // THÊM CONTEXT VÀO CONSTRUCTOR
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BudgetDetailUiState())
@@ -64,7 +72,6 @@ class BudgetDetailViewModel @Inject constructor(
     private val _filterStateForPaging = MutableStateFlow(TransactionFilter())
 
     private var isInitialized = false
-    private val TAG = "BudgetDetailVM"
     private var allTransactions: List<Transaction> = emptyList()
 
     val transactionsPagingFlow: Flow<PagingData<Transaction>> = _filterStateForPaging
@@ -97,7 +104,6 @@ class BudgetDetailViewModel @Inject constructor(
     private fun loadAllTransactionDetails(budgetId: String?) {
         if (budgetId.isNullOrEmpty()) {
             _uiState.update { it.copy(isStatisticsLoading = false) }
-            Log.e(TAG, "loadAllTransactionDetails thất bại vì budgetId rỗng.")
             return
         }
 
@@ -110,7 +116,6 @@ class BudgetDetailViewModel @Inject constructor(
                 is AppResult.Success -> {
                     val transactionList = result.data
                     this@BudgetDetailViewModel.allTransactions = transactionList
-                    Log.d(TAG, "Repo đã trả về thành công ${transactionList.size} giao dịch.")
 
                     val totalIncome = transactionList.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
                     val totalOutcome = transactionList.filter { it.type == TransactionType.OUTCOME }.sumOf { it.amount }
@@ -119,6 +124,8 @@ class BudgetDetailViewModel @Inject constructor(
                         it.copy(
                             transactionCount = transactionList.size,
                             netAmount = totalIncome - totalOutcome,
+                            totalIncome = totalIncome,
+                            totalOutcome = totalOutcome,
                             budget = it.budget?.copy(
                                 totalIncome = totalIncome,
                                 totalOutcome = totalOutcome
@@ -130,7 +137,6 @@ class BudgetDetailViewModel @Inject constructor(
                     updateChartData(uiState.value.timeRange)
                 }
                 is AppResult.Error -> {
-                    Log.e(TAG, "Lỗi khi lấy tất cả giao dịch: ${result.errorType}")
                     _uiState.update { it.copy(isStatisticsLoading = false, isRefreshingByUser = false) }
                 }
                 is AppResult.Loading -> {}
@@ -166,7 +172,6 @@ class BudgetDetailViewModel @Inject constructor(
             val date = it.dateTime.toLocalDate()
             !date.isBefore(config.startDate) && !date.isAfter(config.endDate)
         }
-        Log.d(TAG, "Có ${relevantTransactions.size} giao dịch phù hợp cho biểu đồ WEEK")
 
         val incomeByDate = relevantTransactions
             .filter { it.type == TransactionType.INCOME }
@@ -178,7 +183,6 @@ class BudgetDetailViewModel @Inject constructor(
             .groupBy { it.dateTime.toLocalDate() }
             .mapValues { (_, trans) -> trans.sumOf { it.amount }.toFloat() }
 
-        // --- SỬA Ở ĐÂY ---
         val locale = Locale.forLanguageTag("vi")
         val incomeChartData = config.labels.map { date ->
             LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)), incomeByDate[date] ?: 0f)
@@ -187,7 +191,6 @@ class BudgetDetailViewModel @Inject constructor(
         val outcomeChartData = config.labels.map { date ->
             LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)), outcomeByDate[date] ?: 0f)
         }
-        // --- KẾT THÚC SỬA ---
 
         _uiState.update {
             it.copy(
@@ -206,7 +209,6 @@ class BudgetDetailViewModel @Inject constructor(
             val date = it.dateTime.toLocalDate()
             !date.isBefore(startOfYear) && !date.isAfter(endOfYear)
         }
-        Log.d(TAG, "Có ${relevantTransactions.size} giao dịch phù hợp cho biểu đồ MONTH (cả năm)")
 
         val incomeByMonth = relevantTransactions
             .filter { it.type == TransactionType.INCOME }
@@ -266,32 +268,42 @@ class BudgetDetailViewModel @Inject constructor(
         _uiState.update { it.copy(showDeleteConfirmDialog = false) }
     }
 
-    fun confirmDeleteBudget() {
+    fun confirmDeleteBudget(snackbarManager: SnackbarManager) {
         _uiState.update { it.copy(showDeleteConfirmDialog = false) }
 
         viewModelScope.launch {
             val budgetToDelete = uiState.value.budget
             if (budgetToDelete?.serverId == null) {
-                _eventFlow.emit(BudgetDetailEvent.Error("Không tìm thấy ID ngân sách để xóa."))
+                snackbarManager.showMessage(
+                    // SỬ DỤNG STRING RESOURCE
+                    context.getString(R.string.error_budget_not_found_for_action),
+                    TopSnackbarType.ERROR
+                )
                 return@launch
             }
-
-
 
             budgetRepository.deleteBudget(budgetToDelete.serverId).collectLatest { result ->
                 when(result) {
                     is AppResult.Success -> {
-                        Log.d(TAG, "Xóa budget thành công.")
+                        snackbarManager.showMessage(context.getString(R.string.budget_deleted_successfully), TopSnackbarType.SUCCESS)
                         _eventFlow.emit(BudgetDetailEvent.DeleteSuccess)
                     }
                     is AppResult.Error -> {
-                        val errorMessage = "Lỗi khi xóa: ${result.errorType}"
-                        Log.e(TAG, errorMessage)
-                        _eventFlow.emit(BudgetDetailEvent.Error(errorMessage))
+                        snackbarManager.showMessage(mapErrorToString(result.errorType), TopSnackbarType.ERROR)
                     }
                     is AppResult.Loading -> {}
                 }
             }
+        }
+    }
+
+    private fun mapErrorToString(errorType: ErrorType): String {
+        return when (errorType) {
+            ErrorType.NETWORK -> context.getString(R.string.error_network)
+            ErrorType.TIMEOUT -> context.getString(R.string.error_timeout)
+            ErrorType.UNAUTHORIZED -> context.getString(R.string.error_unauthorized)
+            ErrorType.SERVER_ERROR -> context.getString(R.string.error_server)
+            ErrorType.UNKNOWN -> context.getString(R.string.error_unknown)
         }
     }
 

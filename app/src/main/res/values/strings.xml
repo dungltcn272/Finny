@@ -187,6 +187,10 @@
     <string name="week">Week</string>
     <string name="month">Month</string>
     <string name="no_data_available">No data available</string>
+    <string name="spent_label">Spent: %1$s</string>
+    <string name="limit_label">Limit: %1$s</string>
+    <string name="recurring_topup_info">Top up +%1$s / %2$d %3$s</string>
+    <string name="error_budget_not_found_for_action">Budget not found for this action.</string>
 
 
     <!-- Setting Screen -->
