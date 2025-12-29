@@ -52,9 +52,9 @@
 
     <!-- Home Screen -->
     <string name="home_greeting">Chào, %1$s 👋</string>
-    <string name="left_to_spend_of_limit">Còn lại trên tổng %1$s</string>
+    <string name="left_to_spend_of_limit">Còn %1$s tới ngưỡng giới hạn</string>
     <string name="days_to_go">Còn %1$d ngày</string>
-    <string name="saved_amount">Đã tiết kiệm %1$s</string>
+    <string name="saved_amount">Tiết kiệm được: %1$s</string>
 
     <string name="budget_distribution">Phân bổ ngân sách</string>
     <string name="total_spent">Tổng chi</string>
@@ -141,7 +141,7 @@
     <string name="update_transaction_title">Cập nhật giao dịch</string>
     <string name="transaction_name_label">Tên giao dịch</string>
     <string name="type">Loại</string>
-    <string name="incoming">Thu vào</string>
+    <string name="incoming">Nạp vào</string>
     <string name="outcoming">Chi ra</string>
     <string name="recurring_transaction">Giao dịch định kỳ</string>
     <string name="recurring_start_date">Ngày bắt đầu định kỳ</string>

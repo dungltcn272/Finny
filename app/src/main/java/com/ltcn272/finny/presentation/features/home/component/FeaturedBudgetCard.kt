@@ -10,15 +10,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,7 +32,9 @@ import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.presentation.common.ui.FinnyProgressIndicator
 import com.ltcn272.finny.presentation.common.ui.shimmerEffect
 import com.ltcn272.finny.presentation.common.util.formatCurrency
+import com.ltcn272.finny.presentation.theme.FinnyGreen
 import java.time.ZonedDateTime
+import kotlin.math.max
 
 @Preview
 @Composable
@@ -37,11 +42,15 @@ fun FeaturedBudgetCardPreview() {
     FeaturedBudgetCard(
         budget = Budget(
             serverId = "1",
-            name = "Monthly Groceries",
-            amount = 150.0,
-            limit = 500.0,
-            currency = "USD",
+            name = "Tiết kiệm",
+            amount = 14200000.0,
+            limit = 26200000.0, // 14.2M + 12M
+            progress = 54.19, // (14.2 / 26.2) * 100
+            currency = "VND",
             startDate = ZonedDateTime.now(),
+            totalIncome = 2300000.0,
+            totalOutcome = 100000.0,
+            daysRemaining = 24.0,
             recurring = null,
             isSingle = true
         ),
@@ -63,12 +72,11 @@ fun FeaturedBudgetCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            // --- REDUCE SPACING HERE ---
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = budget.name,
@@ -83,34 +91,25 @@ fun FeaturedBudgetCard(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
+            val leftToSpend = max(0.0, budget.limit - budget.amount)
             Text(
                 text = stringResource(
                     R.string.left_to_spend_of_limit,
-                    formatCurrency(budget.limit, budget.currency)
+                    formatCurrency(leftToSpend, budget.currency)
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(Modifier.height(6.dp)) // Reduce spacer
-
-            FinnyProgressIndicator(
-                progress = budget.progress.toFloat() / 100f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            )
-
-            Spacer(Modifier.height(2.dp)) // Reduce spacer
+            Spacer(Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 val daysRemaining = budget.daysRemaining
-                if (daysRemaining != null) {
+                if (daysRemaining != null && daysRemaining >= 0) {
                     Text(
                         text = stringResource(R.string.days_to_go, daysRemaining.toInt()),
                         style = MaterialTheme.typography.bodySmall,
@@ -118,7 +117,7 @@ fun FeaturedBudgetCard(
                     )
                 }
 
-                val savedAmount = budget.limit - budget.amount
+                val savedAmount = budget.limit - budget.totalOutcome
                 if (savedAmount > 0) {
                     Text(
                         text = stringResource(
@@ -126,12 +125,22 @@ fun FeaturedBudgetCard(
                             formatCurrency(savedAmount, budget.currency)
                         ),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = FinnyGreen,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
 
-            Spacer(Modifier.height(6.dp))
+            FinnyProgressIndicator(
+                progress = (budget.progress / 100.0).toFloat() ,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            )
+
+            Spacer(Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -161,24 +170,24 @@ private fun InfoChip(
     Column(
         modifier = modifier
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
                 shape = RoundedCornerShape(12.dp)
             )
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .padding(vertical = 10.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontSize = 10.sp
-        )
         Text(
             text = amount,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 11.sp
         )
     }
 }
@@ -193,13 +202,12 @@ fun FeaturedBudgetCardShimmer(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Title
             Box(
                 modifier = Modifier
                     .height(20.dp)
@@ -208,60 +216,52 @@ fun FeaturedBudgetCardShimmer(
                     .shimmerEffect()
             )
             Spacer(Modifier.height(2.dp))
-            // Amount
             Box(
                 modifier = Modifier
-                    .height(36.dp)
+                    .height(40.dp)
                     .fillMaxWidth(0.7f)
                     .clip(RoundedCornerShape(4.dp))
                     .shimmerEffect()
             )
-            // Limit
             Box(
                 modifier = Modifier
                     .height(16.dp)
-                    .fillMaxWidth(0.5f)
+                    .fillMaxWidth(0.6f)
                     .clip(RoundedCornerShape(4.dp))
                     .shimmerEffect()
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
-            // Progress bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .shimmerEffect()
-            )
-
-            Spacer(Modifier.height(2.dp))
-
-            // Days & Saved
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(
                     modifier = Modifier
-                        .height(12.dp)
+                        .height(14.dp)
                         .width(80.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .shimmerEffect()
                 )
                 Box(
                     modifier = Modifier
-                        .height(12.dp)
-                        .width(100.dp)
+                        .height(14.dp)
+                        .width(120.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .shimmerEffect()
                 )
             }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(CircleShape)
+                    .shimmerEffect()
+            )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(8.dp))
 
-            // Info Chips
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -269,14 +269,14 @@ fun FeaturedBudgetCardShimmer(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(60.dp)
+                        .height(58.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .shimmerEffect()
                 )
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(60.dp)
+                        .height(58.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .shimmerEffect()
                 )

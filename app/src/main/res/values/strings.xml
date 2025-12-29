@@ -56,9 +56,9 @@
 
     <!-- Home Screen -->
     <string name="home_greeting">Hi, %1$s 👋</string>
-    <string name="left_to_spend_of_limit">Left to spend of %1$s limit</string>
-    <string name="days_to_go">%1$d days to go</string>
-    <string name="saved_amount">%1$s saved</string>
+    <string name="left_to_spend_of_limit">%1$s to limit</string>
+    <string name="days_to_go">%1$d days remaining</string>
+    <string name="saved_amount">Saved: %1$s</string>
     <string name="incoming">Incoming</string>
     <string name="outcoming">OutComing</string>
 
