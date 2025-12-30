@@ -69,6 +69,10 @@
     <string name="latest_transactions">Giao dịch gần nhất</string>
     <string name="no_transactions_for_filter">Không có giao dịch nào cho bộ lọc này.</string>
     <string name="no_transactions_yet">Chưa có giao dịch nào.</string>
+    <string name="offline_mode">Bạn đang ngoại tuyến</string>
+    <string name="create_first_budget_title">Bắt đầu quản lý tài chính của bạn</string>
+    <string name="create_first_budget_subtitle">Tạo ngân sách đầu tiên để theo dõi chi tiêu và tiết kiệm hiệu quả hơn.</string>
+    <string name="create_new_budget">Tạo ngân sách mới</string>
 
     <!-- Transaction -->
     <string name="recurring_transactions_link">Giao dịch định kỳ</string>
@@ -218,6 +222,15 @@
     <string name="notifications_enabled">Đã bật thông báo</string>
     <string name="notifications_disabled">Đã tắt thông báo</string>
 
+    <!-- Bank Notification Inbox --><string name="bank_notification_inbox_title">Hộp thư thông báo</string>
+    <string name="no_pending_notifications">Không có thông báo nào chờ xử lý.</string>
+    <string name="btn_recognize">Ghi nhận</string>
+    <string name="analyzing_transaction">Đang phân tích giao dịch…</string>
+    <string name="analysis_successful">Phân tích thành công!</string>
+    <string name="ai_could_not_recognize_transaction">AI không nhận dạng được giao dịch từ thông báo này.</string>
+    <string name="notification_deleted">Đã xoá thông báo.</string>
+
+
     <!-- Notification Screen -->
     <string name="notifications_title">Thông báo</string>
     <string name="tab_all">Tất cả</string>
@@ -294,4 +307,11 @@
     <string name="category_deleted_successfully">Đã xóa danh mục thành công.</string>
     <string name="category_created_successfully">Đã tạo danh mục thành công.</string>
     <string name="category_name_cannot_be_empty">Tên danh mục không được để trống.</string>
+
+    <!-- Auto-read Notifications Feature -->
+    <string name="auto_read_notifications">Tự động đọc thông báo ngân hàng</string>
+    <string name="notification_access_dialog_title">Bật quyền truy cập thông báo?</string>    <string name="notification_access_dialog_text">Để tự động ghi lại giao dịch, Finny cần quyền đọc thông báo từ các ứng dụng ngân hàng. Dữ liệu của bạn được xử lý an toàn trên thiết bị và không bao giờ được chia sẻ. Hãy đi tới cài đặt để bật tính năng này.</string>
+    <string name="go_to_settings">Đi tới cài đặt</string>
+    <string name="notification_access_needed">Cần có quyền truy cập thông báo cho tính năng này.</string>
+
 </resources>

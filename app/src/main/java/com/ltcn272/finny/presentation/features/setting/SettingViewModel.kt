@@ -30,7 +30,9 @@ data class SettingUiState(
     val selectedCurrency: String = "VND",
     val actualNotificationStatus: Boolean = false,
     val isLoggingOut: Boolean = false,
-    val isExportingPdf: Boolean = false
+    val isExportingPdf: Boolean = false,
+    val hasNotificationAccess: Boolean = false,
+    val showNotificationAccessDialog: Boolean = false
 )
 
 @HiltViewModel
@@ -44,6 +46,8 @@ class SettingViewModel @Inject constructor(
     private val hasSystemPermission = MutableStateFlow(PermissionUtils.hasNotificationPermission(application))
     private val _isLoggingOut = MutableStateFlow(false)
     private val _isExportingPdf = MutableStateFlow(false)
+    private val hasNotificationAccess = MutableStateFlow(PermissionUtils.hasNotificationAccess(application))
+    private val _showNotificationAccessDialog = MutableStateFlow(false)
 
     val uiState: StateFlow<SettingUiState> = combine(
         settingDataStore.usernameFlow,
@@ -51,12 +55,16 @@ class SettingViewModel @Inject constructor(
         settingDataStore.getEnableNotifications.combine(hasSystemPermission) { pref, perm -> pref && perm },
         _isLoggingOut,
         _isExportingPdf,
+        hasNotificationAccess,
+        _showNotificationAccessDialog
     ) { values ->
         val username = values[0] as String?
         val currency = values[1] as String
         val notificationStatus = values[2] as Boolean
         val isLoggingOut = values[3] as Boolean
         val isExporting = values[4] as Boolean
+        val notificationAccess = values[5] as Boolean
+        val showDialog = values[6] as Boolean
 
         SettingUiState(
             username = username,
@@ -64,6 +72,8 @@ class SettingViewModel @Inject constructor(
             actualNotificationStatus = notificationStatus,
             isLoggingOut = isLoggingOut,
             isExportingPdf = isExporting,
+            hasNotificationAccess = notificationAccess,
+            showNotificationAccessDialog = showDialog
         )
     }.stateIn(
         scope = viewModelScope,
@@ -133,7 +143,6 @@ class SettingViewModel @Inject constructor(
                 _notificationEvent.emit(SettingNotificationEvent.RequestPermission)
             } else {
                 val currentPreference = uiState.value.actualNotificationStatus
-                // We don't need to pass snackbarManager here, as setEnableNotifications handles it
                 setEnableNotifications(null, !currentPreference)
             }
         }
@@ -174,11 +183,17 @@ class SettingViewModel @Inject constructor(
 
     fun syncNotificationStatus() {
         val currentPermission = PermissionUtils.hasNotificationPermission(application)
-        hasSystemPermission.value = currentPermission
-        viewModelScope.launch {
-            if (!currentPermission && settingDataStore.getEnableNotifications.first()) {
-                settingDataStore.saveEnableNotifications(false)
+        if (currentPermission != hasSystemPermission.value) {
+            hasSystemPermission.value = currentPermission
+            viewModelScope.launch {
+                if (!currentPermission && settingDataStore.getEnableNotifications.first()) {
+                    settingDataStore.saveEnableNotifications(false)
+                }
             }
+        }
+        val currentAccess = PermissionUtils.hasNotificationAccess(application)
+        if (currentAccess != hasNotificationAccess.value) {
+            hasNotificationAccess.value = currentAccess
         }
     }
 
@@ -193,5 +208,19 @@ class SettingViewModel @Inject constructor(
                 _isLoggingOut.value = false
             }
         }
+    }
+
+    fun onEnableAutoReadNotificationsToggled(enabled: Boolean) {
+        if (enabled) {
+            if (!hasNotificationAccess.value) {
+                _showNotificationAccessDialog.value = true
+            }
+        } else {
+            // Logic to disable feature will be here in future
+        }
+    }
+
+    fun onDismissNotificationAccessDialog() {
+        _showNotificationAccessDialog.value = false
     }
 }

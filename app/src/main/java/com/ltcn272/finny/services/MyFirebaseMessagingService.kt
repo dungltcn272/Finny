@@ -1,4 +1,4 @@
-package com.ltcn272.finny.service
+package com.ltcn272.finny.services
 
 import android.util.Log // <<< THÊM IMPORT
 import com.google.firebase.messaging.FirebaseMessaging

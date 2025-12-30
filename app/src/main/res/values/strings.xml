@@ -75,6 +75,11 @@
     <string name="latest_transactions">Latest Transact</string>
     <string name="no_transactions_for_filter">No transactions found for this filter.</string>
     <string name="no_transactions_yet">No transactions yet.</string>
+    <string name="offline_mode">You are offline</string>
+    <string name="create_first_budget_title">Start managing your finances</string>
+    <string name="create_first_budget_subtitle">Create your first budget to track spending and save more effectively.</string>
+    <string name="create_new_budget">Create New Budget</string>
+
 
     <!-- Transaction -->
     <string name="recurring_transactions_link">Giao dịch lặp lại</string>
@@ -219,6 +224,15 @@
     <string name="notifications_enabled">Notifications enabled</string>
     <string name="notifications_disabled">Notifications disabled</string>
 
+    <!-- Bank Notification Inbox -->
+    <string name="bank_notification_inbox_title">Notification Inbox</string>
+    <string name="no_pending_notifications">No pending notifications to process.</string>
+    <string name="btn_recognize">Recognize</string>
+    <string name="analyzing_transaction">Analyzing transaction…</string>
+    <string name="analysis_successful">Analysis successful!</string>
+    <string name="ai_could_not_recognize_transaction">AI could not recognize a transaction from this notification.</string>
+    <string name="notification_deleted">Notification deleted.</string>
+
     <!-- Notification Screen -->
     <string name="notifications_title">Notifications</string>
     <string name="tab_all">All</string>
@@ -299,5 +313,14 @@
     <string name="category_deleted_successfully">Category deleted successfully.</string>
     <string name="category_created_successfully">Category created successfully.</string>
     <string name="category_name_cannot_be_empty">Category name cannot be empty.</string>
+
+    <!-- Auto-read Notifications Feature -->
+    <string name="auto_read_notifications">Auto-read Bank Notifications</string>
+    <string name="notification_access_dialog_title">Enable Notification Access?</string>
+    <string name="notification_access_dialog_text">To automatically record transactions, Finny needs permission to read notifications from banking apps. Your data is processed securely on your device and is never shared. Go to settings to enable this feature.</string>
+    <string name="go_to_settings">Go to Settings</string>
+    <string name="notification_access_needed">Notification access is required for this feature.</string>
+
+
 </resources>
 

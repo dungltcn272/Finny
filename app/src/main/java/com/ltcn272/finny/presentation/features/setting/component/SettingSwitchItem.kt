@@ -36,7 +36,7 @@ fun SettingSwitchItem(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = text, fontSize = 16.sp, color = textColor)
+        Text(text = text, fontSize = 16.sp, color = textColor, modifier = Modifier.weight(1f))
 
         ISwitch(
             checked = isChecked,

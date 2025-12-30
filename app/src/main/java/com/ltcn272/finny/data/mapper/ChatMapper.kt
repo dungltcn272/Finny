@@ -1,5 +1,7 @@
 package com.ltcn272.finny.data.mapper
 
+import androidx.compose.ui.input.key.type
+import com.ltcn272.finny.data.remote.dto.CardDto
 import com.ltcn272.finny.data.remote.dto.ChatDto
 import com.ltcn272.finny.domain.model.Chat
 import com.ltcn272.finny.domain.model.MessageCard
@@ -24,7 +26,17 @@ fun ChatDto.toChat(): Chat {
             } else {
                 null
             }
-        } ?: kotlin.collections.emptyList(),
+        } ?: emptyList(),
         timestamp = this.createdAt?.let { parseUtcString(it) } ?: LocalDateTime.now()
+    )
+}
+
+fun CardDto.toMessageCard(): MessageCard {
+    return MessageCard(
+        type = this.type ?: "outcome",
+        amount = this.amount ?: 0.0,
+        description = this.description ?: "",
+        budgetId = this.budgetId ?: "",
+        categoryId = this.categoryId ?: ""
     )
 }

@@ -19,6 +19,7 @@ object MainRoute {
     const val DASHBOARD = "dashboard"
     const val PROFILE = "profile"
     const val NOTIFICATION = "notification"
+    const val BANK_NOTIFICATION_INBOX = "bankNotificationInbox"
 
     const val BUDGET_DETAIL = "budgetDetail"
     const val CREATE_EDIT_BUDGET = "createEditBudget"

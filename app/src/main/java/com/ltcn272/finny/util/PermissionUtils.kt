@@ -1,5 +1,6 @@
 package com.ltcn272.finny.util
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -30,4 +31,17 @@ object PermissionUtils {
         }
         context.startActivity(intent)
     }
+
+    fun hasNotificationAccess(context: Context): Boolean {
+        val componentName = ComponentName(context, "com.ltcn272.finny.services.FinnyNotificationListenerService")
+        val flat = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
+        return flat != null && flat.contains(componentName.flattenToString())
+    }
+
+    fun openNotificationAccessSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    }
+
 }

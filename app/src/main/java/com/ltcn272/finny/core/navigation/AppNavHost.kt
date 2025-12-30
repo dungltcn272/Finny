@@ -30,6 +30,7 @@ import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.presentation.common.ui.GradientFloatingActionButton
 import com.ltcn272.finny.presentation.features.MainBottomBar
 import com.ltcn272.finny.presentation.features.auth.AuthScreen
+import com.ltcn272.finny.presentation.features.bank_notification.BankNotificationInboxScreen
 import com.ltcn272.finny.presentation.features.budget.budget_detail.BudgetDetailScreen
 import com.ltcn272.finny.presentation.features.budget.budget_list.BudgetListScreen
 import com.ltcn272.finny.presentation.features.budget.create_edit.CreateEditBudgetScreen
@@ -130,6 +131,12 @@ fun AppNav(
                                     restoreState = true
                                     popUpTo(Graph.MAIN) { saveState = true }
                                 }
+                            },
+                            onCreateBudget = {
+                                nav.navigate(MainRoute.CREATE_EDIT_BUDGET)
+                            },
+                            onBankNotificationClick = {
+                                nav.navigate(MainRoute.BANK_NOTIFICATION_INBOX)
                             }
                         )
                     }
@@ -180,6 +187,11 @@ fun AppNav(
 
                     // Các composable khác
                     composable(MainRoute.NOTIFICATION) { NotificationScreen(onBack = { nav.popBackStack() }) }
+                    composable(MainRoute.BANK_NOTIFICATION_INBOX) {
+                        BankNotificationInboxScreen(
+                            onBack = { nav.popBackStack() }
+                        )
+                    }
                     composable(MainRoute.LIST_BUDGET) {
                         BudgetListScreen(
                             onBack = { nav.popBackStack() },

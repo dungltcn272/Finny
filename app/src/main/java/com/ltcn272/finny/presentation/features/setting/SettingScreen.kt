@@ -38,6 +38,7 @@ import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
 import com.ltcn272.finny.presentation.features.setting.component.SettingItem
 import com.ltcn272.finny.presentation.features.setting.component.SettingSwitchItem
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
+import com.ltcn272.finny.util.PermissionUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -55,6 +56,29 @@ fun SettingScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val snackbarManager = LocalSnackbarManager.current
+
+    if (uiState.showNotificationAccessDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::onDismissNotificationAccessDialog,
+            title = { Text(stringResource(R.string.notification_access_dialog_title)) },
+            text = { Text(stringResource(R.string.notification_access_dialog_text)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.onDismissNotificationAccessDialog()
+                        PermissionUtils.openNotificationAccessSettings(context)
+                    }
+                ) {
+                    Text(stringResource(R.string.go_to_settings))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::onDismissNotificationAccessDialog) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 
     val saveAndOpenFile: (String) -> Unit = { base64Pdf ->
         try {
@@ -205,6 +229,12 @@ fun SettingScreen(
                             onCheckedChange = { viewModel.onEnableNotificationsToggled() }
                         )
                         HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
+                        SettingSwitchItem(
+                            text = stringResource(R.string.auto_read_notifications),
+                            checked = uiState.hasNotificationAccess,
+                            onCheckedChange = viewModel::onEnableAutoReadNotificationsToggled
+                        )
+                        HorizontalDivider(color = Color.Gray.copy(alpha = 0.1f))
                         SettingItem(
                             text = stringResource(R.string.export_data),
                             onClick = {
@@ -271,9 +301,6 @@ private fun SettingsCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column {
-            content()
-        }
+        Column(content = content)
     }
 }
-

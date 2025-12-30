@@ -1,19 +1,17 @@
 package com.ltcn272.finny.presentation.features.home.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,11 +26,12 @@ fun HomeHeader(
     username: String,
     currentDate: String,
     onNotificationClick: () -> Unit,
+    bankNotificationCount: Int,
+    onBankNotificationClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
@@ -43,10 +42,22 @@ fun HomeHeader(
             currentDate = currentDate
         )
 
+        Spacer(modifier = Modifier.weight(1f))
         // RIGHT
-        HomeHeaderActions(
-            onNotificationClick = onNotificationClick
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HeaderIconButton(
+                icon = Icons.Default.AccountBalanceWallet,
+                contentDescription = "Bank Notifications",
+                onClick = onBankNotificationClick,
+                badgeCount = bankNotificationCount
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            HeaderIconButton(
+                icon = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                onClick = onNotificationClick
+            )
+        }
     }
 }
 
@@ -77,38 +88,35 @@ private fun HomeGreeting(
 }
 
 @Composable
-private fun HomeHeaderActions(
-    onNotificationClick: () -> Unit
-) {
-    HeaderIconButton(
-        icon = Icons.Default.Notifications,
-        contentDescription = null,
-        onClick = onNotificationClick
-    )
-
-}
-
-@Composable
 private fun HeaderIconButton(
     icon: ImageVector,
     contentDescription: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    badgeCount: Int = 0
 ) {
     Surface(
+        onClick = onClick,
         shape = CircleShape,
         shadowElevation = 3.dp,
         color = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(40.dp)
     ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.size(40.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(20.dp)
-            )
+        Box(contentAlignment = Alignment.Center) {
+            BadgedBox(
+                badge = {
+                    if (badgeCount > 0) {
+                        Badge { Text(text = badgeCount.toString()) }
+                    }
+                }
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
+
