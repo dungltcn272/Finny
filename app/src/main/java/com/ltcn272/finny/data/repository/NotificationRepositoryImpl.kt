@@ -36,4 +36,13 @@ class NotificationRepositoryImpl @Inject constructor(
             AppResult.Error(e.toErrorType())
         }
     }
+
+    override suspend fun getUnreadCount(): AppResult<Int> {
+        return try {
+            val response = notificationApi.getUnreadCount().ensureSuccess()
+            AppResult.Success(response.totalUnread)
+        } catch (e: Exception) {
+            AppResult.Error(e.toErrorType())
+        }
+    }
 }

@@ -45,3 +45,8 @@ data class NotificationMetaDto(
     @SerializedName("limit")
     val limit: Double?
 )
+
+data class UnreadCountDto(
+    @SerializedName("total_unread")
+    val totalUnread: Int
+)

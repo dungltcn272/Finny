@@ -8,4 +8,5 @@ import kotlinx.coroutines.flow.Flow
 interface NotificationRepository {
     fun getNotifications(): Flow<PagingData<Notification>>
     suspend fun markAsRead(notificationId: String): AppResult<Unit>
+    suspend fun getUnreadCount(): AppResult<Int>
 }

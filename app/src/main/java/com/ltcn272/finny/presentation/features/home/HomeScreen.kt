@@ -123,6 +123,7 @@ fun HomeScreen(
                             currentDate = uiState.currentDate,
                             onNotificationClick = onNotificationClick,
                             bankNotificationCount = uiState.bankNotificationCount,
+                            unreadNotificationCount = uiState.unreadNotificationCount,
                             onBankNotificationClick = onBankNotificationClick
                         )
                     }

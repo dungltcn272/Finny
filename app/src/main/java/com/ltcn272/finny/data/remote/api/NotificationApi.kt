@@ -3,6 +3,7 @@ package com.ltcn272.finny.data.remote.api
 import com.ltcn272.finny.data.remote.dto.ApiResponse
 import com.ltcn272.finny.data.remote.dto.NotificationListDataDto
 import com.ltcn272.finny.data.remote.dto.NotificationResponseDto
+import com.ltcn272.finny.data.remote.dto.UnreadCountDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
@@ -21,4 +22,7 @@ interface NotificationApi {
         @Path("id") id: String,
         @Body isReadMap: Map<String, Boolean>
     ): ApiResponse<NotificationResponseDto>
+
+    @GET("notifications/count-unread")
+    suspend fun getUnreadCount(): ApiResponse<UnreadCountDto>
 }

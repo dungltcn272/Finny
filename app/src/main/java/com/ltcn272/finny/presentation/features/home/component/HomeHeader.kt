@@ -1,5 +1,7 @@
 package com.ltcn272.finny.presentation.features.home.component
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +15,14 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ltcn272.finny.R
 
 @Composable
@@ -27,6 +31,7 @@ fun HomeHeader(
     currentDate: String,
     onNotificationClick: () -> Unit,
     bankNotificationCount: Int,
+    unreadNotificationCount: Int,
     onBankNotificationClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -55,7 +60,8 @@ fun HomeHeader(
             HeaderIconButton(
                 icon = Icons.Default.Notifications,
                 contentDescription = "Notifications",
-                onClick = onNotificationClick
+                onClick = onNotificationClick,
+                badgeCount = unreadNotificationCount
             )
         }
     }
@@ -94,28 +100,37 @@ private fun HeaderIconButton(
     onClick: () -> Unit,
     badgeCount: Int = 0
 ) {
-    Surface(
-        onClick = onClick,
-        shape = CircleShape,
-        shadowElevation = 3.dp,
-        color = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.size(40.dp)
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            BadgedBox(
-                badge = {
-                    if (badgeCount > 0) {
-                        Badge { Text(text = badgeCount.toString()) }
-                    }
+        Surface(
+            shape = CircleShape,
+            shadowElevation = 3.dp,
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.size(40.dp)
+        ) {}
+
+        BadgedBox(
+            badge = {
+                if (badgeCount > 0) {
+                    val badgeText = if (badgeCount > 99) "99+" else badgeCount.toString()
+                    Badge { Text(text = badgeText, fontSize = 8.sp) }
                 }
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = contentDescription,
-                    modifier = Modifier.size(24.dp)
-                )
             }
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

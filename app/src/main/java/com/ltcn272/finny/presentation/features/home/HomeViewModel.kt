@@ -10,7 +10,7 @@ import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.domain.repository.BudgetRepository
-import com.ltcn272.finny.domain.repository.ChatRepository
+import com.ltcn272.finny.domain.repository.NotificationRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.domain.util.ErrorType
@@ -21,6 +21,7 @@ import com.ltcn272.finny.presentation.common.util.formatCurrencyNonComposable
 import com.ltcn272.finny.presentation.common.util.generateHarmonicColors
 import com.ltcn272.finny.presentation.common.util.getCurrentDateFormatted
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,8 +51,9 @@ data class HomeUiState(
     val transactionFilterType: TransactionType? = null,
     val currency: String = "VND",
     val showCreateBudgetPrompt: Boolean = false,
-    val networkStatus: NetworkStatus = NetworkStatus.Available ,
-    val bankNotificationCount: Int = 0
+    val networkStatus: NetworkStatus = NetworkStatus.Available,
+    val bankNotificationCount: Int = 0,
+    val unreadNotificationCount: Int = 0
 )
 
 @HiltViewModel
@@ -59,6 +61,7 @@ class HomeViewModel @Inject constructor(
     private val app: Application,
     private val budgetRepository: BudgetRepository,
     private val transactionRepository: TransactionRepository,
+    private val notificationRepository: NotificationRepository,
     private val settingDataStore: SettingDataStore,
     private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
@@ -110,19 +113,24 @@ class HomeViewModel @Inject constructor(
 
     private fun loadInitialData() {
         if (_uiState.value.networkStatus != NetworkStatus.Available) {
-            _uiState.update { it.copy(isLoading = false) } // Nếu không có mạng thì không loading nữa
+            _uiState.update { it.copy(isLoading = false) }
             return
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, showCreateBudgetPrompt = false) }
 
-            val budgetResult = budgetRepository.getRecentBudgets()
-            val transactionResult = transactionRepository.getRecentTransactions()
+            val budgetResultDeferred = async { budgetRepository.getRecentBudgets() }
+            val transactionResultDeferred = async { transactionRepository.getRecentTransactions() }
+            val unreadCountDeferred = async { notificationRepository.getUnreadCount() }
+
+            val budgetResult = budgetResultDeferred.await()
+            val transactionResult = transactionResultDeferred.await()
+            val unreadCountResult = unreadCountDeferred.await()
 
             val allBudgets = if (budgetResult is AppResult.Success) budgetResult.data else emptyList()
             val allTransactions = if (transactionResult is AppResult.Success) transactionResult.data else null
+            val unreadCount = if (unreadCountResult is AppResult.Success) unreadCountResult.data else 0
 
-            // Chỉ bắn lỗi nếu đó không phải lỗi mạng (lỗi mạng đã có indicator)
             if (budgetResult is AppResult.Error && budgetResult.errorType != ErrorType.NETWORK) {
                 _errorEvent.emit(mapErrorToString(budgetResult.errorType))
             }
@@ -136,7 +144,8 @@ class HomeViewModel @Inject constructor(
                 it.copy(
                     allRecentBudgets = allBudgets,
                     allRecentTransactions = allTransactions,
-                    showCreateBudgetPrompt = shouldShowPrompt
+                    showCreateBudgetPrompt = shouldShowPrompt,
+                    unreadNotificationCount = unreadCount
                 )
             }
             processAndUpdateUiState()
@@ -147,11 +156,17 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshingByUser = true) }
 
-            val budgetResult = budgetRepository.getRecentBudgets()
-            val transactionResult = transactionRepository.getRecentTransactions()
+            val budgetResultDeferred = async { budgetRepository.getRecentBudgets() }
+            val transactionResultDeferred = async { transactionRepository.getRecentTransactions() }
+            val unreadCountDeferred = async { notificationRepository.getUnreadCount() }
+
+            val budgetResult = budgetResultDeferred.await()
+            val transactionResult = transactionResultDeferred.await()
+            val unreadCountResult = unreadCountDeferred.await()
 
             val allBudgets = if (budgetResult is AppResult.Success) budgetResult.data else emptyList()
             val allTransactions = if (transactionResult is AppResult.Success) transactionResult.data else null
+            val unreadCount = if (unreadCountResult is AppResult.Success) unreadCountResult.data else _uiState.value.unreadNotificationCount
 
             if (budgetResult is AppResult.Error) {
                 _errorEvent.emit(mapErrorToString(budgetResult.errorType))
@@ -167,7 +182,8 @@ class HomeViewModel @Inject constructor(
                     isRefreshingByUser = false,
                     allRecentBudgets = allBudgets,
                     allRecentTransactions = allTransactions,
-                    showCreateBudgetPrompt = shouldShowPrompt
+                    showCreateBudgetPrompt = shouldShowPrompt,
+                    unreadNotificationCount = unreadCount
                 )
             }
             processAndUpdateUiState()
