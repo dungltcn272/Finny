@@ -73,7 +73,7 @@ fun ChatScreen(
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> uri?.let { viewModel.uploadImageAndSend(it, snackbarManager) } }
+        onResult = { uri -> uri?.let { viewModel.onImageSelected(it) } }
     )
 
     val listState = rememberLazyListState()
@@ -99,11 +99,11 @@ fun ChatScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MainBackgroundBrush)
-            .windowInsetsPadding(WindowInsets.systemBars)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
         ) {
             Box(
                 modifier = Modifier
@@ -151,7 +151,7 @@ fun ChatScreen(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp),
                     reverseLayout = true
                 ) {
                     if (uiState.isAiTyping) {
@@ -244,6 +244,8 @@ fun ChatScreen(
                 enabled = !uiState.isAiTyping,
                 isListening = uiState.isListening,
                 isUploading = uiState.isUploadingImage,
+                selectedImageUri = uiState.selectedImageUri,
+                onClearSelectedImage = viewModel::clearSelectedImage,
                 onMicPress = {
                     if (uiState.hasRecordPermission) {
                         viewModel.startListening()
@@ -261,4 +263,3 @@ fun ChatScreen(
         }
     }
 }
-

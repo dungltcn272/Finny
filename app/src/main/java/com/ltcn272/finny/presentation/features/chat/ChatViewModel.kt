@@ -36,6 +36,7 @@ data class ChatUiState(
     val hasRecordPermission: Boolean = false,
     val isUploadingImage: Boolean = false,
     val showSuggestions: Boolean = true,
+    val selectedImageUri: Uri? = null,
     val suggestionPrompts: List<String> = listOf(
         "Hôm nay tôi chi bao nhiêu?",
         "Tổng thu nhập tháng này",
@@ -104,63 +105,93 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun uploadImageAndSend(uri: Uri, snackbarManager: SnackbarManager) {
+    fun onImageSelected(uri: Uri) {
+        _uiState.update { it.copy(selectedImageUri = uri) }
+        hideSuggestions()
+    }
+
+    fun clearSelectedImage() {
+        _uiState.update { it.copy(selectedImageUri = null) }
+    }
+
+    fun sendMessage(text: String, snackbarManager: SnackbarManager) {
+        val imageUri = uiState.value.selectedImageUri
+        if (text.isBlank() && imageUri == null) return
+        if (uiState.value.isAiTyping) return
+
+        hideSuggestions()
+        _uiState.update { it.copy(recognizedText = "", selectedImageUri = null) }
+
+        if (imageUri != null) {
+            uploadImageAndSendMessage(imageUri, text.ifBlank { "Đây là ảnh về giao dịch của tôi" }, snackbarManager)
+        } else {
+            sendMessageInternal(text = text, imageUrl = null, imageUriForDisplay = null, snackbarManager = snackbarManager)
+        }
+    }
+
+    private fun uploadImageAndSendMessage(uri: Uri, text: String, snackbarManager: SnackbarManager) {
         viewModelScope.launch {
-            hideSuggestions()
             _uiState.update { it.copy(isUploadingImage = true, isAiTyping = true) }
+
+            val userMessage = createUserMessage(text, uri.toString())
+            _uiState.update { it.copy(sessionMessages = listOf(userMessage) + it.sessionMessages) }
 
             val tempFile = createFileFromUri(application, uri, snackbarManager)
                 ?: run {
-                    _uiState.update { it.copy(isUploadingImage = false, isAiTyping = false) }
+                    _uiState.update { state ->
+                        state.copy(
+                            isUploadingImage = false, isAiTyping = false,
+                            sessionMessages = state.sessionMessages.filterNot { it.id == userMessage.id }
+                        )
+                    }
                     return@launch
                 }
 
             transactionRepository.uploadImage(tempFile).collectLatest { result ->
                 when (result) {
                     is AppResult.Success -> {
-                        val imageUrl = result.data
-                        sendMessage(text = "đây là ảnh về giao dịch của tôi", imageUrl = imageUrl, snackbarManager = snackbarManager, imageUri = uri.toString())
+                        sendMessageInternal(text, result.data, uri.toString(), snackbarManager, userMessage.id)
                     }
                     is AppResult.Error -> {
                         snackbarManager.showMessage(mapErrorToString(result.errorType), TopSnackbarType.ERROR)
-                        _uiState.update {
-                            it.copy(
-                                isUploadingImage = false,
-                                isAiTyping = false
+                        _uiState.update { state ->
+                            state.copy(
+                                isUploadingImage = false, isAiTyping = false,
+                                sessionMessages = state.sessionMessages.filterNot { it.id == userMessage.id }
                             )
                         }
                     }
-                    is AppResult.Loading -> { /* Đang tải */ }
+                    is AppResult.Loading -> { }
                 }
             }
             tempFile.delete()
         }
     }
 
-    fun sendMessage(text: String?, imageUrl: String? = null, snackbarManager: SnackbarManager, imageUri: String? = null) {
-        if (text.isNullOrBlank() && imageUrl.isNullOrBlank()) return
-        if (uiState.value.isAiTyping) return
-
-        hideSuggestions()
-        _uiState.update { it.copy(recognizedText = "") }
-
-        val userMessage = Chat(
-            id = UUID.randomUUID().toString(),
-            isFromUser = true,
-            text = text!!,
-            image = imageUri ?: imageUrl,
-            cards = emptyList(),
-            timestamp = LocalDateTime.now()
-        )
-        _uiState.update {
-            it.copy(
-                isAiTyping = true,
-                isUploadingImage = false,
-                sessionMessages = listOf(userMessage) + it.sessionMessages
-            )
+    private fun sendMessageInternal(
+        text: String?,
+        imageUrl: String? = null,
+        imageUriForDisplay: String? = null,
+        snackbarManager: SnackbarManager,
+        existingUserMessageId: String? = null
+    ) {
+        val userMessage = if (existingUserMessageId == null) {
+            val msg = createUserMessage(text!!, imageUriForDisplay)
+            _uiState.update {
+                it.copy(
+                    isAiTyping = true,
+                    isUploadingImage = false,
+                    sessionMessages = listOf(msg) + it.sessionMessages
+                )
+            }
+            msg
+        } else {
+            uiState.value.sessionMessages.first { it.id == existingUserMessageId }
         }
 
         viewModelScope.launch {
+            _uiState.update { it.copy(isAiTyping = true, isUploadingImage = false) }
+
             when (val result = chatRepository.sendMessageAndGetResponse(text, imageUrl)) {
                 is AppResult.Success -> {
                     val aiMessage = result.data
@@ -177,7 +208,8 @@ class ChatViewModel @Inject constructor(
                         it.copy(
                             isAiTyping = false,
                             sessionMessages = it.sessionMessages.filterNot { msg -> msg.id == userMessage.id },
-                            recognizedText = userMessage.text
+                            recognizedText = userMessage.text,
+                            selectedImageUri = if (userMessage.image != null) Uri.parse(userMessage.image) else null
                         )
                     }
                 }
@@ -186,11 +218,22 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    private fun createUserMessage(text: String, imageUri: String?): Chat {
+        return Chat(
+            id = UUID.randomUUID().toString(),
+            isFromUser = true,
+            text = text,
+            image = imageUri,
+            cards = emptyList(),
+            timestamp = LocalDateTime.now()
+        )
+    }
+
     fun onRecognizedTextChanged(text: String) {
-        if (text.isNotEmpty() && uiState.value.showSuggestions) {
+        _uiState.update { it.copy(recognizedText = text) }
+        if (text.isNotEmpty()) {
             hideSuggestions()
         }
-        _uiState.update { it.copy(recognizedText = text) }
     }
 
     fun startListening() {

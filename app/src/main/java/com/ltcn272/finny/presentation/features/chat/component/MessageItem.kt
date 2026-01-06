@@ -85,7 +85,7 @@ fun MessageItem(
         )
     }
 
-    val verticalPadding = if (isLastInGroup) 12.dp else 2.dp
+    val verticalPadding = if (isLastInGroup) 8.dp else 2.dp
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -138,7 +138,6 @@ fun MessageItem(
         }
 
         if (showTimestamp) {
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = formatTimeAgo(time = message.timestamp),
                 style = MaterialTheme.typography.labelSmall,

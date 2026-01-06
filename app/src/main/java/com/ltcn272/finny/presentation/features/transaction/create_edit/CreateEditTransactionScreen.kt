@@ -169,7 +169,7 @@ fun CreateEditTransactionScreen(
 
                 if (uiState.mode == ScreenMode.EDIT) {
                     Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                        CircleNavigationButton(icon = Icons.Default.MoreVert, onClick = {
+                        CircleNavigationButton(icon = Icons.Default.MoreHoriz, onClick = {
                             showMoreMenu = true
                         })
                         AnimatedMoreMenu(

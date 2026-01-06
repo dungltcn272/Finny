@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -101,7 +101,7 @@ fun BudgetDetailScreen(
         ) {
             CircleNavigationButton(icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft, onClick = onBack)
             Box {
-                CircleNavigationButton(icon = Icons.Default.MoreVert, onClick = { menuExpanded = true })
+                CircleNavigationButton(icon = Icons.Default.MoreHoriz, onClick = { menuExpanded = true })
                 AnimatedMoreMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },

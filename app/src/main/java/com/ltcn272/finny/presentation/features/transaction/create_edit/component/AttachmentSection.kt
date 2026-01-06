@@ -2,15 +2,11 @@ package com.ltcn272.finny.presentation.features.transaction.create_edit.componen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -101,7 +97,6 @@ fun AttachmentSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 12.dp)
-                        .height(180.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.LightGray.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
@@ -112,8 +107,8 @@ fun AttachmentSection(
                         AsyncImage(
                             model = imageUri,
                             contentDescription = stringResource(R.string.choose_image),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.FillWidth
                         )
                     }
                 }
