@@ -317,4 +317,6 @@
     <string name="go_to_settings">Đi tới cài đặt</string>
     <string name="notification_access_needed">Cần có quyền truy cập thông báo cho tính năng này.</string>
 
+    <string name="notification_received_at">Nhận lúc: %1$s</string>
+    <string name="close">Đóng</string>
 </resources>

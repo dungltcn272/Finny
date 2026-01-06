@@ -95,6 +95,7 @@ private fun rememberNotificationDisplayInfo(type: NotificationType): Notificatio
 @Composable
 fun NotificationItem(
     notification: Notification,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val displayInfo = rememberNotificationDisplayInfo(type = notification.type)
@@ -102,7 +103,8 @@ fun NotificationItem(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        shadowElevation = if (notification.isRead) 1.dp else 4.dp
+        shadowElevation = if (notification.isRead) 1.dp else 4.dp,
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
@@ -169,7 +171,8 @@ fun NotificationItem(
                 }
 
                 Box(
-                    modifier = Modifier.align(Alignment.Bottom)
+                    modifier = Modifier
+                        .align(Alignment.Bottom)
                         .size(8.dp)
                         .alpha(alpha.value)
                         .background(MaterialTheme.colorScheme.primary, CircleShape)

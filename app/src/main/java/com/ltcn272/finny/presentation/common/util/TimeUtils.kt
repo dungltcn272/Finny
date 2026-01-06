@@ -6,6 +6,7 @@ import java.time.ZonedDateTime
 import androidx.compose.ui.platform.LocalConfiguration
 import java.time.LocalDateTime
 import java.time.Year
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.format.TextStyle
@@ -51,4 +52,9 @@ fun parseUtcString(dateString: String): LocalDateTime? {
         LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME)
     } catch (e: DateTimeParseException) {null
     }
+}
+
+fun formatDateFull(dateTime: ZonedDateTime): String {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm, dd/MM/yyyy")
+    return dateTime.withZoneSameInstant(ZoneId.systemDefault()).format(formatter)
 }

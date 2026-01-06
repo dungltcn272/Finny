@@ -324,7 +324,7 @@
     <string name="notification_access_dialog_text">To automatically record transactions, Finny needs permission to read notifications from banking apps. Your data is processed securely on your device and is never shared. Go to settings to enable this feature.</string>
     <string name="go_to_settings">Go to Settings</string>
     <string name="notification_access_needed">Notification access is required for this feature.</string>
-
-
+    <string name="notification_received_at">Received at: %1$s</string>
+    <string name="close">Close</string>
 </resources>
 
