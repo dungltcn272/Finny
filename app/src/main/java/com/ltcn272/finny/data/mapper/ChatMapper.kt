@@ -1,6 +1,5 @@
 package com.ltcn272.finny.data.mapper
 
-import androidx.compose.ui.input.key.type
 import com.ltcn272.finny.data.remote.dto.CardDto
 import com.ltcn272.finny.data.remote.dto.ChatDto
 import com.ltcn272.finny.domain.model.Chat
@@ -14,6 +13,7 @@ fun ChatDto.toChat(): Chat {
         id = this.id,
         isFromUser = this.isMe ?: false,
         text = this.message?.text ?: "",
+        image = this.message?.image,
         cards = this.message?.card?.mapNotNull { cardDto ->
             if (cardDto.type != null && cardDto.amount != null && cardDto.description != null && cardDto.budgetId != null && cardDto.categoryId != null) {
                 MessageCard(

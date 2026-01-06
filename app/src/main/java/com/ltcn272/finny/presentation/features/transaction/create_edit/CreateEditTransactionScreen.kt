@@ -1,10 +1,13 @@
 package com.ltcn272.finny.presentation.features.transaction.create_edit
 
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,13 +22,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionType
@@ -34,7 +40,7 @@ import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
 import com.ltcn272.finny.presentation.common.ui.DeleteConfirmationDialog
 import com.ltcn272.finny.presentation.common.ui.FinnyDatePickerDialog
 import com.ltcn272.finny.presentation.common.ui.ScreenMode
-import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager // <<< IMPORT MỚI
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
 import com.ltcn272.finny.presentation.common.ui.SelectionDialog
 import com.ltcn272.finny.presentation.common.ui.SubmitButton
 import com.ltcn272.finny.presentation.common.ui.WheelDateTimePickerDialog
@@ -52,8 +58,7 @@ fun CreateEditTransactionScreen(
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    val snackbarManager = LocalSnackbarManager.current // <<< LẤY SNACKBAR MANAGER
+    val snackbarManager = LocalSnackbarManager.current
 
     var showMoreMenu by remember { mutableStateOf(false) }
 
@@ -61,7 +66,6 @@ fun CreateEditTransactionScreen(
         DeleteConfirmationDialog(
             title = stringResource(R.string.delete_transaction_confirmation_title),
             text = stringResource(R.string.delete_transaction_confirmation_text, uiState.transactionNameToDelete),
-            // THAY ĐỔI Ở ĐÂY: Truyền snackbarManager vào hàm confirm
             onConfirm = { viewModel.confirmDeleteTransaction(snackbarManager) },
             onDismiss = { viewModel.cancelDelete() }
         )
@@ -69,7 +73,7 @@ fun CreateEditTransactionScreen(
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri -> uri?.let { viewModel.uploadImage(it, snackbarManager) } } // <<< TRUYỀN SNACKBAR MANAGER
+        onResult = { uri -> uri?.let { viewModel.uploadImage(it, snackbarManager) } }
     )
 
     val lazyBudgets = viewModel.budgetsPagingFlow.collectAsLazyPagingItems()
@@ -100,7 +104,6 @@ fun CreateEditTransactionScreen(
 
     LaunchedEffect(uiState.finished) {
         if (uiState.finished) {
-            // Toast không còn cần thiết vì Snackbar đã hiển thị
             onBack()
         }
     }
@@ -153,7 +156,6 @@ fun CreateEditTransactionScreen(
                 .background(TransactionBackgroundBrush)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
         ) {
-            // Top Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -299,10 +301,29 @@ fun CreateEditTransactionScreen(
             SubmitButton(
                 mode = uiState.mode,
                 isSubmitting = uiState.isSubmitting,
-                onClick = { viewModel.submit(snackbarManager) } // <<< TRUYỀN SNACKBAR MANAGER
+                onClick = { viewModel.submit(snackbarManager) }
             )
         }
 
-        // FinnySnackbar đã được chuyển ra AppNavHost
+        AnimatedVisibility(
+            visible = uiState.isDeleting,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            val composition by rememberLottieComposition(LottieCompositionSpec.Asset("delete_anim.json"))
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.6f))
+                    .clickable(enabled = false, onClick = {}),
+                contentAlignment = Alignment.Center
+            ) {
+                LottieAnimation(
+                    composition = composition,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(200.dp)
+                )
+            }
+        }
     }
 }

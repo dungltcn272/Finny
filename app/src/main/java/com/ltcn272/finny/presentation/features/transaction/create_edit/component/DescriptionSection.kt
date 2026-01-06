@@ -35,7 +35,7 @@ fun DescriptionSection(
         shape = RoundedCornerShape(16.dp),
         color = Color.White
     ) {
-        if (description.isNullOrBlank()) {
+        if (description == null) {
             ActionSelectionRow(
                 icon = Icons.Default.Notes,
                 label = stringResource(R.string.description),

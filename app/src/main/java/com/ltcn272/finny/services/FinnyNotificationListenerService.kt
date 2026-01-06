@@ -24,14 +24,15 @@ class FinnyNotificationListenerService : NotificationListenerService() {
 
         // ======= NGÂN HÀNG QUỐC DOANH =======
         "com.mbmobile" to "MB Bank",
-        "vn.com.vietcombank.android.vcblite" to "Vietcombank",
-        "vn.com.bidv.smartbanking" to "BIDV SmartBanking",
-        "vn.com.vietinbank.ipay" to "VietinBank iPay",
+        "com.VCB" to "Vietcombank",
+        "com.vnpay.bidv" to "BIDV SmartBanking",
+        "com.vietinbank.ipay" to "VietinBank iPay",
 
         // ======= NGÂN HÀNG TMCP =======
         "vn.com.techcombank.bb.app" to "Techcombank",
-        "vn.com.acb.acb_mobile" to "ACB",
-        "vn.com.tpb.ebank" to "TPBank",
+        "mobile.acb.com.vn" to "ACB",
+        "com.tpb.mb.gprsandroid" to "TPBank",
+
         "vn.com.vpb.neo" to "VPBank NEO",
         "com.shb.mobile" to "SHB Mobile",
         "com.ocb.mobile" to "OCB OMNI",
@@ -59,7 +60,7 @@ class FinnyNotificationListenerService : NotificationListenerService() {
         "com.tyme.digitalbank" to "TymeX",
 
         // ======= VÍ ĐIỆN TỬ =======
-        "vn.com.momo" to "MoMo",
+        "com.mservice.momotransfer" to "MoMo",
         "com.viettel.vtmoney" to "Viettel Money",
         "vn.zalopay" to "ZaloPay",
         "com.mservice.zalopay" to "ZaloPay (old)",

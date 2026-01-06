@@ -1,8 +1,14 @@
 package com.ltcn272.finny.presentation.features.chat
 
 import android.Manifest
+import com.ltcn272.finny.presentation.features.chat.component.SuggestionChip
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -64,6 +71,11 @@ fun ChatScreen(
         onResult = { isGranted -> viewModel.onPermissionResult(isGranted, snackbarManager) }
     )
 
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> uri?.let { viewModel.uploadImageAndSend(it, snackbarManager) } }
+    )
+
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
@@ -72,13 +84,7 @@ fun ChatScreen(
         }
     }
 
-    LaunchedEffect(uiState.refreshTrigger) {
-        if (uiState.refreshTrigger > 0) {
-            messages.refresh()
-        }
-    }
-
-    LaunchedEffect(uiState.pendingMessages, messages.itemCount) {
+    LaunchedEffect(messages.itemCount) {
         snapshotFlow { messages.loadState.refresh }
             .distinctUntilChanged()
             .filter { it is LoadState.NotLoading }
@@ -93,11 +99,11 @@ fun ChatScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MainBackgroundBrush)
+            .windowInsetsPadding(WindowInsets.systemBars)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
         ) {
             Box(
                 modifier = Modifier
@@ -120,8 +126,8 @@ fun ChatScreen(
 
             val focusManager = LocalFocusManager.current
 
-            LaunchedEffect(uiState.pendingMessages.size) {
-                if (uiState.pendingMessages.isNotEmpty()) {
+            LaunchedEffect(uiState.sessionMessages.size) {
+                if (uiState.sessionMessages.isNotEmpty()) {
                     listState.animateScrollToItem(0)
                 }
             }
@@ -155,8 +161,8 @@ fun ChatScreen(
                     }
 
                     items(
-                        items = uiState.pendingMessages,
-                        key = { "pending_${it.id}" }
+                        items = uiState.sessionMessages,
+                        key = { "session_${it.id}" }
                     ) { message ->
                         MessageItem(
                             message = message,
@@ -177,7 +183,7 @@ fun ChatScreen(
                             val nextMessage = if (index > 0) messages.peek(index - 1) else null
 
                             val isFirstInGroup = prevMessage == null || prevMessage.isFromUser != message.isFromUser
-                            val isLastInGroup = (nextMessage == null && uiState.pendingMessages.isEmpty()) ||
+                            val isLastInGroup = (nextMessage == null && uiState.sessionMessages.isEmpty()) ||
                                     (nextMessage != null && nextMessage.isFromUser != message.isFromUser)
 
                             val showTimestamp = isLastInGroup || (nextMessage != null && abs(
@@ -208,14 +214,36 @@ fun ChatScreen(
                 }
             }
 
+            AnimatedVisibility(
+                visible = uiState.showSuggestions,
+                exit = shrinkVertically(animationSpec = tween(durationMillis = 200)) +
+                        fadeOut(animationSpec = tween(durationMillis = 200))
+            ) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(uiState.suggestionPrompts) { prompt ->
+                        SuggestionChip(
+                            text = prompt,
+                            onClick = {
+                                viewModel.sendMessage(text = prompt, snackbarManager = snackbarManager)
+                            }
+                        )
+                    }
+                }
+            }
+
             MessageInput(
                 text = uiState.recognizedText,
                 onTextChanged = viewModel::onRecognizedTextChanged,
-                onMessageSent = {
-                    viewModel.sendMessage(it, snackbarManager)
+                onMessageSent = { text ->
+                    viewModel.sendMessage(text = text, snackbarManager = snackbarManager)
                 },
                 enabled = !uiState.isAiTyping,
                 isListening = uiState.isListening,
+                isUploading = uiState.isUploadingImage,
                 onMicPress = {
                     if (uiState.hasRecordPermission) {
                         viewModel.startListening()
@@ -223,8 +251,14 @@ fun ChatScreen(
                         recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     }
                 },
-                onMicRelease = viewModel::stopListening
+                onMicRelease = viewModel::stopListening,
+                onImagePickerClick = {
+                    imagePickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                }
             )
         }
     }
 }
+

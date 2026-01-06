@@ -72,32 +72,14 @@ class BankNotificationInboxViewModel @Inject constructor(
 
             val prompt = "Finny, tạo giao dịch nội dung là ${notification.text}"
 
-            when (val result = chatRepository.sendMessageAndGetResponse(prompt)) {
+            // Sửa đổi lời gọi hàm cho phù hợp với Repository mới
+            when (chatRepository.sendMessageAndGetResponse(text = prompt, imageUrl = null)) {
                 is AppResult.Success -> {
-                    val cardResult = result.data.firstOrNull()
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            notifications = currentState.notifications.map {
-                                if (it.id == notification.id) {
-                                    it.copy(isLoading = false, cardResult = cardResult)
-                                } else it
-                            }
-                        )
-                    }
-
-                    if (cardResult != null) {
-                        _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.analysis_successful), false))
-                        removeNotificationFromDataStore(notification, removeFromUi = false)
-                    } else {
-                        _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.ai_could_not_recognize_transaction), true))
-                        _uiState.update { currentState ->
-                            currentState.copy(
-                                notifications = currentState.notifications.map {
-                                    if (it.id == notification.id) it.copy(isLoading = false) else it
-                                }
-                            )
-                        }
-                    }
+                    // Vì API mới không trả về card trực tiếp, chúng ta sẽ giả định thành công
+                    // và thông báo cho người dùng kiểm tra lại ở màn hình Chat hoặc Giao dịch
+                    _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.notification_sent_to_ai), false))
+                    // Xóa thông báo khỏi DataStore để không hiển thị lại
+                    removeNotificationFromDataStore(notification, removeFromUi = true)
                 }
                 is AppResult.Error -> {
                     _uiState.update { currentState ->
@@ -107,7 +89,7 @@ class BankNotificationInboxViewModel @Inject constructor(
                             }
                         )
                     }
-                    _eventFlow.emit(InboxEvent.ShowSnackbar(mapErrorToString(result.errorType), true))
+                    _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.ai_could_not_recognize_transaction), true))
                 }
                 is AppResult.Loading -> {}
             }

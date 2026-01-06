@@ -276,6 +276,10 @@
     <string name="time_ago_hours">%d hours ago</string>
     <string name="time_ago_yesterday">Yesterday</string>
 
+    <string name="uploading_image">Uploading image...</string>
+    <string name="notification_sent_to_ai">Sent to AI for processing. Please check the Chat screen for the result.</string>
+
+
     <!-- Error Messages -->
     <string name="error_network">Network error, please check your connection.</string>
     <string name="error_timeout">Request timed out. Please try again.</string>

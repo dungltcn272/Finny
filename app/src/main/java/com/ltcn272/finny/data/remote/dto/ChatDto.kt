@@ -19,7 +19,8 @@ data class CardDto(
 
 data class MessageDto(
     @SerializedName("text") val text: String?,
-    @SerializedName("card") val card: List<CardDto>?
+    @SerializedName("card") val card: List<CardDto>?,
+    @SerializedName("image") val image: String?
 )
 
 data class ChatDto(

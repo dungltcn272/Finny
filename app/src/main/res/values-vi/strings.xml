@@ -271,6 +271,9 @@
     <string name="time_ago_minutes">%d phút trước</string>
     <string name="time_ago_hours">%d giờ trước</string>
     <string name="time_ago_yesterday">Hôm qua</string>
+    <string name="uploading_image">Đang tải ảnh lên...</string>
+    <string name="notification_sent_to_ai">Đã gửi cho AI xử lý. Vui lòng kiểm tra màn hình Chat để xem kết quả.</string>
+
 
     <!-- Error Messages -->
     <string name="error_network">Lỗi mạng, vui lòng kiểm tra lại kết nối.</string>

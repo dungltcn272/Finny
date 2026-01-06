@@ -26,9 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Chat
 import com.ltcn272.finny.domain.model.MessageCard
@@ -68,7 +70,6 @@ fun MessageItem(
     val backgroundColor = if (isUserMessage) MaterialTheme.colorScheme.primary else Color.White
     val textColor = if (isUserMessage) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
 
-
     val shape = when {
         isUserMessage -> RoundedCornerShape(
             topStart = 15.dp,
@@ -88,8 +89,26 @@ fun MessageItem(
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = alignment
+        horizontalAlignment = alignment,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        // --- HIỂN THỊ ẢNH NẾU CÓ ---
+        if (!message.image.isNullOrBlank()) {
+            Surface(
+                modifier = Modifier.widthIn(max = 240.dp),
+                shape = shape,
+                shadowElevation = 1.dp
+            ) {
+                AsyncImage(
+                    model = message.image,
+                    contentDescription = "Sent image",
+                    modifier = Modifier.clip(shape),
+                    contentScale = ContentScale.Fit
+                )
+            }
+        }
+
+        // --- HIỂN THỊ TEXT NẾU CÓ ---
         if (message.text.isNotBlank()) {
             Surface(
                 modifier = Modifier.widthIn(max = 300.dp),
@@ -106,8 +125,8 @@ fun MessageItem(
             }
         }
 
+        // --- HIỂN THỊ CARD NẾU CÓ ---
         if (message.cards.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(4.dp))
             Column(
                 modifier = Modifier.widthIn(max = 300.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -117,7 +136,6 @@ fun MessageItem(
                 }
             }
         }
-
 
         if (showTimestamp) {
             Spacer(modifier = Modifier.height(4.dp))

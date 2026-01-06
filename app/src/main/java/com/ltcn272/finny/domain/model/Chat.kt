@@ -14,6 +14,7 @@ data class Chat(
     val id: String,
     val isFromUser: Boolean,
     val text: String,
+    val image: String?,
     val cards: List<MessageCard>,
     val timestamp: LocalDateTime
 )

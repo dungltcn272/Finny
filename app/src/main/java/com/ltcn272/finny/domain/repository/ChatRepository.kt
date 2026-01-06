@@ -6,7 +6,8 @@ import com.ltcn272.finny.domain.model.MessageCard
 import com.ltcn272.finny.domain.util.AppResult
 import kotlinx.coroutines.flow.Flow
 
+
 interface ChatRepository {
     fun getChatMessages(): Flow<PagingData<Chat>>
-    suspend fun sendMessageAndGetResponse(text: String): AppResult<List<MessageCard>>
+    suspend fun sendMessageAndGetResponse(text: String?, imageUrl: String?): AppResult<Chat>
 }

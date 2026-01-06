@@ -2,7 +2,6 @@ package com.ltcn272.finny.presentation.features.transaction.create_edit
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -13,9 +12,11 @@ import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.CategoryRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
+import com.ltcn272.finny.domain.util.ErrorType
 import com.ltcn272.finny.presentation.common.ui.ScreenMode
 import com.ltcn272.finny.presentation.features.snackbar.SnackbarManager
 import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
+import com.ltcn272.finny.util.createFileFromUri
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -24,18 +25,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
-
-enum class TransactionMode { CREATE, EDIT }
-
-// KHÔNG CẦN data class SnackbarState ở đây nữa
 
 data class CreateEditTransactionUiState(
     val mode: ScreenMode = ScreenMode.CREATE,
@@ -56,7 +51,8 @@ data class CreateEditTransactionUiState(
     val isBudgetSelectionHidden: Boolean = false,
     val isUploadingImage: Boolean = false,
     val showDeleteConfirmDialog: Boolean = false,
-    val transactionNameToDelete: String = ""
+    val transactionNameToDelete: String = "",
+    val isDeleting: Boolean = false
 )
 
 @HiltViewModel
@@ -147,30 +143,15 @@ class CreateEditTransactionViewModel @Inject constructor(
         }
     }
 
-    // Sửa lại hàm để nhận SnackbarManager
     fun uploadImage(uri: Uri, snackbarManager: SnackbarManager) {
         viewModelScope.launch {
             _uiState.update { it.copy(isUploadingImage = true) }
 
-            val file = try {
-                context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val tempFile = File.createTempFile("upload_", ".jpg", context.cacheDir)
-                    FileOutputStream(tempFile).use { outputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                    tempFile
+            val file = createFileFromUri(context, uri, snackbarManager)
+                ?: run {
+                    _uiState.update { it.copy(isUploadingImage = false) }
+                    return@launch
                 }
-            } catch (e: Exception) {
-                Log.e("CreateEditVM", "Error creating temp file: ${e.message}", e)
-                _uiState.update { it.copy(isUploadingImage = false) }
-                snackbarManager.showMessage(
-                    context.getString(R.string.error_read_image_file),
-                    TopSnackbarType.ERROR
-                )
-                null
-            }
-
-            if (file == null) return@launch
 
             transactionRepository.uploadImage(file).collectLatest { result ->
                 when (result) {
@@ -191,11 +172,99 @@ class CreateEditTransactionViewModel @Inject constructor(
                         )
                     }
 
-                    is AppResult.Loading -> { /* No-op */
+                    is AppResult.Loading -> {
                     }
                 }
             }
             file.delete()
+        }
+    }
+
+    fun onNameChange(name: String) {
+        _uiState.update { it.copy(name = name) }
+    }
+
+    fun onAmountChange(amount: String) {
+        val cleanValue = amount.filter { it.isDigit() }
+        _uiState.update { it.copy(amount = cleanValue) }
+    }
+
+    fun onTypeSelected(type: TransactionType) {
+        _uiState.update { it.copy(transactionType = type) }
+    }
+
+    fun onDateTimeChange(dateTime: ZonedDateTime) {
+        _uiState.update { it.copy(dateTime = dateTime) }
+    }
+
+    fun onBudgetSelected(budget: Budget) {
+        _uiState.update { it.copy(selectedBudget = budget) }
+    }
+
+    fun onCategorySelected(category: Category) {
+        _uiState.update { it.copy(selectedCategory = category) }
+    }
+
+    fun onDescriptionChange(description: String?) {
+        _uiState.update { it.copy(description = description) }
+    }
+
+    fun onDeleteImageClick() {
+        _uiState.update { it.copy(imageUri = null) }
+    }
+
+    fun onRecurringToggled(isRecurring: Boolean) {
+        _uiState.update { it.copy(isRecurring = isRecurring) }
+    }
+
+    fun onRecurringStartDateChange(date: ZonedDateTime) {
+        _uiState.update { it.copy(recurringStartDate = date) }
+    }
+
+    fun onRecurringIntervalUnitSelected(unit: RecurringIntervalUnit) {
+        _uiState.update { it.copy(recurringIntervalUnit = unit) }
+    }
+
+    fun requestDeleteTransaction() {
+        originalTransaction?.let {
+            _uiState.update {
+                it.copy(
+                    showDeleteConfirmDialog = true,
+                    transactionNameToDelete = it.name
+                )
+            }
+        }
+    }
+
+    fun cancelDelete() {
+        _uiState.update { it.copy(showDeleteConfirmDialog = false) }
+    }
+
+    fun confirmDeleteTransaction(snackbarManager: SnackbarManager) {
+        val id = transactionIdToEdit ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(showDeleteConfirmDialog = false, isDeleting = true) }
+            transactionRepository.deleteTransaction(id).collectLatest { result ->
+                when (result) {
+                    is AppResult.Success -> {
+                        snackbarManager.showMessage(
+                            context.getString(R.string.transaction_deleted_successfully),
+                            TopSnackbarType.SUCCESS
+                        )
+                        _uiState.update { it.copy(finished = true, isDeleting = false) }
+                    }
+
+                    is AppResult.Error -> {
+                        snackbarManager.showMessage(
+                            context.getString(R.string.error_deleting_transaction),
+                            TopSnackbarType.ERROR
+                        )
+                        _uiState.update { it.copy(isDeleting = false) }
+                    }
+
+                    is AppResult.Loading -> {}
+                }
+            }
         }
     }
 
@@ -228,7 +297,7 @@ class CreateEditTransactionViewModel @Inject constructor(
                 .format(DateTimeFormatter.ISO_INSTANT)
             updateMap["date_time"] = utcDateTime
         }
-        if (original.description != currentDescription) {
+        if (original.description?.trim() != currentDescription) {
             updateMap["description"] = currentDescription
         }
         if (original.isRecurring != current.isRecurring) {
@@ -241,7 +310,6 @@ class CreateEditTransactionViewModel @Inject constructor(
         return updateMap
     }
 
-    // Sửa lại hàm để nhận SnackbarManager
     fun submit(snackbarManager: SnackbarManager) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true) }
@@ -313,18 +381,16 @@ class CreateEditTransactionViewModel @Inject constructor(
             resultFlow.collectLatest { result ->
                 when (result) {
                     is AppResult.Success -> {
-                        val message = if (currentState.mode == ScreenMode.CREATE) {
-                            context.getString(R.string.transaction_created_successfully)
-                        } else {
-                            context.getString(R.string.transaction_updated_successfully)
-                        }
+                        val message =
+                            if (currentState.mode == ScreenMode.CREATE) context.getString(R.string.transaction_created_successfully)
+                            else context.getString(R.string.transaction_updated_successfully)
                         snackbarManager.showMessage(message, TopSnackbarType.SUCCESS)
                         _uiState.update { it.copy(isSubmitting = false, finished = true) }
                     }
 
                     is AppResult.Error -> {
                         snackbarManager.showMessage(
-                            context.getString(R.string.error_unknown),
+                            mapErrorToString(result.errorType),
                             TopSnackbarType.ERROR
                         )
                         _uiState.update { it.copy(isSubmitting = false) }
@@ -336,80 +402,13 @@ class CreateEditTransactionViewModel @Inject constructor(
         }
     }
 
-    // Các hàm còn lại giữ nguyên
-    fun onNameChange(value: String) = _uiState.update { it.copy(name = value) }
-    fun onAmountChange(value: String) = _uiState.update { it.copy(amount = value) }
-    fun onBudgetSelected(budget: Budget) = _uiState.update { it.copy(selectedBudget = budget) }
-    fun onCategorySelected(category: Category) =
-        _uiState.update { it.copy(selectedCategory = category) }
-
-    fun onTypeSelected(type: TransactionType) = _uiState.update { it.copy(transactionType = type) }
-    fun onDateTimeChange(dateTime: ZonedDateTime) = _uiState.update { it.copy(dateTime = dateTime) }
-    fun onDescriptionChange(description: String?) =
-        _uiState.update { it.copy(description = description) }
-
-    fun onDeleteImageClick() = _uiState.update { it.copy(imageUri = null) }
-    fun onRecurringToggled(isEnabled: Boolean) =
-        _uiState.update { it.copy(isRecurring = isEnabled) }
-
-    fun onRecurringStartDateChange(date: ZonedDateTime) =
-        _uiState.update { it.copy(recurringStartDate = date) }
-
-    fun onRecurringIntervalUnitSelected(unit: RecurringIntervalUnit) =
-        _uiState.update { it.copy(recurringIntervalUnit = unit) }
-
-    fun requestDeleteTransaction() {
-        if (uiState.value.mode == ScreenMode.EDIT) {
-            _uiState.update {
-                it.copy(
-                    showDeleteConfirmDialog = true,
-                    transactionNameToDelete = it.name
-                )
-            }
-        }
-    }
-
-    fun cancelDelete() = _uiState.update { it.copy(showDeleteConfirmDialog = false) }
-
-    // THAY ĐỔI Ở ĐÂY: Thêm snackbarManager vào tham số
-    fun confirmDeleteTransaction(snackbarManager: SnackbarManager) {
-        _uiState.update { it.copy(showDeleteConfirmDialog = false, isSubmitting = true) }
-        transactionIdToEdit?.let { id ->
-            viewModelScope.launch {
-                transactionRepository.deleteTransaction(id).collectLatest { result ->
-                    when (result) {
-                        is AppResult.Success -> {
-                            // Khi xóa thành công, báo cho UI biết để đóng màn hình
-                            snackbarManager.showMessage(
-                                context.getString(R.string.transaction_deleted_successfully),
-                                TopSnackbarType.SUCCESS
-                            )
-                            _uiState.update {
-                                it.copy(
-                                    isSubmitting = false,
-                                    finished = true,
-                                )
-                            }
-                        }
-
-                        is AppResult.Error -> {
-                            // THAY ĐỔI Ở ĐÂY: Gọi đến snackbarManager
-                            snackbarManager.showMessage(
-                                context.getString(R.string.error_deleting_transaction),
-                                TopSnackbarType.ERROR
-                            )
-                            _uiState.update {
-                                it.copy(
-                                    isSubmitting = false
-                                )
-                            }
-                        }
-
-                        is AppResult.Loading -> {}
-                    }
-                }
-            }
+    private fun mapErrorToString(errorType: ErrorType): String {
+        return when (errorType) {
+            ErrorType.NETWORK -> context.getString(R.string.error_network)
+            ErrorType.TIMEOUT -> context.getString(R.string.error_timeout)
+            ErrorType.UNAUTHORIZED -> context.getString(R.string.error_unauthorized)
+            ErrorType.SERVER_ERROR -> context.getString(R.string.error_server)
+            ErrorType.UNKNOWN -> context.getString(R.string.error_unknown)
         }
     }
 }
-
