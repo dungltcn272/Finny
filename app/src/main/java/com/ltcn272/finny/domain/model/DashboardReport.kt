@@ -8,11 +8,18 @@ data class ReportTotals(
     val prevOutcome: Double
 )
 
+// Dùng chung cho cả Budget và Category Report
+interface Report {
+    val totals: ReportTotals
+    val pieItems: List<PieItem>
+    val detailItems: List<Any>
+}
+
 data class CategoryReport(
-    val totals: ReportTotals,
-    val pieItems: List<PieItem>,
-    val detailItems: List<CategoryReportDetail>
-)
+    override val totals: ReportTotals,
+    override val pieItems: List<PieItem>,
+    override val detailItems: List<CategoryReportDetail>
+) : Report
 
 data class CategoryReportDetail(
     val id: String,
@@ -21,10 +28,10 @@ data class CategoryReportDetail(
 )
 
 data class BudgetReport(
-    val totals: ReportTotals,
-    val pieItems: List<PieItem>,
-    val detailItems: List<BudgetReportDetail>
-)
+    override val totals: ReportTotals,
+    override val pieItems: List<PieItem>,
+    override val detailItems: List<BudgetReportDetail>
+) : Report
 
 data class BudgetReportDetail(
     val id: String,

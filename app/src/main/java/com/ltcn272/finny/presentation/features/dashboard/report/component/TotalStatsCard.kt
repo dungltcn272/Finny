@@ -1,4 +1,4 @@
-package com.ltcn272.finny.presentation.features.dashboard.component
+package com.ltcn272.finny.presentation.features.dashboard.report.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -82,7 +82,6 @@ internal fun TotalStatsCard(
                 )
             }
 
-            // Amount
             Text(
                 text = formatCurrency(amount, "VND"),
                 style = MaterialTheme.typography.titleMedium,
@@ -119,7 +118,6 @@ internal fun TotalStatsCardShimmer(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Label Shimmer
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -127,9 +125,7 @@ internal fun TotalStatsCardShimmer(modifier: Modifier = Modifier) {
                 Box(modifier = Modifier.size(20.dp).clip(CircleShape).shimmerEffect())
                 Box(modifier = Modifier.height(14.dp).width(80.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
             }
-            // Amount Shimmer
             Box(modifier = Modifier.height(28.dp).width(130.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
-            // Change Shimmer
             Box(modifier = Modifier.height(12.dp).width(100.dp).clip(RoundedCornerShape(4.dp)).shimmerEffect())
         }
     }

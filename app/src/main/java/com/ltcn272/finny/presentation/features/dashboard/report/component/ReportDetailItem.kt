@@ -1,4 +1,4 @@
-package com.ltcn272.finny.presentation.features.dashboard.component
+package com.ltcn272.finny.presentation.features.dashboard.report.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,7 +81,6 @@ internal fun ReportDetailItemShimmer(modifier: Modifier = Modifier) {
             .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Name and Amount Shimmer
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -90,7 +89,6 @@ internal fun ReportDetailItemShimmer(modifier: Modifier = Modifier) {
             Box(modifier = Modifier.height(18.dp).fillMaxWidth(0.4f).clip(RoundedCornerShape(4.dp)).shimmerEffect())
             Box(modifier = Modifier.height(16.dp).fillMaxWidth(0.3f).clip(RoundedCornerShape(4.dp)).shimmerEffect())
         }
-        // Progress Bar Shimmer
         Box(
             modifier = Modifier
                 .fillMaxWidth()

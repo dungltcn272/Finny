@@ -2,12 +2,15 @@ package com.ltcn272.finny.data.repository
 
 import com.ltcn272.finny.data.mapper.toBudgetReport
 import com.ltcn272.finny.data.mapper.toCategoryReport
+import com.ltcn272.finny.data.mapper.toDashboardOverview
 import com.ltcn272.finny.data.remote.api.DashboardApi
+import com.ltcn272.finny.data.remote.dto.DashboardOverviewRequestDto
+import com.ltcn272.finny.data.remote.dto.DashboardReportRequestDto
 import com.ltcn272.finny.data.remote.dto.DateRangeDto
-import com.ltcn272.finny.data.remote.dto.ReportRequestDto
 import com.ltcn272.finny.data.remote.dto.ensureSuccess
 import com.ltcn272.finny.domain.model.BudgetReport
 import com.ltcn272.finny.domain.model.CategoryReport
+import com.ltcn272.finny.domain.model.DashboardOverview
 import com.ltcn272.finny.domain.repository.DashboardRepository
 import com.ltcn272.finny.domain.util.AppResult
 import com.ltcn272.finny.domain.util.toErrorType
@@ -20,8 +23,6 @@ class DashboardRepositoryImpl @Inject constructor(
     private val dashboardApi: DashboardApi
 ) : DashboardRepository {
 
-
-    private val localDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
     override suspend fun getCategoryReport(
@@ -32,15 +33,15 @@ class DashboardRepositoryImpl @Inject constructor(
             val startUTC = startDate.withZoneSameInstant(ZoneId.of("UTC")).format(formatter)
             val endUTC = endDate.withZoneSameInstant(ZoneId.of("UTC")).format(formatter)
 
-            val request = ReportRequestDto(
+            val request = DashboardReportRequestDto( // UPDATED
                 dateRange = DateRangeDto(
                     start = startUTC,
                     end = endUTC
                 )
             )
 
-            val response = dashboardApi.getCategoryReport(request)
-            AppResult.Success(response.data.toCategoryReport())
+            val response = dashboardApi.getCategoryReport(request).ensureSuccess() // ensureSuccess
+            AppResult.Success(response.toCategoryReport())
         } catch (e: Exception) {
             AppResult.Error(e.toErrorType())
         }
@@ -54,36 +55,36 @@ class DashboardRepositoryImpl @Inject constructor(
             val startUTC = startDate.withZoneSameInstant(ZoneId.of("UTC")).format(formatter)
             val endUTC = endDate.withZoneSameInstant(ZoneId.of("UTC")).format(formatter)
 
-            val request = ReportRequestDto(
+            val request = DashboardReportRequestDto( // UPDATED
                 dateRange = DateRangeDto(
                     start = startUTC,
                     end = endUTC
                 )
             )
-            val response = dashboardApi.getBudgetReport(request)
-            AppResult.Success(response.data.toBudgetReport())
+            val response = dashboardApi.getBudgetReport(request).ensureSuccess() // ensureSuccess
+            AppResult.Success(response.toBudgetReport())
         } catch (e: Exception) {
             AppResult.Error(e.toErrorType())
         }
     }
 
-    override suspend fun getAiReport(startDate: ZonedDateTime, endDate: ZonedDateTime): AppResult<String> {
+    override suspend fun getAiReport(period: String): AppResult<String> {
         return try {
-            val startLocalDate = startDate.format(localDateFormatter)
-            val endLocalDate = endDate.format(localDateFormatter)
-            val request = ReportRequestDto(
-                dateRange = DateRangeDto(
-                    start = startLocalDate,
-                    end = endLocalDate
-                )
-            )
-
+            val request = DashboardOverviewRequestDto(period = period) // UPDATED
             val response = dashboardApi.getAiReport(request).ensureSuccess()
             AppResult.Success(response.insight)
-
         } catch (e: Exception) {
             AppResult.Error(e.toErrorType())
         }
     }
 
+    override suspend fun getOverview(period: String): AppResult<DashboardOverview> {
+        return try {
+            val request = DashboardOverviewRequestDto(period = period) // UPDATED
+            val response = dashboardApi.getOverview(request).ensureSuccess()
+            AppResult.Success(response.toDashboardOverview())
+        } catch (e: Exception) {
+            AppResult.Error(e.toErrorType())
+        }
+    }
 }

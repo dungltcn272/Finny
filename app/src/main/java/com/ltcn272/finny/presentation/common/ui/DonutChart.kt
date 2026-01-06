@@ -252,7 +252,7 @@ fun ChartLegend(
 
 
 @Composable
-fun formatAmountShort(value: Double): String {
+private fun formatAmountShort(value: Double): String {
     val absValue = abs(value)
     if (absValue < 1000) return value.toLong().toString()
 

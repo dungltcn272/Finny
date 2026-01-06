@@ -37,12 +37,12 @@ fun <T> SegmentedControl(
     selected: T,
     onOptionClicked: (T) -> Unit,
     titleForItem: (T) -> String,
-
     containerColor: Color = Color(0xFFEFEFF4),
     indicatorColor: Color = Color.White,
     indicatorPadding: Dp = 0.dp,
-
-    contentPadding : PaddingValues = PaddingValues(vertical = 10.dp, horizontal = 5.dp),
+    selectedTextColor: Color = MaterialTheme.colorScheme.onSurface,
+    unselectedTextColor: Color = MaterialTheme.colorScheme.onSurface,
+    contentPadding: PaddingValues = PaddingValues(vertical = 10.dp, horizontal = 5.dp),
 ) {
     val numSegments = options.size.toFloat()
     val selectedIndex = options.indexOf(selected)
@@ -79,6 +79,8 @@ fun <T> SegmentedControl(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         options.onEachIndexed { index, segment ->
+            val textColor = if (index == selectedIndex) selectedTextColor else unselectedTextColor
+
             Box(
                 Modifier
                     .fillMaxHeight()
@@ -90,13 +92,14 @@ fun <T> SegmentedControl(
                         interactionSource = MutableInteractionSource(),
                         indication = null
                     ) { onOptionClicked(segment) }
-                    .padding(contentPadding)
                     .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = titleForItem(segment),
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.W600),
+                    color = textColor,
+                    modifier = Modifier.padding(contentPadding)
                 )
             }
         }

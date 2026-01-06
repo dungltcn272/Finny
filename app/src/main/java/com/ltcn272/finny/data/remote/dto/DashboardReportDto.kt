@@ -2,8 +2,8 @@ package com.ltcn272.finny.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-// --- Request Body ---
-data class ReportRequestDto(
+// --- Request Body for Report ---
+data class DashboardReportRequestDto(
     @SerializedName("date_range")
     val dateRange: DateRangeDto
 )
@@ -15,7 +15,7 @@ data class DateRangeDto(
     val end: String
 )
 
-// --- Common Response Parts ---
+// --- Common Response Parts for Report ---
 data class ReportTotalsDto(
     @SerializedName("income") val income: Double,
     @SerializedName("outcome") val outcome: Double,
@@ -56,9 +56,5 @@ data class BudgetReportDetailDto(
     @SerializedName("limit") val limit: Double,
     @SerializedName("outcome") val outcome: Double,
     @SerializedName("ratio") val ratio: Double
-)
-
-data class AiReportDataDto(
-    @SerializedName("insight") val insight: String
 )
 

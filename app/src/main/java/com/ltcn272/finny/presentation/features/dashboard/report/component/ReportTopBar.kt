@@ -1,4 +1,4 @@
-package com.ltcn272.finny.presentation.features.dashboard.component
+package com.ltcn272.finny.presentation.features.dashboard.report.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
 
 @Composable
-fun DashboardTopBar(
+fun ReportTopBar(
     modifier: Modifier = Modifier,
     title: String,
     onBack: () -> Unit,

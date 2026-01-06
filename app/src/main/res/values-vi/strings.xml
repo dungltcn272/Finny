@@ -319,4 +319,17 @@
 
     <string name="notification_received_at">Nhận lúc: %1$s</string>
     <string name="close">Đóng</string>
+
+    <!-- Dashboard Overview -->
+    <string name="financial_overview">Tổng quan tài chính</string>
+    <string name="current_balance">Số dư hiện tại</string>
+    <string name="transactions">Giao dịch</string>
+    <string name="avg_per_day">TB/ngày</string>
+    <string name="income_expense_by_day">Thu chi theo ngày</string>
+    <string name="switch_dashboard_mode">Chuyển chế độ xem</string>
+    <string name="see_more">Xem thêm</string>
+    <string name="show_less">Thu gọn</string>
+    <string name="overspent_tag">Vượt!</string>
+    <string name="no_category_data">Chưa có dữ liệu danh mục</string>
+    <string name="no_budget_data">Chưa có dữ liệu ngân sách</string>
 </resources>

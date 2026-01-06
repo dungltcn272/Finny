@@ -326,5 +326,17 @@
     <string name="notification_access_needed">Notification access is required for this feature.</string>
     <string name="notification_received_at">Received at: %1$s</string>
     <string name="close">Close</string>
-</resources>
 
+    <!-- Dashboard Overview -->
+    <string name="financial_overview">Financial Overview</string>
+    <string name="current_balance">Current Balance</string>
+    <string name="transactions">Transactions</string>
+    <string name="avg_per_day">Avg/day</string>
+    <string name="income_expense_by_day">Income &amp; Expense by day</string>
+    <string name="switch_dashboard_mode">Switch dashboard mode</string>
+    <string name="see_more">See more</string>
+    <string name="show_less">Show less</string>
+    <string name="overspent_tag">Over!</string>
+    <string name="no_category_data">No category data yet</string>
+    <string name="no_budget_data">No budget data yet</string>
+</resources>

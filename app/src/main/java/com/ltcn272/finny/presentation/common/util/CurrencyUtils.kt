@@ -14,6 +14,7 @@ fun formatCurrency(amount: Double, currencyCode: String): String {
     return formatter.format(amount)
 }
 
+
 @Composable
 fun rememberCurrencyFormatter(currencyCode: String): NumberFormat {
     val locale = Locale("vi", "VN")
