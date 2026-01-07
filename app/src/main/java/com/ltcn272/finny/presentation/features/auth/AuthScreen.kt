@@ -2,7 +2,6 @@ package com.ltcn272.finny.presentation.features.auth
 
 import android.app.Activity
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -38,10 +37,14 @@ import com.facebook.login.LoginResult
 import com.ltcn272.finny.presentation.features.auth.common.LoginButton
 import com.ltcn272.finny.presentation.features.intro.component.FinnyHeader
 import com.ltcn272.finny.presentation.features.intro.component.ImageCard
+import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
+import com.ltcn272.finny.presentation.features.snackbar.SnackbarManager
+import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
 import com.ltcn272.finny.presentation.theme.IntroBackgroundBrush
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
 
@@ -57,20 +60,33 @@ fun AuthScreen(
     val activity = context as? Activity
     var isPreparingGoogleLogin by remember { mutableStateOf(false) }
 
+    val snackbarManager = LocalSnackbarManager.current
+
+    LaunchedEffect(Unit) {
+        viewModel.authState
+            .filter { it is AuthUiState.Authorized }
+            .collect { onLoggedIn() }
+    }
+
+    LaunchedEffect(authUiState) {
+        if (authUiState is AuthUiState.Error) {
+            isPreparingGoogleLogin = false
+        }
+    }
+
 
     DisposableEffect(Unit) {
         val callback = object : FacebookCallback<LoginResult> {
             override fun onSuccess(result: LoginResult) {
-                viewModel.loginWithFacebook(result.accessToken.token)
+                viewModel.loginWithFacebook(result.accessToken.token, snackbarManager)
             }
 
             override fun onCancel() {}
             override fun onError(error: FacebookException) {
-                Toast.makeText(
-                    context,
+                snackbarManager.showMessage(
                     context.getString(R.string.facebook_login_error, error.message),
-                    Toast.LENGTH_SHORT
-                ).show()
+                    TopSnackbarType.ERROR
+                )
             }
         }
         LoginManager.getInstance().registerCallback(callbackManager, callback)
@@ -126,7 +142,7 @@ fun AuthScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
             ) {
                 LoginButton(
-                    backgroundColor = Color.White,
+                    backgroundColor = Color.Black.copy(alpha = 0.8f),
                     icon = painterResource(R.drawable.ic_google),
                     iconTint = Color.Unspecified,
                     onClick = {
@@ -134,6 +150,7 @@ fun AuthScreen(
                             context = context,
                             viewModel = viewModel,
                             scope = scope,
+                            snackbarManager = snackbarManager,
                             onStart = { isPreparingGoogleLogin = true },
                             onFinish = { isPreparingGoogleLogin = false }
                         )
@@ -152,26 +169,6 @@ fun AuthScreen(
             }
         }
         Spacer(Modifier.height(12.dp))
-
-        LaunchedEffect(authUiState) {
-            when (val state = authUiState) {
-                is AuthUiState.Authorized -> {
-                    isPreparingGoogleLogin = false
-                    val user = state.user
-                    Toast.makeText(context, context.getString(R.string.welcome_user, user.displayName), Toast.LENGTH_LONG)
-                        .show()
-                    onLoggedIn()
-                }
-                is AuthUiState.Error -> {
-                    isPreparingGoogleLogin = false
-                    val errorMsg = state.message
-                    Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
-                }
-                else -> {
-
-                }
-            }
-        }
 
         if (authUiState is AuthUiState.Loading || isPreparingGoogleLogin) {
             val lottieAnimationFile ="generic_loading.json"
@@ -200,6 +197,7 @@ private fun handleGoogleLogin(
     context: Context,
     viewModel: AuthViewModel,
     scope: CoroutineScope,
+    snackbarManager: SnackbarManager,
     onStart: () -> Unit,
     onFinish: () -> Unit
 ) {
@@ -219,14 +217,13 @@ private fun handleGoogleLogin(
                 credentialManager.getCredential(context, request)
             }
 
-            onFinish()
-            handleSignInResult(result, viewModel, context)
+            handleSignInResult(result, viewModel, snackbarManager, context)
         } catch (e: TimeoutCancellationException) {
-            viewModel.cancelLoadingIfStuck("Google dialog timed out")
-            Toast.makeText(context, context.getString(R.string.google_signin_timeout), Toast.LENGTH_SHORT).show()
+            val errorMsg = context.getString(R.string.google_signin_timeout)
+            viewModel.cancelLoadingIfStuck(errorMsg, snackbarManager)
         } catch (e: Exception) {
-            viewModel.cancelLoadingIfStuck(e.message ?: "Google SignIn error")
-            Toast.makeText(context, context.getString(R.string.google_signin_error, e.message), Toast.LENGTH_SHORT).show()
+            val errorMsg = context.getString(R.string.google_signin_error, e.message)
+            viewModel.cancelLoadingIfStuck(errorMsg, snackbarManager)
         } finally {
             onFinish()
         }
@@ -245,6 +242,7 @@ private fun handleFacebookLogin(activity: Activity?) {
 private fun handleSignInResult(
     result: GetCredentialResponse,
     viewModel: AuthViewModel,
+    snackbarManager: SnackbarManager,
     context: Context
 ) {
     val credential: Credential = result.credential
@@ -254,13 +252,13 @@ private fun handleSignInResult(
         try {
             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
             val idToken = googleIdTokenCredential.idToken
-            viewModel.loginWithGoogle(idToken)
+            viewModel.loginWithGoogle(idToken, snackbarManager)
         } catch (e: Exception) {
-            viewModel.cancelLoadingIfStuck(e.message ?: "Invalid Google credential")
-            Toast.makeText(context, context.getString(R.string.invalid_google_credential, e.message), Toast.LENGTH_SHORT).show()
+            val errorMsg = context.getString(R.string.invalid_google_credential, e.message)
+            viewModel.cancelLoadingIfStuck(errorMsg, snackbarManager)
         }
     } else {
-        viewModel.cancelLoadingIfStuck("Unsupported credential")
-        Toast.makeText(context, context.getString(R.string.unsupported_credential), Toast.LENGTH_SHORT).show()
+        val errorMsg = context.getString(R.string.unsupported_credential)
+        viewModel.cancelLoadingIfStuck(errorMsg, snackbarManager)
     }
 }
