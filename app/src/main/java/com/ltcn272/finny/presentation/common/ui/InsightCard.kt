@@ -1,4 +1,4 @@
-package com.ltcn272.finny.presentation.features.dashboard.overview.component
+package com.ltcn272.finny.presentation.common.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
@@ -27,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
-import com.ltcn272.finny.presentation.common.ui.shimmerEffect
 
 @Composable
 fun InsightCard(

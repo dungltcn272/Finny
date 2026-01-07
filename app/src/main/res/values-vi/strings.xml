@@ -70,6 +70,7 @@
     <string name="no_transactions_for_filter">Không có giao dịch nào cho bộ lọc này.</string>
     <string name="no_transactions_yet">Chưa có giao dịch nào.</string>
     <string name="offline_mode">Bạn đang ngoại tuyến</string>
+    <string name="online_mode">Đã có mạng trở lại</string>
     <string name="create_first_budget_title">Bắt đầu quản lý tài chính của bạn</string>
     <string name="create_first_budget_subtitle">Tạo ngân sách đầu tiên để theo dõi chi tiêu và tiết kiệm hiệu quả hơn.</string>
     <string name="create_new_budget">Tạo ngân sách mới</string>

@@ -1,6 +1,7 @@
 package com.ltcn272.finny.presentation.features.home
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.domain.repository.BudgetRepository
+import com.ltcn272.finny.domain.repository.DashboardRepository
 import com.ltcn272.finny.domain.repository.NotificationRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
 import com.ltcn272.finny.domain.util.AppResult
@@ -37,23 +39,21 @@ data class HomeUiState(
     val isRefreshingByUser: Boolean = false,
     val username: String? = null,
     val currentDate: String = "",
-
     val allRecentBudgets: List<Budget> = emptyList(),
     val allRecentTransactions: List<Transaction>? = null,
-
     val topBudgets: List<Budget> = emptyList(),
     val featuredBudget: Budget? = null,
     val transactionsToShow: List<Transaction> = emptyList(),
-
     val donutChartData: List<DonutData> = emptyList(),
     val donutChartTotalAmount: Double = 0.0,
-
     val transactionFilterType: TransactionType? = null,
     val currency: String = "VND",
     val showCreateBudgetPrompt: Boolean = false,
     val networkStatus: NetworkStatus = NetworkStatus.Available,
     val bankNotificationCount: Int = 0,
-    val unreadNotificationCount: Int = 0
+    val unreadNotificationCount: Int = 0,
+    val aiInsight: String? = null,
+    val isLoadingInsight: Boolean = true
 )
 
 @HiltViewModel
@@ -62,6 +62,7 @@ class HomeViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
     private val transactionRepository: TransactionRepository,
     private val notificationRepository: NotificationRepository,
+    private val dashboardRepository: DashboardRepository,
     private val settingDataStore: SettingDataStore,
     private val connectivityObserver: ConnectivityObserver
 ) : ViewModel() {
@@ -117,7 +118,13 @@ class HomeViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, showCreateBudgetPrompt = false) }
+            _uiState.update { it.copy(isLoading = true, isLoadingInsight = true, showCreateBudgetPrompt = false, aiInsight = null) }
+
+            launch {
+                val aiInsightResult = dashboardRepository.getAiReport("3_days")
+                val aiInsight = if (aiInsightResult is AppResult.Success) aiInsightResult.data else null
+                _uiState.update { it.copy(aiInsight = aiInsight, isLoadingInsight = false) }
+            }
 
             val budgetResultDeferred = async { budgetRepository.getRecentBudgets() }
             val transactionResultDeferred = async { transactionRepository.getRecentTransactions() }
@@ -145,7 +152,7 @@ class HomeViewModel @Inject constructor(
                     allRecentBudgets = allBudgets,
                     allRecentTransactions = allTransactions,
                     showCreateBudgetPrompt = shouldShowPrompt,
-                    unreadNotificationCount = unreadCount
+                    unreadNotificationCount = unreadCount,
                 )
             }
             processAndUpdateUiState()
@@ -154,7 +161,13 @@ class HomeViewModel @Inject constructor(
 
     fun refreshDataFromPull() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isRefreshingByUser = true) }
+            _uiState.update { it.copy(isRefreshingByUser = true, isLoadingInsight = true, aiInsight = null) }
+
+            launch {
+                val aiInsightResult = dashboardRepository.getAiReport("3_days")
+                val aiInsight = if (aiInsightResult is AppResult.Success) aiInsightResult.data else null
+                _uiState.update { it.copy(aiInsight = aiInsight, isLoadingInsight = false) }
+            }
 
             val budgetResultDeferred = async { budgetRepository.getRecentBudgets() }
             val transactionResultDeferred = async { transactionRepository.getRecentTransactions() }

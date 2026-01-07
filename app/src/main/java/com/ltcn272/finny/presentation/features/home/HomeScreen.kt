@@ -1,31 +1,21 @@
 package com.ltcn272.finny.presentation.features.home
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,9 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ltcn272.finny.R
@@ -46,10 +34,11 @@ import com.ltcn272.finny.domain.model.Transaction
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.presentation.common.ui.BudgetItem
 import com.ltcn272.finny.presentation.common.ui.BudgetItemShimmer
+import com.ltcn272.finny.presentation.common.ui.InsightCard
+import com.ltcn272.finny.presentation.common.ui.InsightCardShimmer
 import com.ltcn272.finny.presentation.common.ui.SliderFilterRow
 import com.ltcn272.finny.presentation.common.ui.TransactionItem
 import com.ltcn272.finny.presentation.common.ui.TransactionItemShimmer
-import com.ltcn272.finny.presentation.common.util.NetworkStatus
 import com.ltcn272.finny.presentation.features.home.component.BudgetDistributionCard
 import com.ltcn272.finny.presentation.features.home.component.BudgetDistributionCardShimmer
 import com.ltcn272.finny.presentation.features.home.component.FeaturedBudgetCard
@@ -57,6 +46,7 @@ import com.ltcn272.finny.presentation.features.home.component.FeaturedBudgetCard
 import com.ltcn272.finny.presentation.features.home.component.FeaturedBudgetEmptyStateCard
 import com.ltcn272.finny.presentation.features.home.component.HomeHeader
 import com.ltcn272.finny.presentation.features.home.component.ListHeader
+import com.ltcn272.finny.presentation.features.home.component.NetworkStatusIndicator
 import com.ltcn272.finny.presentation.features.snackbar.LocalSnackbarManager
 import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
 import com.ltcn272.finny.presentation.theme.MainBackgroundBrush
@@ -100,8 +90,9 @@ fun HomeScreen(
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            NetworkStatusIndicator(networkStatus = uiState.networkStatus)
-
+            NetworkStatusIndicator(
+                networkStatus = uiState.networkStatus
+            )
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -130,6 +121,7 @@ fun HomeScreen(
 
                     if (uiState.isLoading) {
                         item { FeaturedBudgetCardShimmer() }
+                        item { InsightCardShimmer() }
                         item { BudgetDistributionCardShimmer() }
                         item {
                             ListHeader(
@@ -154,6 +146,14 @@ fun HomeScreen(
                                     budget = uiState.featuredBudget!!,
                                     onCardClick = { onBudgetClick(uiState.featuredBudget!!) }
                                 )
+                            }
+                        }
+
+                        if (uiState.isLoadingInsight) {
+                            item { InsightCardShimmer() }
+                        } else if (uiState.aiInsight != null && uiState.aiInsight!!.isNotBlank()) {
+                            item {
+                                InsightCard(insight = uiState.aiInsight!!)
                             }
                         }
 
@@ -242,44 +242,9 @@ fun HomeScreen(
                 PullRefreshIndicator(
                     refreshing = uiState.isRefreshingByUser,
                     state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    backgroundColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.align(Alignment.TopCenter)
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun NetworkStatusIndicator(networkStatus: NetworkStatus) {
-    val isOffline = networkStatus != NetworkStatus.Available
-    AnimatedVisibility(
-        visible = isOffline,
-        enter = expandVertically(animationSpec = tween(300)),
-        exit = shrinkVertically(animationSpec = tween(300))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.DarkGray)
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.CloudOff,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                text = stringResource(R.string.offline_mode),
-                color = Color.White,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
         }
     }
 }

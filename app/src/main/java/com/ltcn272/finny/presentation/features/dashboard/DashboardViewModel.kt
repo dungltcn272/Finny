@@ -87,7 +87,13 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadDataForCurrentMode() {
         when (_uiState.value.dashboardMode) {
-            DashboardMode.OVERVIEW -> loadOverviewData()
+            DashboardMode.OVERVIEW -> {
+                if (_uiState.value.overviewData == null) {
+                    loadOverviewData()
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+            }
             DashboardMode.REPORT -> {
                 if (_uiState.value.budgetReportData == null) {
                     loadReportData()

@@ -76,6 +76,7 @@
     <string name="no_transactions_for_filter">No transactions found for this filter.</string>
     <string name="no_transactions_yet">No transactions yet.</string>
     <string name="offline_mode">You are offline</string>
+    <string name="online_mode">Back online</string>
     <string name="create_first_budget_title">Start managing your finances</string>
     <string name="create_first_budget_subtitle">Create your first budget to track spending and save more effectively.</string>
     <string name="create_new_budget">Create New Budget</string>

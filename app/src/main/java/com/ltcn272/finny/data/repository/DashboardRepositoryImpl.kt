@@ -33,14 +33,14 @@ class DashboardRepositoryImpl @Inject constructor(
             val startUTC = startDate.withZoneSameInstant(ZoneId.of("UTC")).format(formatter)
             val endUTC = endDate.withZoneSameInstant(ZoneId.of("UTC")).format(formatter)
 
-            val request = DashboardReportRequestDto( // UPDATED
+            val request = DashboardReportRequestDto(
                 dateRange = DateRangeDto(
                     start = startUTC,
                     end = endUTC
                 )
             )
 
-            val response = dashboardApi.getCategoryReport(request).ensureSuccess() // ensureSuccess
+            val response = dashboardApi.getCategoryReport(request).ensureSuccess()
             AppResult.Success(response.toCategoryReport())
         } catch (e: Exception) {
             AppResult.Error(e.toErrorType())
@@ -61,7 +61,7 @@ class DashboardRepositoryImpl @Inject constructor(
                     end = endUTC
                 )
             )
-            val response = dashboardApi.getBudgetReport(request).ensureSuccess() // ensureSuccess
+            val response = dashboardApi.getBudgetReport(request).ensureSuccess()
             AppResult.Success(response.toBudgetReport())
         } catch (e: Exception) {
             AppResult.Error(e.toErrorType())
@@ -70,7 +70,7 @@ class DashboardRepositoryImpl @Inject constructor(
 
     override suspend fun getAiReport(period: String): AppResult<String> {
         return try {
-            val request = DashboardOverviewRequestDto(period = period) // UPDATED
+            val request = DashboardOverviewRequestDto(period = period)
             val response = dashboardApi.getAiReport(request).ensureSuccess()
             AppResult.Success(response.insight)
         } catch (e: Exception) {
@@ -80,7 +80,7 @@ class DashboardRepositoryImpl @Inject constructor(
 
     override suspend fun getOverview(period: String): AppResult<DashboardOverview> {
         return try {
-            val request = DashboardOverviewRequestDto(period = period) // UPDATED
+            val request = DashboardOverviewRequestDto(period = period)
             val response = dashboardApi.getOverview(request).ensureSuccess()
             AppResult.Success(response.toDashboardOverview())
         } catch (e: Exception) {

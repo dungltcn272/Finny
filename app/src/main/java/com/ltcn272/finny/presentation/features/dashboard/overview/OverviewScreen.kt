@@ -22,7 +22,8 @@ import com.ltcn272.finny.presentation.common.ui.ColumnChart
 import com.ltcn272.finny.presentation.common.ui.ColumnChartEntry
 import com.ltcn272.finny.presentation.common.ui.ColumnChartMode
 import com.ltcn272.finny.presentation.common.ui.ColumnChartWaiting
-import com.ltcn272.finny.presentation.common.util.formatCurrency
+import com.ltcn272.finny.presentation.common.ui.InsightCard
+import com.ltcn272.finny.presentation.common.ui.InsightCardShimmer
 import com.ltcn272.finny.presentation.common.util.formatCurrencyShortVietnamese
 import com.ltcn272.finny.presentation.features.dashboard.DashboardUiState
 import com.ltcn272.finny.presentation.features.dashboard.OverviewPeriod
@@ -72,7 +73,7 @@ fun OverviewScreen(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.SwapHoriz,
                             iconTint = Color.Blue.copy(alpha = 0.7f),
-                            changeText = "+18",
+                            changeText = null,
                             changeColor = Color(0xFF28A745),
                             mainValue = summary.transactionCount.toString(),
                             subLabel = stringResource(R.string.transactions)
@@ -81,7 +82,7 @@ fun OverviewScreen(
                             modifier = Modifier.weight(1f),
                             icon = Icons.AutoMirrored.Filled.TrendingUp,
                             iconTint = Color(0xFFFFA726),
-                            changeText = "-12%",
+                            changeText = null,
                             changeColor = Color(0xFFDC3545),
                             mainValue = formatCurrencyShortVietnamese(summary.avgPerDay),
                             subLabel = stringResource(R.string.avg_per_day)
@@ -140,8 +141,7 @@ fun OverviewScreen(
                     CategoryBudgetSummaryCard(
                         categories = uiState.overviewData.categories,
                         budgets = uiState.overviewData.budgets,
-                        totalExpense = uiState.overviewData.summary.totalExpenses,
-                        onSeeAllClick = { /* TODO: Navigate to another screen */ }
+                        totalExpense = uiState.overviewData.summary.totalExpenses
                     )
                 }
             }

@@ -235,7 +235,12 @@ private fun ChartBar(
             .width(BAR_WIDTH)
             .fillMaxHeight(fraction = barHeightFraction * animationProgress)
             .background(
-                brush = Brush.verticalGradient(listOf(color.copy(alpha = 0.7f), color)),
+                brush = Brush.verticalGradient(
+                    listOf(
+                        color,
+                        color.copy(alpha = 0.7f)
+                    )
+                ),
                 shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
             )
     )
@@ -319,43 +324,42 @@ fun ColumnChartWaiting(
                 verticalAlignment = Alignment.Bottom
             ) {
                 repeat(visibleItemsCount) { index ->
-                    val duration1 = remember { Random.nextInt(800, 1200) }
-                    val delay1 = remember { Random.nextInt(0, 200) }
-                    val targetValue1 = remember { Random.nextDouble(0.4, 0.8).toFloat() }
+                    val duration1 = remember { Random.nextInt(600, 1000) }
+                    val delay1 = remember { Random.nextInt(0, 150) }
+                    val targetValue1 = remember { Random.nextDouble(0.5, 0.9).toFloat() }
 
                     val heightFraction by infiniteTransition.animateFloat(
                         initialValue = 0.1f,
                         targetValue = targetValue1,
                         animationSpec = infiniteRepeatable(
-                            animation = tween(duration1, easing = LinearEasing, delayMillis = delay1 * index),
+                            animation = tween(duration1, easing = LinearEasing, delayMillis = delay1),
                             repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "waiting_bar_height_$index"
+                        ), label = "shimmer_bar_1_$index"
                     )
 
-                    val duration2 = remember { Random.nextInt(800, 1200) }
-                    val delay2 = remember { Random.nextInt(0, 200) }
-                    val targetValue2 = remember { Random.nextDouble(0.3, 0.7).toFloat() }
+                    val duration2 = remember { Random.nextInt(600, 1000) }
+                    val delay2 = remember { Random.nextInt(0, 150) }
+                    val targetValue2 = remember { Random.nextDouble(0.5, 0.9).toFloat() }
 
-                    val secondaryHeightFraction by infiniteTransition.animateFloat(
-                        initialValue = 0.2f,
+                    val heightFraction2 by infiniteTransition.animateFloat(
+                        initialValue = 0.1f,
                         targetValue = targetValue2,
                         animationSpec = infiniteRepeatable(
-                            animation = tween(duration2, easing = LinearEasing, delayMillis = delay2 * index + 100),
+                            animation = tween(duration2, easing = LinearEasing, delayMillis = delay2),
                             repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "waiting_bar_height_secondary_$index"
+                        ), label = "shimmer_bar_2_$index"
                     )
 
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(bottom = 20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f),
+                                .fillMaxHeight(),
                             verticalAlignment = Alignment.Bottom,
                             horizontalArrangement = Arrangement.spacedBy(BAR_SPACING, Alignment.CenterHorizontally)
                         ) {
@@ -363,27 +367,15 @@ fun ColumnChartWaiting(
                                 modifier = Modifier
                                     .width(BAR_WIDTH)
                                     .fillMaxHeight(fraction = heightFraction)
-                                    .background(
-                                        incomeColor.copy(alpha = 0.3f),
-                                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                                    )
+                                    .background(incomeColor.copy(alpha = 0.5f), RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                             )
                             Box(
                                 modifier = Modifier
                                     .width(BAR_WIDTH)
-                                    .fillMaxHeight(fraction = secondaryHeightFraction)
-                                    .background(
-                                        outcomeColor.copy(alpha = 0.4f),
-                                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                                    )
+                                    .fillMaxHeight(fraction = heightFraction2)
+                                    .background(outcomeColor.copy(alpha = 0.5f), RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                             )
                         }
-                        Box(
-                            modifier = Modifier
-                                .width(20.dp)
-                                .height(12.dp)
-                                .background(Color.LightGray.copy(alpha = 0.2f), RoundedCornerShape(2.dp))
-                        )
                     }
                 }
             }
@@ -391,60 +383,62 @@ fun ColumnChartWaiting(
     }
 }
 
-@Preview(showBackground = true, widthDp = 380)
+@Preview
 @Composable
-private fun ColumnChartWeekPreview() {
-    val chartData = listOf(
-        ColumnChartEntry(date = "2026-01-01", label = "T2", income = 1150000f, outcome = 850000f),
-        ColumnChartEntry(date = "2026-01-02", label = "T3", income = 900000f, outcome = 1050000f),
-        ColumnChartEntry(date = "2026-01-03", label = "T4", income = 1500000f, outcome = 700000f),
-        ColumnChartEntry(date = "2026-01-04", label = "T5", income = 1000000f, outcome = 950000f),
-        ColumnChartEntry(date = "2026-01-05", label = "T6", income = 1800000f, outcome = 1250000f),
-        ColumnChartEntry(date = "2026-01-06", label = "T7", income = 2200000f, outcome = 1750000f),
-        ColumnChartEntry(date = "2026-01-07", label = "CN", income = 750000f, outcome = 900000f),
-    )
+private fun ColumnChartPreview() {
+    val sampleEntries = remember {
+        listOf(
+            ColumnChartEntry("01", "T2", 2500000f, 1200000f),
+            ColumnChartEntry("02", "T3", 3500000f, 2200000f),
+            ColumnChartEntry("03", "T4", 1500000f, 800000f),
+            ColumnChartEntry("04", "T5", 4500000f, 3200000f),
+            ColumnChartEntry("05", "T6", 2000000f, 1500000f),
+            ColumnChartEntry("06", "T7", 5500000f, 4200000f),
+            ColumnChartEntry("07", "CN", 800000f, 500000f)
+        )
+    }
 
     MaterialTheme {
         Card(
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.padding(16.dp),
             elevation = CardDefaults.cardElevation(4.dp),
-            modifier = Modifier.padding(16.dp)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    "Thu chi theo ngày",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "Báo cáo Thu-Chi Tuần",
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 ColumnChart(
-                    entries = chartData,
+                    entries = sampleEntries,
                     mode = ColumnChartMode.WEEK,
                     incomeColor = Color(0xFF20C997),
-                    outcomeColor = Color(0xFFFA5A7D)
+                    outcomeColor = Color(0xFFFA5A7D),
                 )
             }
         }
     }
 }
 
-@Preview(showBackground = true, widthDp = 380)
+@Preview
 @Composable
-fun ColumnChartWaitingPreview() {
+private fun ColumnChartWaitingPreview() {
     MaterialTheme {
         Card(
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.padding(16.dp),
             elevation = CardDefaults.cardElevation(4.dp),
-            modifier = Modifier.padding(16.dp)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    "Đang tải dữ liệu...",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "Báo cáo Thu-Chi Tuần",
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                ColumnChartWaiting(visibleItemsCount = 7)
+                Spacer(modifier = Modifier.height(24.dp))
+                ColumnChartWaiting()
             }
         }
     }
