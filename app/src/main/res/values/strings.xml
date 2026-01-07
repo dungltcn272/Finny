@@ -103,6 +103,8 @@
     <!-- Transactions -->
     <string name="transaction_image_count">%1$d ảnh</string>
     <string name="transaction_amount_format">%1$s%2$s</string>
+    <string name="attachments_image">Image</string>
+    <string name="choose_and_upload_invoice">Choose and upload your invoice information.</string>
 
     <!-- Budgets -->
     <string name="your_budgets">Your Budgets</string>

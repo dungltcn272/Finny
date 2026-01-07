@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -106,7 +105,6 @@ fun HomeScreen(
                         top = 12.dp,
                         bottom = 160.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     item {
                         HomeHeader(
@@ -120,40 +118,51 @@ fun HomeScreen(
                     }
 
                     if (uiState.isLoading) {
-                        item { FeaturedBudgetCardShimmer() }
-                        item { InsightCardShimmer() }
-                        item { BudgetDistributionCardShimmer() }
+                        item { FeaturedBudgetCardShimmer(modifier = Modifier.padding(top = 16.dp)) }
+                        item { InsightCardShimmer(modifier = Modifier.padding(top = 16.dp)) }
+                        item { BudgetDistributionCardShimmer(modifier = Modifier.padding(top = 16.dp)) }
                         item {
                             ListHeader(
                                 title = stringResource(R.string.your_budgets),
-                                onSeeAllClick = {})
+                                onSeeAllClick = {},
+                                modifier = Modifier.padding(top = 16.dp)
+                            )
                         }
-                        items(2) { BudgetItemShimmer() }
+                        items(2) { BudgetItemShimmer(modifier = Modifier.padding(top = 8.dp)) }
                         item {
                             ListHeader(
                                 title = stringResource(R.string.latest_transactions),
-                                onSeeAllClick = {})
+                                onSeeAllClick = {},
+                                modifier = Modifier.padding(top = 16.dp)
+                            )
                         }
-                        items(3) { TransactionItemShimmer() }
+                        items(3) { TransactionItemShimmer(modifier = Modifier.padding(top = 8.dp)) }
                     } else {
                         if (uiState.showCreateBudgetPrompt) {
                             item {
-                                FeaturedBudgetEmptyStateCard(onCreateBudgetClick = onCreateBudget)
+                                FeaturedBudgetEmptyStateCard(
+                                    onCreateBudgetClick = onCreateBudget,
+                                    modifier = Modifier.padding(top = 16.dp)
+                                )
                             }
                         } else if (uiState.featuredBudget != null) {
                             item {
                                 FeaturedBudgetCard(
                                     budget = uiState.featuredBudget!!,
-                                    onCardClick = { onBudgetClick(uiState.featuredBudget!!) }
+                                    onCardClick = { onBudgetClick(uiState.featuredBudget!!) },
+                                    modifier = Modifier.padding(top = 16.dp)
                                 )
                             }
                         }
 
                         if (uiState.isLoadingInsight) {
-                            item { InsightCardShimmer() }
+                            item { InsightCardShimmer(modifier = Modifier.padding(top = 16.dp)) }
                         } else if (uiState.aiInsight != null && uiState.aiInsight!!.isNotBlank()) {
                             item {
-                                InsightCard(insight = uiState.aiInsight!!)
+                                InsightCard(
+                                    insight = uiState.aiInsight!!,
+                                    modifier = Modifier.padding(top = 16.dp)
+                                )
                             }
                         }
 
@@ -161,23 +170,27 @@ fun HomeScreen(
                             item {
                                 BudgetDistributionCard(
                                     reportData = uiState.donutChartData,
-                                    totalAmount = uiState.donutChartTotalAmount
+                                    totalAmount = uiState.donutChartTotalAmount,
+                                    modifier = Modifier.padding(top = 16.dp)
                                 )
                             }
                         }
 
                         if (uiState.topBudgets.isNotEmpty()) {
                             item {
-                                ListHeader(
-                                    title = stringResource(R.string.your_budgets),
-                                    onSeeAllClick = onSeeAllBudgets
-                                )
-                            }
-                            items(uiState.topBudgets, key = { it.serverId!! }) { budget ->
-                                BudgetItem(
-                                    budget = budget,
-                                    onClick = { onBudgetClick(budget) }
-                                )
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    ListHeader(
+                                        title = stringResource(R.string.your_budgets),
+                                        onSeeAllClick = onSeeAllBudgets,
+                                        modifier = Modifier.padding(top = 16.dp)
+                                    )
+                                    uiState.topBudgets.forEach { budget ->
+                                        BudgetItem(
+                                            budget = budget,
+                                            onClick = { onBudgetClick(budget) }
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -185,46 +198,46 @@ fun HomeScreen(
                         if (transactions != null) {
                             if (transactions.isNotEmpty()) {
                                 item {
-                                    ListHeader(
-                                        title = stringResource(R.string.latest_transactions),
-                                        onSeeAllClick = onSeeAllTransactions
-                                    )
-                                }
-                                item {
-                                    val filterItems = remember { TransactionType.entries }
-                                    SliderFilterRow(
-                                        items = filterItems,
-                                        selectedItem = uiState.transactionFilterType,
-                                        onItemSelected = viewModel::setTransactionFilter,
-                                        itemToString = { type ->
-                                            when (type) {
-                                                TransactionType.INCOME -> incomeString
-                                                TransactionType.OUTCOME -> outgoingString
-                                            }
-                                        },
-                                        selectedBg = MaterialTheme.colorScheme.primary,
-                                        unselectedBg = MaterialTheme.colorScheme.surfaceVariant.copy(
-                                            alpha = 0.5f
-                                        ),
-                                        selectedText = MaterialTheme.colorScheme.onPrimary,
-                                        unselectedText = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        ListHeader(
+                                            title = stringResource(R.string.latest_transactions),
+                                            onSeeAllClick = onSeeAllTransactions,
+                                            modifier = Modifier.padding(top = 16.dp)
+                                        )
+                                        val filterItems = remember { TransactionType.entries }
+                                        SliderFilterRow(
+                                            items = filterItems,
+                                            selectedItem = uiState.transactionFilterType,
+                                            onItemSelected = viewModel::setTransactionFilter,
+                                            itemToString = { type ->
+                                                when (type) {
+                                                    TransactionType.INCOME -> incomeString
+                                                    TransactionType.OUTCOME -> outgoingString
+                                                }
+                                            },
+                                            selectedBg = MaterialTheme.colorScheme.primary,
+                                            unselectedBg = MaterialTheme.colorScheme.surfaceVariant.copy(
+                                                alpha = 0.5f
+                                            ),
+                                            verticalPadding = 4.dp,
+                                            selectedText = MaterialTheme.colorScheme.onPrimary,
+                                            unselectedText = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
 
-                                if (uiState.transactionsToShow.isNotEmpty()) {
-                                    items(uiState.transactionsToShow, key = { it.serverId }) { transaction ->
-                                        TransactionItem(
-                                            transaction = transaction,
-                                            currencyCode = currencyCode,
-                                            onClick = { onTransactionClick(transaction) }
-                                        )
-                                    }
-                                } else {
-                                    item {
-                                        Text(
-                                            text = stringResource(R.string.no_transactions_for_filter),
-                                            modifier = Modifier.padding(vertical = 20.dp)
-                                        )
+                                        if (uiState.transactionsToShow.isNotEmpty()) {
+                                            uiState.transactionsToShow.forEach { transaction ->
+                                                TransactionItem(
+                                                    transaction = transaction,
+                                                    currencyCode = currencyCode,
+                                                    onClick = { onTransactionClick(transaction) }
+                                                )
+                                            }
+                                        } else {
+                                            Text(
+                                                text = stringResource(R.string.no_transactions_for_filter),
+                                                modifier = Modifier.padding(vertical = 20.dp)
+                                            )
+                                        }
                                     }
                                 }
                             } else if (!uiState.showCreateBudgetPrompt) {

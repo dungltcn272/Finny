@@ -140,8 +140,7 @@ fun OverviewScreen(
                 } else if (uiState.overviewData != null) {
                     CategoryBudgetSummaryCard(
                         categories = uiState.overviewData.categories,
-                        budgets = uiState.overviewData.budgets,
-                        totalExpense = uiState.overviewData.summary.totalExpenses
+                        budgets = uiState.overviewData.budgets
                     )
                 }
             }

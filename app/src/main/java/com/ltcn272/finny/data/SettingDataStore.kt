@@ -24,7 +24,6 @@ class SettingDataStore @Inject constructor(@ApplicationContext private val conte
     private val enableNotificationsKey = booleanPreferencesKey("enable_notifications")
     private val authenticationEnabledKey = booleanPreferencesKey("authentication_enabled")
     private val pendingNotificationsKey = stringPreferencesKey("pending_notifications_queue")
-    // --- KEY MỚI CHO HỘP THƯ ĐẾN ---
     private val bankNotificationInboxKey = stringPreferencesKey("bank_notification_inbox")
 
 
@@ -38,7 +37,6 @@ class SettingDataStore @Inject constructor(@ApplicationContext private val conte
             preferences[usernameKey]
         }
 
-    // --- FLOW MỚI ĐỂ LẮNG NGHE HỘP THƯ ĐẾN ---
     val bankNotificationInboxFlow: Flow<String> = context.dataStore.data
         .map { preferences ->
             preferences[bankNotificationInboxKey] ?: ""

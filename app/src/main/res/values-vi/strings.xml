@@ -97,6 +97,8 @@
     <!-- Transactions -->
     <string name="transaction_image_count">%1$d ảnh</string>
     <string name="transaction_amount_format">%1$s%2$s</string>
+    <string name="attachments_image">Ảnh</string>
+    <string name="choose_and_upload_invoice">Chọn và tải ảnh thông tin hoá đơn của bạn.</string>
 
     <!-- Budgets -->
     <string name="your_budgets">Ngân sách của bạn</string>

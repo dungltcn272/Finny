@@ -107,7 +107,6 @@ class ChatViewModel @Inject constructor(
 
     fun onImageSelected(uri: Uri) {
         _uiState.update { it.copy(selectedImageUri = uri) }
-        hideSuggestions()
     }
 
     fun clearSelectedImage() {
@@ -119,7 +118,6 @@ class ChatViewModel @Inject constructor(
         if (text.isBlank() && imageUri == null) return
         if (uiState.value.isAiTyping) return
 
-        hideSuggestions()
         _uiState.update { it.copy(recognizedText = "", selectedImageUri = null) }
 
         if (imageUri != null) {
@@ -231,15 +229,9 @@ class ChatViewModel @Inject constructor(
 
     fun onRecognizedTextChanged(text: String) {
         _uiState.update { it.copy(recognizedText = text) }
-        if (text.isNotEmpty()) {
-            hideSuggestions()
-        }
     }
 
     fun startListening() {
-        if (uiState.value.showSuggestions) {
-            hideSuggestions()
-        }
         _uiState.update { it.copy(recognizedText = "") }
         speechRecognizerManager.startListening(application)
     }
@@ -255,10 +247,6 @@ class ChatViewModel @Inject constructor(
         } else {
             snackbarManager.showMessage("Cần quyền ghi âm để sử dụng tính năng này", TopSnackbarType.WARNING)
         }
-    }
-
-    fun hideSuggestions() {
-        _uiState.update { it.copy(showSuggestions = false) }
     }
 
     private fun mapErrorToString(errorType: ErrorType): String {

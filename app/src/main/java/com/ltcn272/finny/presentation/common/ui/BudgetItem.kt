@@ -1,6 +1,8 @@
 package com.ltcn272.finny.presentation.common.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,8 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.presentation.common.util.rememberCurrencyFormatter
@@ -146,19 +151,30 @@ private fun BudgetInfo(
     modifier: Modifier = Modifier,
     alignEnd: Boolean = false
 ) {
-    Column(
+    Row(
         modifier = modifier,
-        horizontalAlignment = if (alignEnd)
-            Alignment.End else Alignment.Start
+        horizontalArrangement = if (alignEnd) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            text = "$label: ",
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontSize = 12.sp,
+                color = Color.Gray
+            ),
+            maxLines = 1
         )
+
         Text(
             text = value,
-            fontWeight = FontWeight.SemiBold
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                letterSpacing = (-0.3).sp
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.basicMarquee()
         )
     }
 }
@@ -176,11 +192,9 @@ fun BudgetItemShimmer(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // HEADER SHIMMER
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Budget Name
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -191,7 +205,6 @@ fun BudgetItemShimmer(
 
                 Spacer(Modifier.width(20.dp))
 
-                // Progress percentage
                 Box(
                     modifier = Modifier
                         .width(40.dp)
@@ -203,7 +216,6 @@ fun BudgetItemShimmer(
 
             Spacer(Modifier.height(14.dp))
 
-            // PROGRESS BAR SHIMMER
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -214,7 +226,6 @@ fun BudgetItemShimmer(
 
             Spacer(Modifier.height(16.dp))
 
-            // ROW 1 SHIMMER
             Row(modifier = Modifier.fillMaxWidth()) {
                 ShimmerInfoItem(Modifier.weight(1f), alignEnd = false)
                 ShimmerInfoItem(Modifier.weight(1f), alignEnd = true)
@@ -222,7 +233,6 @@ fun BudgetItemShimmer(
 
             Spacer(Modifier.height(12.dp))
 
-            // ROW 2 SHIMMER
             Row(modifier = Modifier.fillMaxWidth()) {
                 ShimmerInfoItem(Modifier.weight(1f), alignEnd = false)
                 ShimmerInfoItem(Modifier.weight(1f), alignEnd = true)
@@ -236,28 +246,25 @@ private fun ShimmerInfoItem(
     modifier: Modifier = Modifier,
     alignEnd: Boolean = false
 ) {
-    Column(
+    Row(
         modifier = modifier,
-        horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start
+        horizontalArrangement = if (alignEnd) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Label
         Box(
             modifier = Modifier
-                .width(60.dp)
-                .height(12.dp)
+                .width(50.dp)
+                .height(12.sp.value.dp)
                 .clip(RoundedCornerShape(4.dp))
                 .shimmerEffect()
         )
-        Spacer(Modifier.height(4.dp))
-        // Value
+        Spacer(Modifier.width(4.dp))
         Box(
             modifier = Modifier
-                .width(80.dp)
-                .height(16.dp)
+                .width(70.dp)
+                .height(12.sp.value.dp)
                 .clip(RoundedCornerShape(4.dp))
                 .shimmerEffect()
         )
     }
 }
-
-

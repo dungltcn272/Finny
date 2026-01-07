@@ -120,7 +120,7 @@ fun MessageItem(
                     text = message.text,
                     color = textColor,
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
         }

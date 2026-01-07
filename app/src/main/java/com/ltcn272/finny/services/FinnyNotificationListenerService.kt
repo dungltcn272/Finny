@@ -2,7 +2,6 @@ package com.ltcn272.finny.services
 
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
 import com.ltcn272.finny.data.SettingDataStore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -13,7 +12,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class FinnyNotificationListenerService : NotificationListenerService() {
-    private val TAG = "FinnyNotiListener"
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
 
@@ -27,62 +25,57 @@ class FinnyNotificationListenerService : NotificationListenerService() {
         "com.VCB" to "Vietcombank",
         "com.vnpay.bidv" to "BIDV SmartBanking",
         "com.vietinbank.ipay" to "VietinBank iPay",
+        "com.vnpay.Agribank3g" to "Agribank",
 
         // ======= NGÂN HÀNG TMCP =======
         "vn.com.techcombank.bb.app" to "Techcombank",
         "mobile.acb.com.vn" to "ACB",
         "com.tpb.mb.gprsandroid" to "TPBank",
-
-        "vn.com.vpb.neo" to "VPBank NEO",
-        "com.shb.mobile" to "SHB Mobile",
-        "com.ocb.mobile" to "OCB OMNI",
-        "com.msb.smartBanking" to "MSB Bank",
-        "vn.com.hdbank.smartbanking" to "HDBank",
-        "com.seabank.mbapp" to "SeABank",
-        "com.lpb.lienviet24h" to "LienVietPostBank",
-        "com.scb.sacombank" to "Sacombank Pay",
-        "com.eximbank.ebanking" to "Eximbank",
+        "com.VCB" to "Vietcombank",
+        "com.vnpay.vpbankonline" to "VPBank NEO",
+        "vn.com.seabank.mb1" to "SeABank",
+        "om.sacombank.ewallet" to "Sacombank Pay",
         "com.vib.myvib2" to "VIB",
-        "com.abbank.mobile" to "ABBank",
-        "com.baca.mobilebanking" to "Bac A Bank",
-        "com.ncb.mobile" to "NCB",
         "com.pvcombank.smartbank" to "PVcomBank",
-        "com.saigonbank.mobile" to "SaigonBank",
-        "com.vietabank.mobile" to "VietABank",
-        "com.kienlongbank.mobile" to "KienlongBank",
-        "com.bvbank.digimi" to "BVBank DigiMi",
-        "com.vietbank.mobile" to "VietBank",
-        "com.namabank.mobile" to "Nam A Bank",
-        "com.oceanbank.mobile" to "OceanBank",
+        "com.vnpay.vietbank" to "VietBank",
+        "com.vnpay.bidv" to "BIDV SmartBanking",
 
         // ======= NGÂN HÀNG SỐ =======
-        "com.timo.plus" to "Timo",
-        "com.tyme.digitalbank" to "TymeX",
+        "io.lifestyle.plus" to "Timo",
 
         // ======= VÍ ĐIỆN TỬ =======
         "com.mservice.momotransfer" to "MoMo",
-        "com.viettel.vtmoney" to "Viettel Money",
-        "vn.zalopay" to "ZaloPay",
-        "com.mservice.zalopay" to "ZaloPay (old)",
-        "vn.com.vnpay.wallet" to "VNPay",
-        "com.shopee.wallet" to "ShopeePay",
-        "com.grabtaxi.passenger" to "Grab (Moca)",
-        "com.viviet" to "Ví Việt",
-        "com.airpay.android" to "AirPay (cũ)",
-        "vn.payoo.wallet" to "Payoo",
-
-        // ======= TÀI CHÍNH / CHỨNG KHOÁN =======
-        "vn.com.ssi.mobile" to "SSI iBoard",
-        "com.vndirect.app" to "VNDIRECT",
-        "com.hsc.mobiletrading" to "HSC",
-        "com.vpsmart.one" to "VPBank Securities (VPSS)",
+        "com.bplus.vtpay" to "Viettel Money",
+        "vn.com.vng.zalopay" to "ZaloPay",
+        "vnpay.smartacccount" to "VNPay",
+        "com.beeasy.toppay" to "ShopeePay",
     )
+
+    private fun isTransactionMessage(text: String): Boolean {
+        val content = text.lowercase()
+
+        // 1. Kiểm tra các định dạng số tiền (Regex)
+        // Tìm các cụm có số đi kèm VND, VNĐ, đ, hoặc dấu +, - ở trước số
+        val amountRegex = Regex("([+-]?\\s?\\d{1,3}([,.]\\d{3})*(\\s?)(vnd|vnđ|đ|vnds))")
+        val hasAmount = amountRegex.containsMatchIn(content)
+
+        // 2. Danh sách từ khóa (có dấu và không dấu)
+        val keywords = listOf(
+            "số dư", "so du", "biến động", "bien dong",
+            "tài khoản", "tai khoan", "tk ", "gd ", "giao dịch", "giao dich",
+            "thanh toán", "thanh toan", "thành công", "thanh cong",
+            "đã nhận", "da nhan", "đã trừ", "da tru", "chuyển khoản", "chuyen khoan"
+        )
+
+        val hasKeyword = keywords.any { content.contains(it) }
+
+        // Một tin nhắn giao dịch thường cần cả 2: có số tiền VÀ có từ khóa ngân hàng
+        return hasAmount && hasKeyword
+    }
 
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
-        Log.d(TAG, "Notification received from package: ${sbn?.packageName}")
-
         if (sbn == null || sbn.packageName !in financialAppPackages.keys) {
             return
         }
@@ -95,7 +88,10 @@ class FinnyNotificationListenerService : NotificationListenerService() {
             return
         }
 
-        Log.d(TAG, "✅ Notification captured from: ${sbn.packageName}. Saving to inbox.")
+        if (!isTransactionMessage(text)) {
+            return
+        }
+
 
         val appName = financialAppPackages[sbn.packageName] ?: "Unknown"
 
@@ -103,9 +99,7 @@ class FinnyNotificationListenerService : NotificationListenerService() {
         val rawNotificationData = "$appName;;;$title;;;$text"
 
         serviceScope.launch {
-            // SỬ DỤNG HÀM MỚI
             settingDataStore.addRawBankNotification(rawNotificationData)
-            Log.i(TAG, "Successfully added raw notification to inbox queue.")
         }
     }
 
@@ -114,3 +108,4 @@ class FinnyNotificationListenerService : NotificationListenerService() {
         serviceJob.cancel()
     }
 }
+

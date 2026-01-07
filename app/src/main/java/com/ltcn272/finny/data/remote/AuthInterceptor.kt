@@ -18,7 +18,6 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         val accessToken = tokenManager.getAccessToken()
-
         val requestWithToken = if (accessToken != null) {
             addAuthHeader(originalRequest, accessToken)
         } else {

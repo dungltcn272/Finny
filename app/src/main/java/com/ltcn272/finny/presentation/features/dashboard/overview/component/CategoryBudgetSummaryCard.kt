@@ -3,6 +3,7 @@ package com.ltcn272.finny.presentation.features.dashboard.overview.component
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,14 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.OverviewBudgetSummary
 import com.ltcn272.finny.domain.model.OverviewCategorySummary
-import com.ltcn272.finny.presentation.common.util.generateHarmonicColors
 
 private enum class SummaryTab {
     CATEGORY, BUDGET
@@ -43,11 +42,9 @@ private enum class SummaryTab {
 fun CategoryBudgetSummaryCard(
     modifier: Modifier = Modifier,
     categories: List<OverviewCategorySummary>,
-    budgets: List<OverviewBudgetSummary>,
-    totalExpense: Double,
+    budgets: List<OverviewBudgetSummary>
 ) {
     var selectedTab by remember { mutableStateOf(SummaryTab.CATEGORY) }
-    val categoryColors = remember(categories.size) { generateHarmonicColors(Color(0xFFFFA726), categories.size) }
     var isExpanded by remember { mutableStateOf(false) }
 
     val showSeeAllButton = when (selectedTab) {
@@ -84,7 +81,7 @@ fun CategoryBudgetSummaryCard(
 
             Column(
                 modifier = Modifier
-                    .padding(vertical = 12.dp)
+                    .padding(vertical = 8.dp)
                     .animateContentSize(animationSpec = spring())
             ) {
                 if (isListEmpty) {
@@ -101,18 +98,16 @@ fun CategoryBudgetSummaryCard(
                 } else {
                     when (selectedTab) {
                         SummaryTab.CATEGORY -> {
-                            itemsToShow.forEachIndexed { index, item ->
+                            itemsToShow.forEachIndexed { _, item ->
                                 if (item is OverviewCategorySummary) {
-                                    val percentage = if (totalExpense > 0) (item.outcome / totalExpense).toFloat() else 0f
                                     CategorySummaryItem(
                                         name = item.name,
-                                        amount = item.outcome,
-                                        percentage = percentage,
-                                        progressColor = categoryColors.getOrElse(index) { Color.Gray }
+                                        amount = item.outcome
                                     )
                                 }
                             }
                         }
+
                         SummaryTab.BUDGET -> {
                             itemsToShow.forEach { item ->
                                 if (item is OverviewBudgetSummary) {
@@ -134,13 +129,19 @@ fun CategoryBudgetSummaryCard(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { isExpanded = !isExpanded }
-                        .padding(vertical = 12.dp),
+                        .clickable(
+                            onClick = { isExpanded = !isExpanded },
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        )
+                        .padding(top = 4.dp, bottom = 10.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isExpanded) stringResource(R.string.show_less) else stringResource(R.string.see_all),
+                        text = if (isExpanded) stringResource(R.string.show_less) else stringResource(
+                            R.string.see_all
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
@@ -148,7 +149,9 @@ fun CategoryBudgetSummaryCard(
                     Spacer(Modifier.padding(horizontal = 2.dp))
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) stringResource(R.string.show_less) else stringResource(R.string.see_all),
+                        contentDescription = if (isExpanded) stringResource(R.string.show_less) else stringResource(
+                            R.string.see_all
+                        ),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(16.dp)
                     )
@@ -165,7 +168,14 @@ fun CategoryBudgetSummaryCardShimmer(modifier: Modifier = Modifier) {
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)) {
+        Column(
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = 16.dp
+            )
+        ) {
             OverViewTabRow(
                 selectedTabIndex = 0,
                 tabs = listOf(stringResource(R.string.category), stringResource(R.string.budget)),

@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ltcn272.finny.R
 
 @Composable
@@ -70,7 +71,7 @@ fun InsightCard(
                     modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(10.dp))
 
             Column(
                 modifier = Modifier.animateContentSize()
@@ -90,7 +91,8 @@ fun InsightCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = if (isExpanded) Int.MAX_VALUE else 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 12.sp
                 )
 
                 AnimatedContent(
@@ -142,7 +144,7 @@ fun InsightCardShimmer(modifier: Modifier = Modifier) {
                     .clip(CircleShape)
                     .shimmerEffect()
             )
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(10.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(
                     Modifier

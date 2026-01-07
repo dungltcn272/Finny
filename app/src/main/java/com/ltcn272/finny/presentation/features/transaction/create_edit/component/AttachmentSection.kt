@@ -7,10 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +55,7 @@ fun AttachmentSection(
         shape = RoundedCornerShape(16.dp),
         color = Color.White
     ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -64,9 +65,9 @@ fun AttachmentSection(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ReceiptLong, null, tint = Color.Gray)
+                    Icon(Icons.Default.Image, null, tint = Color.Gray)
                     Text(
-                        stringResource(R.string.attachments),
+                        stringResource(R.string.attachments_image),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Normal
                     )
@@ -75,7 +76,7 @@ fun AttachmentSection(
                     Surface(
                         onClick = onChooseImageClick,
                         shape = RoundedCornerShape(8.dp),
-                        color =  Color.LightGray.copy(alpha = 0.2f)
+                        color = Color.LightGray.copy(alpha = 0.2f)
                     ) {
                         Text(
                             text = stringResource(R.string.choose_image),
@@ -92,11 +93,19 @@ fun AttachmentSection(
                 }
             }
 
+            Text(
+                text = stringResource(R.string.choose_and_upload_invoice),
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+
             AnimatedVisibility(visible = !imageUri.isNullOrBlank() || isUploading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 12.dp)
+                        .heightIn(min = 150.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.LightGray.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center

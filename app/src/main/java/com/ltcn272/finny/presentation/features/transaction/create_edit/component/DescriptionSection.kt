@@ -16,6 +16,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,17 +34,19 @@ fun DescriptionSection(
     onDescriptionChange: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var isEditing by remember { mutableStateOf(!description.isNullOrEmpty()) }
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         color = Color.White
     ) {
-        if (description.isNullOrEmpty()) {
+        if (!isEditing) {
             ActionSelectionRow(
                 icon = Icons.Default.Notes,
                 label = stringResource(R.string.description),
                 actionText = stringResource(R.string.add_description),
-                onClick = { onDescriptionChange("") }
+                onClick = { isEditing = true }
             )
         } else {
             Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
@@ -53,12 +59,15 @@ fun DescriptionSection(
                         stringResource(R.string.description),
                         fontWeight = FontWeight.SemiBold
                     )
-                    TextButton(onClick = { onDescriptionChange(null) }) {
+                    TextButton(onClick = {
+                        isEditing = false
+                        onDescriptionChange("")
+                    }) {
                         Text(stringResource(R.string.delete), color = Color.Red)
                     }
                 }
                 OutlinedTextField(
-                    value = description,
+                    value = description ?: "",
                     onValueChange = onDescriptionChange,
                     modifier = Modifier
                         .fillMaxWidth()

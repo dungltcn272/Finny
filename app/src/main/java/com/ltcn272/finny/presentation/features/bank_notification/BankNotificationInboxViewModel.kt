@@ -72,14 +72,11 @@ class BankNotificationInboxViewModel @Inject constructor(
 
             val prompt = "Finny, tạo giao dịch nội dung là ${notification.text}"
 
-            // Sửa đổi lời gọi hàm cho phù hợp với Repository mới
             when (chatRepository.sendMessageAndGetResponse(text = prompt, imageUrl = null)) {
                 is AppResult.Success -> {
-                    // Vì API mới không trả về card trực tiếp, chúng ta sẽ giả định thành công
-                    // và thông báo cho người dùng kiểm tra lại ở màn hình Chat hoặc Giao dịch
                     _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.notification_sent_to_ai), false))
-                    // Xóa thông báo khỏi DataStore để không hiển thị lại
-                    removeNotificationFromDataStore(notification, removeFromUi = true)
+                    // FIX: Chỉ xóa thông báo khỏi DataStore và UI, không hiển thị thêm snackbar
+                    removeNotificationFromDataStore(notification, showSnackbar = false)
                 }
                 is AppResult.Error -> {
                     _uiState.update { currentState ->
@@ -98,21 +95,22 @@ class BankNotificationInboxViewModel @Inject constructor(
 
     fun deleteNotification(notification: PendingBankNotification) {
         viewModelScope.launch {
-            removeNotificationFromDataStore(notification, removeFromUi = true)
+            removeNotificationFromDataStore(notification, showSnackbar = true)
         }
     }
 
-    private suspend fun removeNotificationFromDataStore(notificationToRemove: PendingBankNotification, removeFromUi: Boolean) {
+    private suspend fun removeNotificationFromDataStore(notificationToRemove: PendingBankNotification, showSnackbar: Boolean) {
         val currentInboxString = settingDataStore.bankNotificationInboxFlow.first()
         val notifications = currentInboxString.split("|||").toMutableList()
         notifications.remove(notificationToRemove.originalString)
         val newInboxString = notifications.joinToString("|||")
         settingDataStore.saveBankNotificationInbox(newInboxString)
 
-        if (removeFromUi) {
-            _uiState.update {
-                it.copy(notifications = it.notifications.filterNot { n -> n.id == notificationToRemove.id })
-            }
+        _uiState.update {
+            it.copy(notifications = it.notifications.filterNot { n -> n.id == notificationToRemove.id })
+        }
+
+        if (showSnackbar) {
             _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.notification_deleted), false))
         }
     }
@@ -132,15 +130,5 @@ class BankNotificationInboxViewModel @Inject constructor(
                 null
             }
         }.reversed()
-    }
-
-    private fun mapErrorToString(errorType: ErrorType): String {
-        return when (errorType) {
-            ErrorType.NETWORK -> app.getString(R.string.error_network)
-            ErrorType.TIMEOUT -> app.getString(R.string.error_timeout)
-            ErrorType.UNAUTHORIZED -> app.getString(R.string.error_unauthorized)
-            ErrorType.SERVER_ERROR -> app.getString(R.string.error_server)
-            ErrorType.UNKNOWN -> app.getString(R.string.error_unknown)
-        }
     }
 }
