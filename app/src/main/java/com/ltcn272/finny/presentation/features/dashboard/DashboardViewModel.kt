@@ -130,9 +130,19 @@ class DashboardViewModel @Inject constructor(
             }
 
             _uiState.update {
+                val finalOverviewData = if (overviewData != null && it.selectedPeriod == OverviewPeriod.MONTH) {
+                    overviewData.copy(
+                        chartData = overviewData.chartData.filter { entry ->
+                            entry.income != 0.toFloat() || entry.outcome != 0.toFloat()
+                        }
+                    )
+                } else {
+                    overviewData
+                }
+
                 it.copy(
                     isLoading = false,
-                    overviewData = overviewData,
+                    overviewData = finalOverviewData,
                     aiInsight = aiInsight,
                 )
             }
