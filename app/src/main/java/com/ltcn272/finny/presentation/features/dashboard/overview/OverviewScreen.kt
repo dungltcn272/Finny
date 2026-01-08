@@ -87,13 +87,26 @@ fun OverviewScreen(
                             mainValue = formatCurrencyShortVietnamese(summary.avgPerDay),
                             subLabel = stringResource(R.string.avg_per_day)
                         )
+                        val budgetUsage = summary.budgetUsagePercent
+                        val (changeText, changeColor) = when {
+                            budgetUsage <= 80 -> stringResource(R.string.budget_usage_good) to Color(
+                                0xFF28A745
+                            ) // Green
+                            budgetUsage <= 99 -> stringResource(R.string.budget_usage_warning) to Color(
+                                0xFFFFA726
+                            ) // Orange
+                            else -> stringResource(R.string.budget_usage_exceeded) to Color(
+                                0xFFDC3545
+                            ) // Red
+                        }
+
                         OverviewStatCard(
                             modifier = Modifier.weight(1f),
                             icon = Icons.Default.TrackChanges,
                             iconTint = Color(0xFF20C997),
-                            changeText = "Tốt",
-                            changeColor = Color(0xFF28A745),
-                            mainValue = "${summary.budgetUsagePercent}%",
+                            changeText = changeText,
+                            changeColor = changeColor,
+                            mainValue = "${budgetUsage}%",
                             subLabel = stringResource(R.string.budgets)
                         )
                     }

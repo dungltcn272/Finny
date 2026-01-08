@@ -265,6 +265,10 @@
     <string name="change_vs_period">↑ %s vs period</string>
     <string name="change_vs_period_up">↑ %s vs period</string>
     <string name="change_vs_period_down">↓ %s vs period</string>
+    <string name="budget_usage_good">Good</string>
+    <string name="budget_usage_warning">Warning</string>
+    <string name="budget_usage_exceeded">Exceeded</string>
+
 
     <!-- Chat Screen -->
     <string name="ai_assistant">AI Assistant</string>

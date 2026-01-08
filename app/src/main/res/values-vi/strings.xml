@@ -262,6 +262,10 @@
     <string name="change_vs_period">↑ %s cùng kỳ</string>
     <string name="change_vs_period_up">↑ %s cùng kỳ</string>
     <string name="change_vs_period_down">↓ %s cùng kỳ</string>
+    <string name="budget_usage_good">Tốt</string>
+    <string name="budget_usage_warning">Cảnh báo</string>
+    <string name="budget_usage_exceeded">Vượt mức</string>
+
 
     <!-- Chat Screen -->
     <string name="ai_assistant">Trợ lý AI</string>
