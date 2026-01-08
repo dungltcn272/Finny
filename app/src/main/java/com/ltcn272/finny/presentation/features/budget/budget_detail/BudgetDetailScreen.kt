@@ -3,6 +3,7 @@ package com.ltcn272.finny.presentation.features.budget.budget_detail
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -24,8 +25,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.paging.LoadState
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
@@ -74,17 +73,20 @@ fun BudgetDetailScreen(
     if (uiState.showDeleteConfirmDialog) {
         DeleteConfirmationDialog(
             title = stringResource(R.string.delete_budget_confirmation_title),
-            text = stringResource(R.string.delete_budget_confirmation_text, uiState.budget?.name ?: ""),
+            text = stringResource(
+                R.string.delete_budget_confirmation_text,
+                uiState.budget?.name ?: ""
+            ),
             onConfirm = { viewModel.confirmDeleteBudget(snackbarManager) },
             onDismiss = viewModel::cancelDelete
         )
     }
 
-    val transactions = viewModel.transactionsPagingFlow.collectAsLazyPagingItems()
     val budgetToShow = uiState.budget ?: budget
-    val isOverallLoading = uiState.isStatisticsLoading && uiState.transactionCount == 0
-    val isPagingTransactionLoading = transactions.loadState.refresh is LoadState.Loading && transactions.itemCount == 0
-    val pullRefreshState = rememberPullRefreshState(refreshing = uiState.isRefreshingByUser, onRefresh = { viewModel.onUserPullToRefresh() })
+    val isOverallLoading = uiState.isStatisticsLoading && uiState.transactions.isEmpty()
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = uiState.isRefreshingByUser,
+        onRefresh = { viewModel.onUserPullToRefresh() })
 
     Column(
         modifier = Modifier
@@ -101,12 +103,18 @@ fun BudgetDetailScreen(
         ) {
             CircleNavigationButton(icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft, onClick = onBack)
             Box {
-                CircleNavigationButton(icon = Icons.Default.MoreHoriz, onClick = { menuExpanded = true })
+                CircleNavigationButton(
+                    icon = Icons.Default.MoreHoriz,
+                    onClick = { menuExpanded = true })
                 AnimatedMoreMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
-                    onEditClick = { menuExpanded = false; onEditBudget(budgetToShow) },
-                    onDeleteClick = { menuExpanded = false; viewModel.requestDeleteBudget() },
+                    onEditClick = {
+                        menuExpanded = false; onEditBudget(budgetToShow)
+                    },
+                    onDeleteClick = {
+                        menuExpanded = false; viewModel.requestDeleteBudget()
+                    },
                     offset = DpOffset(x = 0.dp, y = 38.dp)
                 )
             }
@@ -173,31 +181,28 @@ fun BudgetDetailScreen(
                     )
                 }
 
-                if (isPagingTransactionLoading) {
+                if (isOverallLoading) {
                     items(3) { TransactionItemShimmer() }
                 } else {
-                    if (transactions.itemCount == 0) {
+                    if (uiState.transactions.isEmpty()) {
                         item {
                             Text(
                                 text = stringResource(R.string.no_transactions_in_period),
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
                                 textAlign = TextAlign.Center,
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.Gray
                             )
                         }
                     } else {
-                        items(count = transactions.itemCount, key = { index -> transactions.peek(index)?.serverId ?: index }) { index ->
-                            transactions[index]?.let { transaction ->
-                                TransactionItem(
-                                    transaction = transaction,
-                                    currencyCode = uiState.currency,
-                                    onClick = { onTransactionClick(transaction) }
-                                )
-                            }
-                        }
-                        if (transactions.loadState.append is LoadState.Loading) {
-                            item { TransactionItemShimmer() }
+                        items(items = uiState.transactions, key = { it.serverId }) { transaction ->
+                            TransactionItem(
+                                transaction = transaction,
+                                currencyCode = uiState.currency,
+                                onClick = { onTransactionClick(transaction) }
+                            )
                         }
                     }
                 }

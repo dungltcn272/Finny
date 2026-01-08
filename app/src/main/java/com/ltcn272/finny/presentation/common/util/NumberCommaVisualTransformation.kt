@@ -14,25 +14,25 @@ class NumberCommaVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val originalText = text.text
         if (originalText.isBlank()) {
+            return TransformedText(AnnotatedString(""), OffsetMapping.Identity)
+        }
+
+        val formattedText = try {
+            val number = originalText.toLong()
+            formatter.format(number)
+        } catch (e: Exception) {
             return TransformedText(text, OffsetMapping.Identity)
         }
 
-        val number = originalText.toLongOrNull() ?: return TransformedText(text, OffsetMapping.Identity)
-        val formattedText = formatter.format(number)
-
-
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                val originalTextBeforeCursor = originalText.take(offset)
-                val longBeforeCursor = originalTextBeforeCursor.toLongOrNull() ?: 0
-                val commasBeforeCursor = formatter.format(longBeforeCursor).count { !it.isDigit() }
-
-                return offset + commasBeforeCursor
+                val commasBeforeOffset = formattedText.take(offset + formattedText.count { it == ',' || it == '.' }).count { !it.isDigit() }
+                return (offset + commasBeforeOffset).coerceIn(0, formattedText.length)
             }
 
             override fun transformedToOriginal(offset: Int): Int {
-                val commasBefore = formattedText.take(offset).count { !it.isDigit() }
-                return (offset - commasBefore).coerceAtLeast(0)
+                val commasBeforeOffset = formattedText.take(offset).count { !it.isDigit() }
+                return (offset - commasBeforeOffset).coerceIn(0, originalText.length)
             }
         }
 

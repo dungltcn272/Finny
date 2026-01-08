@@ -121,20 +121,22 @@ fun CreateEditTransactionScreen(
 
     SelectionDialog(
         title = stringResource(R.string.select_budget),
-        items = lazyBudgets.itemSnapshotList.items,
+        items = lazyBudgets,
         visible = showBudgetPicker,
         onDismiss = { showBudgetPicker = false },
         onSelect = viewModel::onBudgetSelected,
-        itemToString = { it.name }
+        itemToString = { it.name },
+        initialSelection = uiState.selectedBudget
     )
 
     SelectionDialog(
         title = stringResource(R.string.select_category),
-        items = lazyCategories.itemSnapshotList.items,
+        items = lazyCategories,
         visible = showCategoryPicker,
         onDismiss = { showCategoryPicker = false },
         onSelect = viewModel::onCategorySelected,
-        itemToString = { it.name.toString() }
+        itemToString = { it.name.toString() },
+        initialSelection = uiState.selectedCategory
     )
 
     if (showRecurringStartDatePicker) {

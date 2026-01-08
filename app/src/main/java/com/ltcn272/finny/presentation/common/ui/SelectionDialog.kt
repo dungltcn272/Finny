@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,6 +34,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -43,15 +45,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import com.ltcn272.finny.R
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
 @Composable
-fun <T> SelectionDialog(
+fun <T : Any> SelectionDialog(
     title: String,
-    items: List<T>,
+    items: LazyPagingItems<T>,
     visible: Boolean,
     onDismiss: () -> Unit,
     onSelect: (T) -> Unit,
@@ -72,18 +77,17 @@ fun <T> SelectionDialog(
         val itemPx = with(density) { itemHeight.toPx() }
         max(1, (dialogPx / itemPx).roundToInt())
     }
-    val maxStart = remember(items.size, visibleCount) { max(0, items.size - visibleCount) }
 
-    val requestedIndex = remember(initialSelection, items) {
-        initialSelection?.let { items.indexOf(it) } ?: -1
+    val requestedIndex = remember(initialSelection, items.itemSnapshotList) {
+        initialSelection?.let { selection -> items.itemSnapshotList.indexOf(selection) } ?: -1
     }
 
     var initialized by remember { mutableStateOf(false) }
 
-    LaunchedEffect(requestedIndex, maxStart) {
-        if (!initialized) {
-            if (requestedIndex in items.indices) {
-                val target = (requestedIndex - visibleCount / 2).coerceIn(0, maxStart)
+    LaunchedEffect(requestedIndex, items.itemCount) {
+        if (!initialized && requestedIndex != -1) {
+            val target = (requestedIndex - visibleCount / 2).coerceIn(0, items.itemCount - visibleCount)
+            if(target >= 0) {
                 listState.scrollToItem(target)
             }
             initialized = true
@@ -100,7 +104,7 @@ fun <T> SelectionDialog(
             val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2f
 
             val newCenterIndex = visibleItems.minByOrNull {
-                kotlin.math.abs((it.offset + it.size / 2) - viewportCenter)
+                abs((it.offset + it.size / 2) - viewportCenter)
             }?.index ?: centerIndex
 
             if (newCenterIndex != centerIndex) {
@@ -136,8 +140,9 @@ fun <T> SelectionDialog(
                         modifier = Modifier.fillMaxWidth(),
                         flingBehavior = snapFling
                     ) {
-                        itemsIndexed(items) { index, item ->
-                            val dist = kotlin.math.abs(index - centerIndex)
+                        items(count = items.itemCount) { index ->
+                            val item = items[index]
+                            val dist = abs(index - centerIndex)
                             val scale = when (dist) {
                                 0 -> 1f; 1 -> 0.95f; 2 -> 0.9f; else -> 0.8f
                             }
@@ -153,20 +158,43 @@ fun <T> SelectionDialog(
                                     .alpha(alpha),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center
-                                ) {
-                                    if (iconBuilder != null) {
-                                        iconBuilder(item)
-                                        Spacer(modifier = Modifier.width(8.dp))
+                                if (item != null) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        if (iconBuilder != null) {
+                                            iconBuilder(item)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                        }
+                                        Text(
+                                            text = itemToString(item),
+                                            fontSize = if (dist == 0) 18.sp else 14.sp,
+                                            fontWeight = if (dist == 0) FontWeight.Bold else FontWeight.Normal,
+                                            color = Color.Black
+                                        )
                                     }
-                                    Text(
-                                        text = itemToString(item),
-                                        fontSize = if (dist == 0) 18.sp else 14.sp,
-                                        fontWeight = if (dist == 0) FontWeight.Bold else FontWeight.Normal,
-                                        color = Color.Black
+                                } else {
+                                    Box(
+                                        Modifier
+                                            .width(120.dp)
+                                            .height(20.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .shimmerEffect()
                                     )
+                                }
+                            }
+                        }
+
+                        if (items.loadState.append is LoadState.Loading) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
                                 }
                             }
                         }
@@ -208,9 +236,8 @@ fun <T> SelectionDialog(
                     }
                     Button(
                         onClick = {
-                            if (items.isNotEmpty()) {
-                                val idx = centerIndex.coerceIn(0, items.lastIndex)
-                                onSelect(items[idx])
+                            items[centerIndex]?.let { selectedItem ->
+                                onSelect(selectedItem)
                             }
                             onDismiss()
                         },
@@ -221,7 +248,8 @@ fun <T> SelectionDialog(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF4CAF50),
                             contentColor = Color.White
-                        )
+                        ),
+                        enabled = items.itemCount > 0
                     ) {
                         Text(
                             text = stringResource(id = R.string.confirm),

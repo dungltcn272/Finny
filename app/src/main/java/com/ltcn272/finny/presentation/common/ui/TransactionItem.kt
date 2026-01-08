@@ -58,7 +58,7 @@ fun TransactionItem(
     val amountText = formatCurrency(transaction.amount, currencyCode)
     val dateText = formatDate(transaction.dateTime)
 
-    val attachmentString = if (transaction.image != null)
+    val attachmentString = if (!transaction.image.isNullOrEmpty())
         " • ${stringResource(R.string.transaction_image_count, 1)}"
     else ""
     val secondaryInfoText = "$dateText$attachmentString"

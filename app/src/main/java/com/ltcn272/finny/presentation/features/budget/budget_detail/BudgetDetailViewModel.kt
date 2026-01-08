@@ -3,12 +3,9 @@ package com.ltcn272.finny.presentation.features.budget.budget_detail
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Budget
 import com.ltcn272.finny.domain.model.Transaction
-import com.ltcn272.finny.domain.model.TransactionFilter
 import com.ltcn272.finny.domain.model.TransactionType
 import com.ltcn272.finny.domain.repository.BudgetRepository
 import com.ltcn272.finny.domain.repository.TransactionRepository
@@ -19,7 +16,6 @@ import com.ltcn272.finny.presentation.features.snackbar.SnackbarManager
 import com.ltcn272.finny.presentation.features.snackbar.TopSnackbarType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -47,19 +43,18 @@ data class BudgetDetailUiState(
     val isStatisticsLoading: Boolean = true,
     val isRefreshingByUser: Boolean = false,
     val currency: String = "VND",
-    val showDeleteConfirmDialog: Boolean = false
+    val showDeleteConfirmDialog: Boolean = false,
+    val transactions: List<Transaction> = emptyList()
 )
 
 sealed class BudgetDetailEvent {
     data object DeleteSuccess : BudgetDetailEvent()
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class BudgetDetailViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val budgetRepository: BudgetRepository,
-    // THÊM CONTEXT VÀO CONSTRUCTOR
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -69,20 +64,7 @@ class BudgetDetailViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<BudgetDetailEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    private val _filterStateForPaging = MutableStateFlow(TransactionFilter())
-
     private var isInitialized = false
-    private var allTransactions: List<Transaction> = emptyList()
-
-    val transactionsPagingFlow: Flow<PagingData<Transaction>> = _filterStateForPaging
-        .flatMapLatest { currentFilter ->
-            if (currentFilter.budgetId.isNullOrEmpty()) {
-                emptyFlow()
-            } else {
-                transactionRepository.getTransactions(currentFilter)
-            }
-        }
-        .cachedIn(viewModelScope)
 
     fun initialize(budget: Budget) {
         if (isInitialized) return
@@ -108,20 +90,23 @@ class BudgetDetailViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            if(!_uiState.value.isRefreshingByUser) {
+            if (!_uiState.value.isRefreshingByUser) {
                 _uiState.update { it.copy(isStatisticsLoading = true) }
             }
 
             when (val result = transactionRepository.getAllTransactionsByBudget(budgetId)) {
                 is AppResult.Success -> {
                     val transactionList = result.data
-                    this@BudgetDetailViewModel.allTransactions = transactionList
-
-                    val totalIncome = transactionList.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-                    val totalOutcome = transactionList.filter { it.type == TransactionType.OUTCOME }.sumOf { it.amount }
+                    val totalIncome =
+                        transactionList.filter { it.type == TransactionType.INCOME }
+                            .sumOf { it.amount }
+                    val totalOutcome =
+                        transactionList.filter { it.type == TransactionType.OUTCOME }
+                            .sumOf { it.amount }
 
                     _uiState.update {
                         it.copy(
+                            transactions = transactionList,
                             transactionCount = transactionList.size,
                             netAmount = totalIncome - totalOutcome,
                             totalIncome = totalIncome,
@@ -136,18 +121,12 @@ class BudgetDetailViewModel @Inject constructor(
                     }
                     updateChartData(uiState.value.timeRange)
                 }
+
                 is AppResult.Error -> {
                     _uiState.update { it.copy(isStatisticsLoading = false, isRefreshingByUser = false) }
                 }
-                is AppResult.Loading -> {}
-            }
 
-            _filterStateForPaging.update {
-                it.copy(
-                    budgetId = budgetId,
-                    startDate = getStartOfWeek(),
-                    endDate = getEndOfWeek()
-                )
+                is AppResult.Loading -> {}
             }
         }
     }
@@ -167,8 +146,7 @@ class BudgetDetailViewModel @Inject constructor(
             labels = (0..6).map { getStartOfWeek().plusDays(it.toLong()) },
             dateFormat = "EEE"
         )
-
-        val relevantTransactions = allTransactions.filter {
+        val relevantTransactions = _uiState.value.transactions.filter {
             val date = it.dateTime.toLocalDate()
             !date.isBefore(config.startDate) && !date.isAfter(config.endDate)
         }
@@ -185,11 +163,17 @@ class BudgetDetailViewModel @Inject constructor(
 
         val locale = Locale.forLanguageTag("vi")
         val incomeChartData = config.labels.map { date ->
-            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)), incomeByDate[date] ?: 0f)
+            LineChartData(
+                date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)),
+                incomeByDate[date] ?: 0f
+            )
         }
 
         val outcomeChartData = config.labels.map { date ->
-            LineChartData(date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)), outcomeByDate[date] ?: 0f)
+            LineChartData(
+                date.format(DateTimeFormatter.ofPattern(config.dateFormat, locale)),
+                outcomeByDate[date] ?: 0f
+            )
         }
 
         _uiState.update {
@@ -205,7 +189,7 @@ class BudgetDetailViewModel @Inject constructor(
         val startOfYear = LocalDate.of(currentYear, 1, 1)
         val endOfYear = LocalDate.of(currentYear, 12, 31)
 
-        val relevantTransactions = allTransactions.filter {
+        val relevantTransactions = _uiState.value.transactions.filter {
             val date = it.dateTime.toLocalDate()
             !date.isBefore(startOfYear) && !date.isAfter(endOfYear)
         }
@@ -248,10 +232,6 @@ class BudgetDetailViewModel @Inject constructor(
         if (range == uiState.value.timeRange) return
         _uiState.update { it.copy(timeRange = range) }
         updateChartData(range)
-
-        val startDate = if (range == ChartTimeRange.WEEK) getStartOfWeek() else getStartOfMonth()
-        val endDate = if (range == ChartTimeRange.WEEK) getEndOfWeek() else getEndOfMonth()
-        _filterStateForPaging.update { it.copy(startDate = startDate, endDate = endDate) }
     }
 
     fun onUserPullToRefresh() {
@@ -275,7 +255,6 @@ class BudgetDetailViewModel @Inject constructor(
             val budgetToDelete = uiState.value.budget
             if (budgetToDelete?.serverId == null) {
                 snackbarManager.showMessage(
-                    // SỬ DỤNG STRING RESOURCE
                     context.getString(R.string.error_budget_not_found_for_action),
                     TopSnackbarType.ERROR
                 )
@@ -283,14 +262,22 @@ class BudgetDetailViewModel @Inject constructor(
             }
 
             budgetRepository.deleteBudget(budgetToDelete.serverId).collectLatest { result ->
-                when(result) {
+                when (result) {
                     is AppResult.Success -> {
-                        snackbarManager.showMessage(context.getString(R.string.budget_deleted_successfully), TopSnackbarType.SUCCESS)
+                        snackbarManager.showMessage(
+                            context.getString(R.string.budget_deleted_successfully),
+                            TopSnackbarType.SUCCESS
+                        )
                         _eventFlow.emit(BudgetDetailEvent.DeleteSuccess)
                     }
+
                     is AppResult.Error -> {
-                        snackbarManager.showMessage(mapErrorToString(result.errorType), TopSnackbarType.ERROR)
+                        snackbarManager.showMessage(
+                            mapErrorToString(result.errorType),
+                            TopSnackbarType.ERROR
+                        )
                     }
+
                     is AppResult.Loading -> {}
                 }
             }
@@ -314,8 +301,9 @@ class BudgetDetailViewModel @Inject constructor(
         val dateFormat: String
     )
 
-    private fun getStartOfWeek(): LocalDate = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    private fun getEndOfWeek(): LocalDate = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
-    private fun getStartOfMonth(): LocalDate = LocalDate.now().with(TemporalAdjusters.firstDayOfMonth())
-    private fun getEndOfMonth(): LocalDate = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth())
+    private fun getStartOfWeek(): LocalDate =
+        LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
+    private fun getEndOfWeek(): LocalDate =
+        LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
 }

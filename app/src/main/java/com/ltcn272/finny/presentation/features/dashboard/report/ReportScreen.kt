@@ -205,19 +205,18 @@ fun ReportScreen(
                                     when (item) {
                                         is BudgetReportDetail -> ReportDetailItem(
                                             name = item.name,
-                                            amountText = "${
-                                                formatCurrency(
-                                                    item.outcome,
-                                                    "VND"
-                                                )
-                                            }/${formatCurrency(item.limit, "VND")}",
-                                            progress = item.ratio.toFloat()
+                                            spent = item.outcome,
+                                            limit = item.limit,
+                                            usagePercent = (item.ratio * 100).toInt(),
+                                            isCategory = false
                                         )
 
                                         is CategoryReportDetail -> ReportDetailItem(
                                             name = item.name,
-                                            amountText = formatCurrency(item.outcome, "VND"),
-                                            progress = -1f
+                                            spent = item.outcome,
+                                            limit = 0.0,
+                                            usagePercent = 0,
+                                            isCategory = true
                                         )
                                     }
                                     if (index < detailItems.lastIndex) {
