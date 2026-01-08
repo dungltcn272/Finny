@@ -54,24 +54,22 @@ class FinnyNotificationListenerService : NotificationListenerService() {
     private fun isTransactionMessage(text: String): Boolean {
         val content = text.lowercase()
 
-        // 1. Kiểm tra các định dạng số tiền (Regex)
-        // Tìm các cụm có số đi kèm VND, VNĐ, đ, hoặc dấu +, - ở trước số
-        val amountRegex = Regex("([+-]?\\s?\\d{1,3}([,.]\\d{3})*(\\s?)(vnd|vnđ|đ|vnds))")
-        val hasAmount = amountRegex.containsMatchIn(content)
+        // Chỉ cần thấy đơn vị tiền
+        val hasMoneyUnit = listOf(
+            "vnd",
+            "vnđ",
+            " đ"   // có space để tránh bắt nhầm chữ "đi"
+        ).any { content.contains(it) }
 
-        // 2. Danh sách từ khóa (có dấu và không dấu)
-        val keywords = listOf(
-            "số dư", "so du", "biến động", "bien dong",
-            "tài khoản", "tai khoan", "tk ", "gd ", "giao dịch", "giao dich",
-            "thanh toán", "thanh toan", "thành công", "thanh cong",
-            "đã nhận", "da nhan", "đã trừ", "da tru", "chuyển khoản", "chuyen khoan"
-        )
+        // Hoặc thấy chuyển khoản
+        val hasTransferKeyword = listOf(
+            "chuyển khoản",
+            "chuyen khoan"
+        ).any { content.contains(it) }
 
-        val hasKeyword = keywords.any { content.contains(it) }
-
-        // Một tin nhắn giao dịch thường cần cả 2: có số tiền VÀ có từ khóa ngân hàng
-        return hasAmount && hasKeyword
+        return hasMoneyUnit || hasTransferKeyword
     }
+
 
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
