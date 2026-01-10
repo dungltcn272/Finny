@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
+import androidx.core.net.toUri
 
 data class ChatUiState(
     val isAiTyping: Boolean = false,
@@ -207,7 +208,7 @@ class ChatViewModel @Inject constructor(
                             isAiTyping = false,
                             sessionMessages = it.sessionMessages.filterNot { msg -> msg.id == userMessage.id },
                             recognizedText = userMessage.text,
-                            selectedImageUri = if (userMessage.image != null) Uri.parse(userMessage.image) else null
+                            selectedImageUri = if (userMessage.image != null) userMessage.image.toUri() else null
                         )
                     }
                 }

@@ -70,12 +70,11 @@ class BankNotificationInboxViewModel @Inject constructor(
                 )
             }
 
-            val prompt = "Finny, tạo giao dịch nội dung là ${notification.text}"
+            val prompt = "Tạo giao dịch nội dung là ${notification.text}"
 
             when (chatRepository.sendMessageAndGetResponse(text = prompt, imageUrl = null)) {
                 is AppResult.Success -> {
                     _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.notification_sent_to_ai), false))
-                    // FIX: Chỉ xóa thông báo khỏi DataStore và UI, không hiển thị thêm snackbar
                     removeNotificationFromDataStore(notification, showSnackbar = false)
                 }
                 is AppResult.Error -> {
