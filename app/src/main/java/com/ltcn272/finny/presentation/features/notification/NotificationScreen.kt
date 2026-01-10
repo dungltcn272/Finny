@@ -20,7 +20,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.ltcn272.finny.R
 import com.ltcn272.finny.domain.model.Notification
 import com.ltcn272.finny.presentation.common.ui.CircleNavigationButton
@@ -80,7 +79,8 @@ fun NotificationScreen(
                     text = stringResource(R.string.tab_unread),
                     isSelected = uiState.selectedTab == NotificationTabState.UNREAD,
                     onClick = { viewModel.onTabSelected(NotificationTabState.UNREAD) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    count = uiState.unreadCount
                 )
             }
 
@@ -113,15 +113,30 @@ fun NotificationScreen(
 
                 items(
                     count = lazyNotifications.itemCount,
-                    key = lazyNotifications.itemKey { it.id }
+                    key = { index ->
+                        val item = lazyNotifications.peek(index)
+                        val isRead = item?.isRead == true || uiState.readIds.contains(item?.id)
+                        "${item?.id}_$isRead"
+                    }
                 ) { index ->
                     val notification = lazyNotifications[index]
                     if (notification != null) {
+                        val isRead = notification.isRead || uiState.readIds.contains(notification.id)
+                        val displayNotification = if (isRead && !notification.isRead) {
+                            notification.copy(isRead = true)
+                        } else notification
+
                         val prevNotification = if (index > 0) lazyNotifications.peek(index - 1) else null
-                        val showHeader = prevNotification == null || prevNotification.createdAt.toLocalDate() != notification.createdAt.toLocalDate()
+                        val isPrevRead = prevNotification?.isRead == true || uiState.readIds.contains(prevNotification?.id)
+                        val prevDisplayNotification = if (isPrevRead && prevNotification?.isRead == false) {
+                            prevNotification.copy(isRead = true)
+                        } else prevNotification
+
+                        val showHeader = prevDisplayNotification == null ||
+                                prevDisplayNotification.createdAt.toLocalDate() != displayNotification.createdAt.toLocalDate()
 
                         if (showHeader) {
-                            val date = notification.createdAt.toLocalDate()
+                            val date = displayNotification.createdAt.toLocalDate()
                             val today = ZonedDateTime.now().toLocalDate()
                             val yesterday = today.minusDays(1)
                             val title = when {
@@ -140,8 +155,8 @@ fun NotificationScreen(
                         }
 
                         NotificationItem(
-                            notification = notification,
-                            onClick = { viewModel.showNotification(notification) }
+                            notification = displayNotification,
+                            onClick = { viewModel.showNotification(displayNotification) }
                         )
                     }
                 }

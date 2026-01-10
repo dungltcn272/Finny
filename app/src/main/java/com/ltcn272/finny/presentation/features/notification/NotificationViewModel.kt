@@ -24,7 +24,9 @@ enum class NotificationTabState { ALL, UNREAD }
 data class NotificationUiState(
     val selectedTab: NotificationTabState = NotificationTabState.ALL,
     val notificationToShow: Notification? = null,
-    val isMarkingAsRead: Boolean = false
+    val isMarkingAsRead: Boolean = false,
+    val readIds: Set<String> = emptySet(),
+    val unreadCount: Int = 0
 )
 
 @HiltViewModel
@@ -39,19 +41,38 @@ class NotificationViewModel @Inject constructor(
 
     val notificationsPagingFlow: Flow<PagingData<Notification>> = combine(
         originalNotificationsFlow,
-        uiState
+        _uiState
     ) { pagingData, state ->
         var processedPagingData = pagingData.map { notification ->
-            if (notification.id == state.notificationToShow?.id && state.notificationToShow.isRead) {
+            if (state.readIds.contains(notification.id)) {
                 notification.copy(isRead = true)
             } else {
                 notification
             }
         }
+
         if (state.selectedTab == NotificationTabState.UNREAD) {
-            processedPagingData = processedPagingData.filter { !it.isRead }
+            processedPagingData = processedPagingData.filter { notification ->
+                val isOpening = notification.id == state.notificationToShow?.id
+                isOpening || (!notification.isRead && !state.readIds.contains(notification.id))
+            }
         }
         processedPagingData
+    }.cachedIn(viewModelScope)
+
+    init {
+        refreshUnreadCount()
+    }
+
+    private fun refreshUnreadCount() {
+        viewModelScope.launch {
+            when (val result = notificationRepository.getUnreadCount()) {
+                is AppResult.Success -> {
+                    _uiState.update { it.copy(unreadCount = result.data) }
+                }
+                else -> {}
+            }
+        }
     }
 
     fun onTabSelected(tab: NotificationTabState) {
@@ -59,8 +80,8 @@ class NotificationViewModel @Inject constructor(
     }
 
     fun showNotification(notification: Notification) {
-        _uiState.update { it.copy(notificationToShow = notification, isMarkingAsRead = !notification.isRead) }
-        if (!notification.isRead) {
+        _uiState.update { it.copy(notificationToShow = notification) }
+        if (!notification.isRead && !_uiState.value.readIds.contains(notification.id)) {
             markNotificationAsRead(notification.id)
         }
     }
@@ -71,18 +92,22 @@ class NotificationViewModel @Inject constructor(
 
     private fun markNotificationAsRead(notificationId: String) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isMarkingAsRead = true) }
             val result = notificationRepository.markAsRead(notificationId)
             if (result is AppResult.Success) {
                 _uiState.update { currentState ->
-                    if (currentState.notificationToShow?.id == notificationId) {
-                        currentState.copy(
-                            notificationToShow = currentState.notificationToShow.copy(isRead = true),
-                            isMarkingAsRead = false
-                        )
-                    } else {
-                        currentState
-                    }
+                    currentState.copy(
+                        readIds = currentState.readIds + notificationId,
+                        isMarkingAsRead = false,
+                        notificationToShow = currentState.notificationToShow?.let {
+                            if (it.id == notificationId) it.copy(isRead = true) else it
+                        },
+                        unreadCount = (currentState.unreadCount - 1).coerceAtLeast(0)
+                    )
                 }
+                refreshUnreadCount()
+            } else {
+                _uiState.update { it.copy(isMarkingAsRead = false) }
             }
         }
     }
