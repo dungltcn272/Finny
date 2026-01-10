@@ -24,6 +24,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 import javax.inject.Inject
@@ -121,13 +122,17 @@ class TransactionViewModel @Inject constructor(
     }
 
     private fun formatRangeTitle(start: LocalDate, end: LocalDate): String {
+        val today = LocalDate.now(zoneId)
         val startOfWeek = getStartOfWeek(today)
-        val endOfWeek = getEndOfWeek(today)
-        return if (start == startOfWeek && end == endOfWeek) {
+
+        return if (start.isEqual(startOfWeek) && ChronoUnit.DAYS.between(start, end) == 6L) {
             context.getString(R.string.this_week)
+        } else if (start.dayOfMonth == 1 && end.dayOfMonth == end.lengthOfMonth()) {
+            start.format(DateTimeFormatter.ofPattern("MMMM, yyyy", Locale.getDefault()))
         } else {
-            val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault())
-            "${start.format(formatter)} - ${end.format(formatter)}"
+            val startFormatted = start.format(DateTimeFormatter.ofPattern("dd/MM/yy"))
+            val endFormatted = end.format(DateTimeFormatter.ofPattern("dd/MM/yy"))
+            "$startFormatted - $endFormatted"
         }
     }
 }

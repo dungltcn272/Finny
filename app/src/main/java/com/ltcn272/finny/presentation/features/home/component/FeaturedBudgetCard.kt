@@ -1,5 +1,4 @@
 package com.ltcn272.finny.presentation.features.home.component
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,8 +50,8 @@ fun FeaturedBudgetCardPreview() {
             serverId = "1",
             name = "Tiết kiệm",
             amount = 14200000.0,
-            limit = 26200000.0, // 14.2M + 12M
-            progress = 54.19, // (14.2 / 26.2) * 100
+            limit = 26200000.0,
+            progress = 54.19,
             currency = "VND",
             startDate = ZonedDateTime.now(),
             totalIncome = 2300000.0,
@@ -138,12 +137,18 @@ fun FeaturedBudgetCard(
                 }
             }
 
+            val progressColor = when {
+                budget.progress < 0.80 -> Color(0xFF4CAF50)
+                budget.progress < 0.95 -> Color(0xFFFFC107)
+                else -> Color(0xFFF44336)
+            }
+
             FinnyProgressIndicator(
-                progress = (budget.progress / 100.0).toFloat(),
+                progress = budget.progress.toFloat(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
+                color = progressColor,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
             )
 

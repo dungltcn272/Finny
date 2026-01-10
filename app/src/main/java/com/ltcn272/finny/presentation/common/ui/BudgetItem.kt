@@ -41,12 +41,19 @@ fun BudgetItem(
 
     val formatter = rememberCurrencyFormatter(budget.currency)
 
+    val percentage = budget.progress * 100
     val progressText = remember(budget.progress) {
-        if (budget.progress == 0.0 || budget.progress % 1.0 == 0.0) {
-            String.format("%.0f%%", budget.progress)
+        if (percentage == 0.0 || percentage % 1.0 == 0.0) {
+            String.format("%.0f%%", percentage)
         } else {
-            String.format("%.1f%%", budget.progress)
+            String.format("%.1f%%", percentage)
         }
+    }
+
+    val progressColor = when {
+        budget.progress < 0.8 -> Color(0xFF2EC4B6)
+        budget.progress < 0.95 -> Color(0xFFFFBF00)
+        else -> Color(0xFFE74C3C)
     }
 
     Surface(
@@ -62,7 +69,6 @@ fun BudgetItem(
             modifier = Modifier.padding(16.dp)
         ) {
 
-            /** HEADER **/
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -81,19 +87,17 @@ fun BudgetItem(
 
             Spacer(Modifier.height(10.dp))
 
-            /** PROGRESS **/
             FinnyProgressIndicator(
-                progress = budget.progress.toFloat() / 100f,
+                progress = budget.progress.toFloat().coerceAtMost(1f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
-                color = Color(0xFF2EC4B6),
+                color = progressColor,
                 trackColor = Color(0xFFEAEAEA)
             )
 
             Spacer(Modifier.height(12.dp))
 
-            /** ROW 1 **/
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -113,7 +117,6 @@ fun BudgetItem(
 
             Spacer(Modifier.height(8.dp))
 
-            /** ROW 2 **/
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -131,7 +134,6 @@ fun BudgetItem(
                 )
             }
 
-            /** RECURRING **/
             if (budget.recurring != null) {
                 Spacer(Modifier.height(10.dp))
                 Text(
@@ -268,3 +270,4 @@ private fun ShimmerInfoItem(
         )
     }
 }
+

@@ -7,7 +7,6 @@ import com.ltcn272.finny.R
 import com.ltcn272.finny.data.SettingDataStore
 import com.ltcn272.finny.domain.repository.ChatRepository
 import com.ltcn272.finny.domain.util.AppResult
-import com.ltcn272.finny.domain.util.ErrorType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

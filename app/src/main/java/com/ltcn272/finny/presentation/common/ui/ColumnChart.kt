@@ -1,6 +1,7 @@
 package com.ltcn272.finny.presentation.common.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.gestures.snapTo
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -47,7 +48,8 @@ import androidx.compose.ui.unit.dp
 import com.ltcn272.finny.R
 import java.text.DecimalFormat
 import kotlin.math.abs
-import kotlin.math.ceil
+import kotlin.math.log10
+import kotlin.math.pow
 import kotlin.random.Random
 
 data class ColumnChartEntry(
@@ -88,7 +90,24 @@ fun ColumnChart(
 
     val maxValue = remember(entries) {
         val maxEntryValue = entries.maxOfOrNull { maxOf(it.income, it.outcome) } ?: 0f
-        (ceil(maxEntryValue / 1_000_000f) * 1_000_000f).coerceAtLeast(1_000_000f)
+        if (maxEntryValue <= 0f) return@remember 1000f
+
+        val exponent = log10(maxEntryValue.toDouble()).toInt()
+        val magnitude = 10.0.pow(exponent.toDouble()).toFloat()
+        val firstDigit = maxEntryValue / magnitude
+
+        val roundedFactor = when {
+            firstDigit <= 1.2f -> 1.6f
+            firstDigit <= 2.0f -> 2.4f
+            firstDigit <= 3.0f -> 4.0f
+            firstDigit <= 4.5f -> 6.0f
+            firstDigit <= 6.0f -> 8.0f
+            else -> 10.0f
+        }
+
+        var result = roundedFactor * magnitude
+        if (result < maxEntryValue) result = magnitude * 10f
+        result
     }
 
     val animationProgress = remember { Animatable(0f) }
@@ -150,7 +169,7 @@ private fun YAxisLabels(maxValue: Float, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.End
     ) {
         for (i in Y_AXIS_LABEL_COUNT downTo 0) {
-            val value = maxValue / Y_AXIS_LABEL_COUNT * i
+            val value = (maxValue / Y_AXIS_LABEL_COUNT) * i
             Text(
                 text = formatAmountShort(value.toDouble()),
                 style = MaterialTheme.typography.labelSmall,
@@ -164,7 +183,7 @@ private fun YAxisLabels(maxValue: Float, modifier: Modifier = Modifier) {
 private fun YAxisGrid(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
-        for (i in 1..Y_AXIS_LABEL_COUNT) {
+        for (i in 0..Y_AXIS_LABEL_COUNT) {
             val y = size.height * (1f - i.toFloat() / Y_AXIS_LABEL_COUNT)
             drawLine(
                 color = Color.LightGray.copy(alpha = 0.3f),
@@ -176,7 +195,6 @@ private fun YAxisGrid(modifier: Modifier = Modifier) {
         }
     }
 }
-
 
 @Composable
 private fun ChartColumnGroup(
@@ -249,10 +267,10 @@ private fun ChartBar(
 @Composable
 private fun formatAmountShort(value: Double): String {
     val absValue = abs(value)
+    if (absValue == 0.0) return "0"
     if (absValue < 1000) return value.toLong().toString()
 
     val formatter = remember { DecimalFormat("#.#") }
-
     val billionSuffix = stringResource(id = R.string.amount_billion_short)
     val millionSuffix = stringResource(id = R.string.amount_million_short)
     val thousandSuffix = stringResource(id = R.string.amount_thousand_short)
@@ -306,8 +324,8 @@ fun ColumnChartWaiting(
         Box(modifier = Modifier.fillMaxSize()) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
-                for (i in 1..Y_AXIS_LABEL_COUNT) {
-                    val y = size.height - (size.height / Y_AXIS_LABEL_COUNT * i)
+                for (i in 0..Y_AXIS_LABEL_COUNT) {
+                    val y = size.height * (1f - i.toFloat() / Y_AXIS_LABEL_COUNT)
                     drawLine(
                         color = Color.LightGray.copy(alpha = 0.3f),
                         start = Offset(0f, y),
@@ -367,13 +385,19 @@ fun ColumnChartWaiting(
                                 modifier = Modifier
                                     .width(BAR_WIDTH)
                                     .fillMaxHeight(fraction = heightFraction)
-                                    .background(incomeColor.copy(alpha = 0.5f), RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .background(
+                                        incomeColor.copy(alpha = 0.5f),
+                                        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                    )
                             )
                             Box(
                                 modifier = Modifier
                                     .width(BAR_WIDTH)
                                     .fillMaxHeight(fraction = heightFraction2)
-                                    .background(outcomeColor.copy(alpha = 0.5f), RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .background(
+                                        outcomeColor.copy(alpha = 0.5f),
+                                        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                    )
                             )
                         }
                     }
@@ -388,13 +412,13 @@ fun ColumnChartWaiting(
 private fun ColumnChartPreview() {
     val sampleEntries = remember {
         listOf(
-            ColumnChartEntry("01", "T2", 2500000f, 1200000f),
-            ColumnChartEntry("02", "T3", 3500000f, 2200000f),
-            ColumnChartEntry("03", "T4", 1500000f, 800000f),
-            ColumnChartEntry("04", "T5", 4500000f, 3200000f),
-            ColumnChartEntry("05", "T6", 2000000f, 1500000f),
-            ColumnChartEntry("06", "T7", 5500000f, 4200000f),
-            ColumnChartEntry("07", "CN", 800000f, 500000f)
+            ColumnChartEntry("01", "T2", 86000f, 12000f),
+            ColumnChartEntry("02", "T3", 35000f, 22000f),
+            ColumnChartEntry("03", "T4", 15000f, 8000f),
+            ColumnChartEntry("04", "T5", 45000f, 32000f),
+            ColumnChartEntry("05", "T6", 20000f, 15000f),
+            ColumnChartEntry("06", "T7", 55000f, 42000f),
+            ColumnChartEntry("07", "CN", 8000f, 5000f)
         )
     }
 
@@ -421,26 +445,3 @@ private fun ColumnChartPreview() {
         }
     }
 }
-
-@Preview
-@Composable
-private fun ColumnChartWaitingPreview() {
-    MaterialTheme {
-        Card(
-            modifier = Modifier.padding(16.dp),
-            elevation = CardDefaults.cardElevation(4.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Báo cáo Thu-Chi Tuần",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                ColumnChartWaiting()
-            }
-        }
-    }
-}
-
