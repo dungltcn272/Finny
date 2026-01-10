@@ -70,13 +70,20 @@ class BankNotificationInboxViewModel @Inject constructor(
                 )
             }
 
-            val prompt = "Tạo giao dịch nội dung là ${notification.text}"
+            val prompt =
+                "Trích xuất nội dung giao dịch từ thông báo dưới đây và tạo giao dịch nội dung là '${notification.text}'"
 
             when (chatRepository.sendMessageAndGetResponse(text = prompt, imageUrl = null)) {
                 is AppResult.Success -> {
-                    _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.notification_sent_to_ai), false))
+                    _eventFlow.emit(
+                        InboxEvent.ShowSnackbar(
+                            app.getString(R.string.notification_sent_to_ai),
+                            false
+                        )
+                    )
                     removeNotificationFromDataStore(notification, showSnackbar = false)
                 }
+
                 is AppResult.Error -> {
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -85,8 +92,14 @@ class BankNotificationInboxViewModel @Inject constructor(
                             }
                         )
                     }
-                    _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.ai_could_not_recognize_transaction), true))
+                    _eventFlow.emit(
+                        InboxEvent.ShowSnackbar(
+                            app.getString(R.string.ai_could_not_recognize_transaction),
+                            true
+                        )
+                    )
                 }
+
                 is AppResult.Loading -> {}
             }
         }
@@ -98,7 +111,10 @@ class BankNotificationInboxViewModel @Inject constructor(
         }
     }
 
-    private suspend fun removeNotificationFromDataStore(notificationToRemove: PendingBankNotification, showSnackbar: Boolean) {
+    private suspend fun removeNotificationFromDataStore(
+        notificationToRemove: PendingBankNotification,
+        showSnackbar: Boolean
+    ) {
         val currentInboxString = settingDataStore.bankNotificationInboxFlow.first()
         val notifications = currentInboxString.split("|||").toMutableList()
         notifications.remove(notificationToRemove.originalString)
@@ -110,7 +126,12 @@ class BankNotificationInboxViewModel @Inject constructor(
         }
 
         if (showSnackbar) {
-            _eventFlow.emit(InboxEvent.ShowSnackbar(app.getString(R.string.notification_deleted), false))
+            _eventFlow.emit(
+                InboxEvent.ShowSnackbar(
+                    app.getString(R.string.notification_deleted),
+                    false
+                )
+            )
         }
     }
 
